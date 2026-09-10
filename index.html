@@ -516,6 +516,46 @@
     .payment-success-label{margin-top:8px;font-size:.88rem;font-weight:800;opacity:.8}
     .payment-success-note{margin-top:8px;line-height:1.6;font-size:.92rem}
 
+
+    .complete-status-popup{
+      position:fixed; inset:0; z-index:99999;
+      display:none; align-items:center; justify-content:center;
+      background:rgba(112,58,81,.16); backdrop-filter:blur(4px);
+      padding:18px;
+    }
+    .complete-status-popup.show{display:flex}
+    .complete-status-card{
+      width:min(360px,92vw); background:#fff; border:1px solid #f2bfd3;
+      border-radius:24px; padding:28px 22px; text-align:center;
+      box-shadow:0 18px 50px rgba(146,77,106,.18);
+      animation:completePop .22s ease-out;
+    }
+    .complete-status-check{
+      width:78px; height:78px; margin:0 auto 14px;
+      border-radius:50%; display:flex; align-items:center; justify-content:center;
+      background:#e885ad; color:#fff; font-size:44px; font-weight:900;
+      box-shadow:0 8px 22px rgba(232,133,173,.28);
+    }
+    .complete-status-title{font-size:1.35rem;font-weight:900;color:#8f4f68}
+    .complete-status-sub{margin-top:7px;color:#a46880;line-height:1.55}
+    .complete-status-close{
+      margin-top:18px; width:100%; min-height:46px; border:0; border-radius:14px;
+      background:#e885ad; color:#fff; font-weight:850; cursor:pointer;
+    }
+    @keyframes completePop{
+      from{transform:scale(.92);opacity:0}
+      to{transform:scale(1);opacity:1}
+    }
+
+
+    .status-popup-wait .complete-status-check{background:#f0a24a}
+    .status-popup-wait .complete-status-title{color:#b46a1f}
+    .status-popup-wait .complete-status-close{background:#f0a24a}
+
+    .status-popup-problem .complete-status-check{background:#d96b7c}
+    .status-popup-problem .complete-status-title{color:#9b4252}
+    .status-popup-problem .complete-status-close{background:#d96b7c}
+
 </style>
 </head>
 <body>
@@ -921,6 +961,134 @@ function updateOrderIdPreview(){
 document.addEventListener('input',()=>setTimeout(updateOrderIdPreview,0));
 document.addEventListener('click',()=>setTimeout(updateOrderIdPreview,50));
 setTimeout(updateOrderIdPreview,300);
+
+
+
+let completeStatusUnsub = null;
+let lastCompletePopupOrder = '';
+
+function playCompleteSound(){
+  try{
+    const Ctx=window.AudioContext||window.webkitAudioContext;
+    if(!Ctx) return;
+    const ctx=new Ctx();
+    if(ctx.state==='suspended') ctx.resume().catch(()=>{});
+    const now=ctx.currentTime;
+    [523.25,659.25,783.99].forEach((freq,i)=>{
+      const osc=ctx.createOscillator();
+      const gain=ctx.createGain();
+      osc.type='sine';
+      osc.frequency.value=freq;
+      gain.gain.setValueAtTime(0.0001,now+i*0.11);
+      gain.gain.exponentialRampToValueAtTime(0.18,now+i*0.11+0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001,now+i*0.11+0.24);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(now+i*0.11); osc.stop(now+i*0.11+0.26);
+    });
+    setTimeout(()=>{ try{ctx.close()}catch(e){} },1000);
+  }catch(e){ console.warn('complete sound failed',e); }
+}
+
+function ensureCompleteStatusPopup(){
+  let p=document.getElementById('completeStatusPopup');
+  if(p) return p;
+  p=document.createElement('div');
+  p.id='completeStatusPopup';
+  p.className='complete-status-popup';
+  p.setAttribute('aria-hidden','true');
+  p.innerHTML=`
+    <div class="complete-status-card" role="dialog" aria-modal="true">
+      <div class="complete-status-check">✓</div>
+      <div class="complete-status-title">ออเดอร์เสร็จสิ้นแล้ว ♡</div>
+      <div id="completeStatusOrderId" class="complete-status-sub"></div>
+      <button id="completeStatusClose" class="complete-status-close" type="button">ปิด</button>
+    </div>`;
+  document.body.appendChild(p);
+  p.querySelector('#completeStatusClose')?.addEventListener('click',hideCompleteStatusPopup);
+  p.addEventListener('click',e=>{ if(e.target===p) hideCompleteStatusPopup(); });
+  return p;
+}
+
+function showOrderStatusPopup(orderId,status){
+  const id=String(orderId||'').trim().toUpperCase();
+  const s=String(status||'').trim();
+  const p=ensureCompleteStatusPopup();
+  const card=p.querySelector('.complete-status-card');
+  const check=p.querySelector('.complete-status-check');
+  const title=p.querySelector('.complete-status-title');
+  const idBox=p.querySelector('#completeStatusOrderId');
+
+  card.classList.remove('status-popup-wait','status-popup-problem');
+  check.textContent='✓';
+  title.textContent='ออเดอร์เสร็จสิ้นแล้ว ♡';
+  if(idBox) idBox.innerHTML=id ? ('เลขออเดอร์: '+id) : '';
+
+  if(s==='รอเติม' || s==='กำลังเติม'){
+    card.classList.add('status-popup-wait');
+    check.textContent='⏳';
+    title.textContent='กำลังรอเติมออเดอร์ ♡';
+    if(idBox) idBox.innerHTML=(id?('เลขออเดอร์: '+id+'<br>'):'')+'กรุณารอสักครู่นะคะ';
+  }else if(s==='มีปัญหา'){
+    card.classList.add('status-popup-problem');
+    check.textContent='✕';
+    title.textContent='ออเดอร์มีปัญหา';
+    if(idBox) idBox.innerHTML=(id?('เลขออเดอร์: '+id+'<br>'):'')+'รบกวนติดต่อเพจเพื่อให้ร้านตรวจสอบค่ะ';
+  }
+
+  p.classList.add('show');
+  p.setAttribute('aria-hidden','false');
+
+  const soundKey=id+'|'+s;
+  if(lastCompletePopupOrder!==soundKey){
+    lastCompletePopupOrder=soundKey;
+    playCompleteSound();
+  }
+}
+
+function showCompleteStatusPopup(orderId){
+  showOrderStatusPopup(orderId,'สำเร็จ');
+}
+
+function hideCompleteStatusPopup(){
+  const p=document.getElementById('completeStatusPopup');
+  if(!p) return;
+  p.classList.remove('show');
+  p.setAttribute('aria-hidden','true');
+}
+
+function watchTrackedOrderStatus(orderId){
+  const id=String(orderId||'').trim().toUpperCase();
+  if(!id || !firebaseReady()) return;
+  try{
+    if(completeStatusUnsub){ completeStatusUnsub(); completeStatusUnsub=null; }
+    const {db}=getFirebaseServices();
+    completeStatusUnsub=db.collection('order_status').doc(id).onSnapshot(doc=>{
+      if(!doc.exists) return;
+      const status=String(doc.data()?.status||'').trim();
+      const result=document.getElementById('mainTrackResult');
+      if(result){
+        result.className='track-result show';
+        result.textContent='สถานะล่าสุด: '+status;
+      }
+      if(status==='สำเร็จ') showOrderStatusPopup(id,'สำเร็จ');
+      else if(status==='รอเติม' || status==='กำลังเติม') showOrderStatusPopup(id,status);
+      else if(status==='มีปัญหา') showOrderStatusPopup(id,'มีปัญหา');
+    },err=>console.warn('status watch failed',err));
+  }catch(e){ console.warn('status watch failed',e); }
+}
+
+
+document.addEventListener('DOMContentLoaded',()=>{
+  const btn=document.getElementById('mainTrackBtn');
+  const input=document.getElementById('mainTrackId');
+  if(btn) btn.addEventListener('click',()=>trackOrderOnMain());
+  if(input) input.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){
+      e.preventDefault();
+      trackOrderOnMain();
+    }
+  });
+});
 
 </script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
@@ -1697,50 +1865,89 @@ async function saveOrderToDemoAdmin(){
   }
 }
 
+
+function handleTrackedStatusPopup(orderId,status){
+  const s=String(status||'').trim();
+  if(s==='สำเร็จ'){
+    showOrderStatusPopup(orderId,'สำเร็จ');
+  }else if(s==='รอเติม' || s==='กำลังเติม'){
+    showOrderStatusPopup(orderId,s);
+  }else if(s==='มีปัญหา'){
+    showOrderStatusPopup(orderId,'มีปัญหา');
+  }
+}
+
 async function trackOrderOnMain(orderId){
   const input=document.getElementById('mainTrackId');
   const result=document.getElementById('mainTrackResult');
   const id=String(orderId || input?.value || '').trim().toUpperCase();
+
   if(input) input.value=id;
   if(!result) return;
+
   result.className='track-result show';
-  if(!id){ result.classList.add('error'); result.textContent='กรุณากรอกเลขออเดอร์ก่อนนะคะ'; return; }
-  if(!firebaseReady()){ result.classList.add('error'); result.textContent='ระบบติดตามยังเชื่อมต่อไม่ได้ กรุณาลองใหม่อีกครั้ง'; return; }
+
+  if(!id){
+    result.classList.add('error');
+    result.textContent='กรุณากรอกเลขออเดอร์';
+    return;
+  }
+
   try{
-    result.textContent='กำลังตรวจสอบสถานะ…';
-    const {db}=getFirebaseServices();
-    const doc=await db.collection('order_status').doc(id).get();
-    if(!doc.exists){
-      let localStatus='';
-      try{ localStatus=localStorage.getItem('ymk_order_status_'+id)||''; }catch(e){}
-      if(localStatus){
-        result.classList.remove('error');
-        result.textContent='สถานะล่าสุด: '+localStatus;
-        return;
-      }
+    if(!firebaseReady()){
       result.classList.add('error');
-      result.textContent='ไม่พบเลขออเดอร์นี้';
+      result.textContent='ระบบติดตามยังเชื่อมต่อไม่ได้ กรุณาลองใหม่อีกครั้ง';
       return;
     }
-    const status=doc.data()?.status || 'รอตรวจสอบการชำระเงิน';
-    try{ localStorage.setItem('ymk_order_status_'+id,status); }catch(e){}
-    result.classList.remove('error');
-    result.textContent='สถานะล่าสุด: '+status;
+
+    const services=getFirebaseServices();
+    const dbx=services.db;
+
+    // Read current status immediately.
+    const doc=await dbx.collection('order_status').doc(id).get();
+
+    if(!doc.exists){
+      let fallback='';
+      try{ fallback=localStorage.getItem('ymk_order_status_'+id)||''; }catch(e){}
+      if(fallback){
+        result.classList.remove('error');
+        result.textContent='สถานะล่าสุด: '+fallback;
+        handleTrackedStatusPopup(id,fallback);
+      }else{
+        result.classList.add('error');
+        result.textContent='ไม่พบเลขออเดอร์นี้';
+      }
+    }else{
+      const status=String(doc.data()?.status||'รอตรวจสอบการชำระเงิน').trim();
+      result.classList.remove('error');
+      result.textContent='สถานะล่าสุด: '+status;
+      try{ localStorage.setItem('ymk_order_status_'+id,status); }catch(e){}
+      handleTrackedStatusPopup(id,status);
+    }
+
+    // Then keep watching this exact order in realtime.
+    if(window._ymkTrackUnsub){
+      try{ window._ymkTrackUnsub(); }catch(e){}
+    }
+    window._ymkTrackUnsub=dbx.collection('order_status').doc(id).onSnapshot(snap=>{
+      if(!snap.exists) return;
+      const status=String(snap.data()?.status||'รอตรวจสอบการชำระเงิน').trim();
+      result.className='track-result show';
+      result.textContent='สถานะล่าสุด: '+status;
+      try{ localStorage.setItem('ymk_order_status_'+id,status); }catch(e){}
+      handleTrackedStatusPopup(id,status);
+    },err=>{
+      console.warn('realtime status listener failed',err);
+    });
+
   }catch(e){
     console.error(e);
-    let localStatus='';
-    try{ localStatus=localStorage.getItem('ymk_order_status_'+id)||''; }catch(_){}
-    if(localStatus){
-      result.classList.remove('error');
-      result.textContent='สถานะล่าสุด: '+localStatus;
-    }else{
-      result.classList.add('error');
-      result.textContent='ตรวจสอบสถานะไม่สำเร็จ กรุณาลองใหม่อีกครั้ง';
-    }
+    result.classList.add('error');
+    result.textContent='ตรวจสอบสถานะไม่สำเร็จ กรุณาลองใหม่อีกครั้ง';
   }
 }
 
-document.getElementById('mainTrackBtn')?.addEventListener('click',()=>trackOrderOnMain());
+
 document.getElementById('mainTrackId')?.addEventListener('keydown',e=>{if(e.key==='Enter') trackOrderOnMain();});
 document.getElementById('successTrackBtn')?.addEventListener('click',()=>{
   const id=currentOrderId||'';
@@ -1781,5 +1988,15 @@ render();
   <div>♡ Yuimellkub Top-up ♡</div>
   <small>คำนวณง่าย • ดูเรทสะดวก • ใช้งานบนมือถือได้</small>
 </footer>
+
+<div id="completeStatusPopup" class="complete-status-popup" aria-hidden="true">
+  <div class="complete-status-card" role="dialog" aria-modal="true" aria-labelledby="completeStatusTitle">
+    <div class="complete-status-check">✓</div>
+    <div id="completeStatusTitle" class="complete-status-title">ออเดอร์เสร็จสิ้นแล้ว ♡</div>
+    <div id="completeStatusOrderId" class="complete-status-sub"></div>
+    <button id="completeStatusClose" class="complete-status-close" type="button">ปิด</button>
+  </div>
+</div>
+
 </body>
 </html>
