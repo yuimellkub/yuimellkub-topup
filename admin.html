@@ -3,33 +3,103 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Yuimellkub Admin</title>
+<title>Yuimellkub Admin Demo</title>
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#fff6fa;color:#6f4658}.wrap{max-width:920px;margin:auto;padding:24px 16px 60px}.head{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}.title{font-weight:900;font-size:25px;color:#8f4f68}.sub{color:#a16b80;font-size:13px;margin-top:4px}.notice{margin:16px 0;padding:13px 14px;border:1px solid #f1c7d8;border-radius:14px;background:#fff0f6;font-size:12px;line-height:1.6}.actions{display:flex;gap:8px;flex-wrap:wrap}.btn{border:0;border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer}.btn.primary{background:#e889ad;color:#fff}.btn.soft{background:#fff0f6;color:#92566e;border:1px solid #efc8d7}.grid{display:grid;gap:14px}.card{background:#fff;border:1px solid #f2ccdc;border-radius:18px;padding:16px;box-shadow:0 8px 24px rgba(190,105,145,.08)}.cardTop{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.oid{font-weight:900;color:#8f4f68}.time{font-size:11px;color:#af8193;margin-top:2px}.price{font-weight:900;font-size:20px;color:#d96f9a}.rows{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;margin-top:12px}.row{font-size:12px;line-height:1.5}.row b{display:block;color:#8f5d71;font-size:11px}.slip{margin-top:12px}.slip.none{font-size:12px;color:#af8193}.statusBox{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:14px}.statusBox select{height:40px;border:1px solid #efc8d7;border-radius:11px;padding:0 10px;background:#fff;color:#71465a;font:inherit}.empty{text-align:center;padding:48px 10px;color:#aa7c8e}.pill{display:inline-block;padding:5px 9px;border-radius:999px;background:#fff0f6;border:1px solid #f2c6d7;font-size:11px;font-weight:800}.danger{background:#fff;color:#a65367;border:1px solid #efc8d7}.messenger{display:inline-flex;align-items:center;text-decoration:none;background:#e889ad;color:#fff;padding:10px 12px;border-radius:11px;font-weight:800;font-size:12px}.footer{margin-top:20px;text-align:center;color:#b38a99;font-size:11px}@media(max-width:620px){.rows{grid-template-columns:1fr}.price{font-size:18px}}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#fff6fa;color:#6f4658}.wrap{max-width:920px;margin:auto;padding:24px 16px 60px}.head{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}.title{font-weight:900;font-size:25px;color:#8f4f68}.sub{color:#a16b80;font-size:13px;margin-top:4px}.notice{margin:16px 0;padding:13px 14px;border:1px solid #f1c7d8;border-radius:14px;background:#fff0f6;font-size:12px;line-height:1.6}.actions{display:flex;gap:8px;flex-wrap:wrap}.btn{border:0;border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer}.btn.primary{background:#e889ad;color:#fff}.btn.soft{background:#fff0f6;color:#92566e;border:1px solid #efc8d7}.grid{display:grid;gap:14px}.card{background:#fff;border:1px solid #f2ccdc;border-radius:18px;padding:16px;box-shadow:0 8px 24px rgba(190,105,145,.08)}.cardTop{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.oid{font-weight:900;color:#8f4f68}.time{font-size:11px;color:#af8193;margin-top:2px}.price{font-weight:900;font-size:20px;color:#d96f9a}.rows{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;margin-top:12px}.row{font-size:12px;line-height:1.5}.row b{display:block;color:#8f5d71;font-size:11px}.slip{margin-top:12px}.slip img{max-width:280px;width:100%;border:1px solid #f2ccdc;border-radius:14px;display:block}.slip.none{font-size:12px;color:#af8193}.statusBox{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:14px}.statusBox select{height:40px;border:1px solid #efc8d7;border-radius:11px;padding:0 10px;background:#fff;color:#71465a;font:inherit}.empty{text-align:center;padding:48px 10px;color:#aa7c8e}.pill{display:inline-block;padding:5px 9px;border-radius:999px;background:#fff0f6;border:1px solid #f2c6d7;font-size:11px;font-weight:800}.danger{background:#fff;color:#a65367;border:1px solid #efc8d7}.messenger{display:inline-flex;align-items:center;text-decoration:none;background:#e889ad;color:#fff;padding:10px 12px;border-radius:11px;font-weight:800;font-size:12px}.footer{margin-top:20px;text-align:center;color:#b38a99;font-size:11px}@media(max-width:620px){.rows{grid-template-columns:1fr}.price{font-size:18px}}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="head">
-    <div><div class="title">♡ Yuimellkub หลังบ้าน</div><div class="sub">ดูออเดอร์ออนไลน์จากหน้าเว็บ • สลิปตรวจผ่าน Messenger</div></div>
-    <div class="actions"><button class="btn primary" id="login">เข้าสู่ระบบร้าน</button><button class="btn soft" id="logout" style="display:none">ออกจากระบบ</button><button class="btn soft" id="reload">รีเฟรช</button></div>
+    <div><div class="title">♡ Yuimellkub จัดการออเดอร์เดโม</div><div class="sub">ดูออเดอร์ออนไลน์จากหน้าเว็บ • สลิปตรวจผ่าน Messenger</div></div>
+    <div class="actions"><button class="btn primary" id="login">เข้าสู่ระบบร้าน</button><button class="btn soft" id="logout" style="display:none">ออกจากระบบ</button><button class="btn soft" id="reload">รีเฟรช</button><button class="btn soft" id="notifyToggle">🔔 เปิดแจ้งเตือน</button><button class="btn danger" id="clearAll">ล้างออเดอร์เดโม</button></div>
   </div>
-  <div class="notice">หลังบ้านนี้ใช้ <b>Firebase ออนไลน์</b> และเปิดดูข้อมูลได้เฉพาะบัญชีแอดมินของร้าน รูปสลิปให้ลูกค้าส่งผ่าน Messenger เนื่องจากยังไม่ได้เปิด Firebase Storage</div>
+  <div class="notice">หลังบ้านนี้รองรับ <b>Firebase ออนไลน์</b> แล้ว หากยังไม่ได้ใส่ค่า Firebase จะกลับไปใช้โหมดเดโมในเบราว์เซอร์นี้อัตโนมัติ เพื่อความปลอดภัย โหมดออนไลน์ต้องเข้าสู่ระบบด้วยบัญชีร้านก่อนดู UID และรายละเอียดออเดอร์ • รูปสลิปให้ลูกค้าส่งใน Messenger</div>
   <div id="orders" class="grid"></div>
-  <div class="footer">Yuimellkub Top-up • Admin</div>
+  <div class="footer">Yuimellkub Top-up • Admin Demo</div>
 </div>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script>
-const $=s=>document.querySelector(s);let db=null,auth=null,unsubscribe=null;
+const KEY='yuimellkub_demo_orders_v1';
+const $=s=>document.querySelector(s);
+let online=false, db=null, auth=null, unsubscribe=null;
 function esc(v=''){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
-function init(){if(!window.YUIMELLKUB_FIREBASE_CONFIG)return false;if(!firebase.apps.length)firebase.initializeApp(window.YUIMELLKUB_FIREBASE_CONFIG);auth=firebase.auth();db=firebase.firestore();return true}
-async function syncPublicStatus(o){try{await db.collection('order_status').doc(o.id).set({status:o.shopStatus||o.paymentStatus||'รอตรวจสอบการชำระเงิน',updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true})}catch(e){console.warn('status sync failed',e)}}
-function render(arr){const root=$('#orders');if(!arr.length){root.innerHTML='<div class="empty">ยังไม่มีออเดอร์ ♡</div>';return}arr.forEach(syncPublicStatus);root.innerHTML=arr.map(o=>`<div class="card" data-id="${esc(o.id)}"><div class="cardTop"><div><div class="oid">${esc(o.id)}</div><div class="time">${esc(o.createdAtText||'')}</div></div><div class="price">${esc(o.price)}</div></div><div class="rows"><div class="row"><b>รายการ</b>${esc(o.item)}</div><div class="row"><b>แพ็ก</b>${esc(o.pack)}</div><div class="row"><b>UID</b>${esc(o.uid)}</div><div class="row"><b>Server</b>${esc(o.server)}</div><div class="row"><b>ชื่อเรียก</b>${esc(o.name||'-')}</div><div class="row"><b>ชำระผ่าน</b>${esc(o.paymentMethod)}</div></div><div class="slip none">${o.slipAttached?'ลูกค้าเลือกสลิปไว้แล้ว • ตรวจรูปจริงใน Messenger':'รอรูปสลิปใน Messenger'}</div><div class="statusBox"><span class="pill">${esc(o.shopStatus||o.paymentStatus||'รอตรวจสอบการชำระเงิน')}</span><select class="shopStatus"><option ${o.shopStatus==='รอตรวจสอบการชำระเงิน'?'selected':''}>รอตรวจสอบการชำระเงิน</option><option ${o.shopStatus==='ชำระแล้ว'?'selected':''}>ชำระแล้ว</option><option ${o.shopStatus==='กำลังเติม'?'selected':''}>กำลังเติม</option><option ${o.shopStatus==='สำเร็จ'?'selected':''}>สำเร็จ</option><option ${o.shopStatus==='มีปัญหา'?'selected':''}>มีปัญหา</option></select><a class="messenger" target="_blank" rel="noopener" href="https://www.facebook.com/messages/t/61594269897110">เปิด Messenger</a><button class="btn danger delete">ลบ</button></div></div>`).join('');root.querySelectorAll('.shopStatus').forEach(sel=>sel.addEventListener('change',async e=>{const card=e.target.closest('.card'),id=card.dataset.id,status=e.target.value;await db.collection('orders').doc(id).update({shopStatus:status});await db.collection('order_status').doc(id).set({status,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});const pill=card.querySelector('.pill');if(pill)pill.textContent=status}));root.querySelectorAll('.delete').forEach(btn=>btn.addEventListener('click',async e=>{const id=e.target.closest('.card').dataset.id;if(confirm('ลบออเดอร์นี้?')){await db.collection('orders').doc(id).delete();try{await db.collection('order_status').doc(id).delete()}catch(_){}}}))}
-function start(){if(unsubscribe)unsubscribe();unsubscribe=db.collection('orders').orderBy('createdAt','desc').limit(100).onSnapshot(s=>render(s.docs.map(d=>{const o=d.data(),dt=o.createdAt?.toDate?.();return {...o,id:o.id||d.id,createdAtText:dt?dt.toLocaleString('th-TH'):''}})),e=>$('#orders').innerHTML='<div class="empty">โหลดออเดอร์ไม่ได้: '+esc(e.message)+'</div>')}
-$('#login').onclick=async()=>{const email=prompt('อีเมลบัญชีแอดมิน Firebase');if(!email)return;const password=prompt('รหัสผ่านบัญชีแอดมิน');if(!password)return;try{await auth.signInWithEmailAndPassword(email.trim(),password)}catch(e){alert('เข้าสู่ระบบไม่สำเร็จ: '+e.message)}};$('#logout').onclick=()=>auth.signOut();$('#reload').onclick=()=>start();
-if(init())auth.onAuthStateChanged(user=>{const ok=!!user&&user.uid===String(window.YUIMELLKUB_ADMIN_UID||'');$('#login').style.display=ok?'none':'inline-block';$('#logout').style.display=ok?'inline-block':'none';if(ok)start();else{if(user)auth.signOut();if(unsubscribe)unsubscribe();$('#orders').innerHTML='<div class="empty">เข้าสู่ระบบบัญชีร้านเพื่อดูออเดอร์ออนไลน์ ♡</div>'}});
+function firebaseReady(){return !!(window.YUIMELLKUB_FIREBASE_CONFIG?.apiKey && !String(window.YUIMELLKUB_FIREBASE_CONFIG.apiKey).includes('PUT_'))}
+function initFirebase(){
+ if(!firebaseReady()) return false;
+ if(!firebase.apps.length) firebase.initializeApp(window.YUIMELLKUB_FIREBASE_CONFIG);
+ auth=firebase.auth(); db=firebase.firestore(); online=true; return true;
+}
+function render(arr){
+ const root=$('#orders');
+ if(!arr.length){root.innerHTML='<div class="empty">ยังไม่มีออเดอร์ ♡</div>';return}
+ root.innerHTML=arr.map(o=>`<div class="card" data-id="${esc(o.id)}" data-slip="${esc(o.slipPath||'')}">
+   <div class="cardTop"><div><div class="oid">${esc(o.id)}</div><div class="time">${esc(o.createdAtText||'')}</div></div><div class="price">${esc(o.price)}</div></div>
+   <div class="rows">
+    <div class="row"><b>รายการ</b>${esc(o.item)}</div><div class="row"><b>แพ็ก</b>${esc(o.pack)}</div>
+    <div class="row"><b>UID</b>${esc(o.uid)}</div><div class="row"><b>Server</b>${esc(o.server)}</div>
+    <div class="row"><b>ชื่อเรียก</b>${esc(o.name||'-')}</div><div class="row"><b>ชำระผ่าน</b>${esc(o.paymentMethod)}</div>
+   </div>
+   <div class="slip none">${o.slipAttached?'ลูกค้าเลือกสลิปไว้แล้ว • ตรวจรูปจริงใน Messenger':'รอรูปสลิปใน Messenger'}</div>
+   <div class="statusBox"><span class="pill">${esc(o.paymentStatus)}</span>
+     <select class="shopStatus"><option ${o.shopStatus==='รอเติม'?'selected':''}>รอเติม</option><option ${o.shopStatus==='กำลังเติม'?'selected':''}>กำลังเติม</option><option ${o.shopStatus==='สำเร็จ'?'selected':''}>สำเร็จ</option><option ${o.shopStatus==='มีปัญหา'?'selected':''}>มีปัญหา</option></select>
+     <a class="messenger" target="_blank" rel="noopener" href="https://www.facebook.com/messages/t/61594269897110">เปิด Messenger</a>
+     <button class="btn danger delete">ลบ</button>
+   </div>
+ </div>`).join('');
+ root.querySelectorAll('.shopStatus').forEach(sel=>sel.addEventListener('change',e=>updateStatus(e.target.closest('.card').dataset.id,e.target.value)));
+ root.querySelectorAll('.delete').forEach(btn=>btn.addEventListener('click',e=>removeOrder(e.target.closest('.card').dataset.id)));
+
+}
+function loadLocal(){
+ let arr=[];try{arr=JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){}
+ arr=arr.map(o=>({...o,createdAtText:o.createdAt?new Date(o.createdAt).toLocaleString('th-TH'):''})); render(arr);
+}
+function startOnline(){
+ if(unsubscribe) unsubscribe();
+ unsubscribe=db.collection('orders').orderBy('createdAt','desc').limit(100).onSnapshot(snap=>{
+  const arr=snap.docs.map(d=>{const o=d.data(); const dt=o.createdAt?.toDate?.(); return {...o,id:o.id||d.id,createdAtText:dt?dt.toLocaleString('th-TH'):''}}); render(arr);
+ },err=>{$('#orders').innerHTML='<div class="empty">โหลดออเดอร์ออนไลน์ไม่ได้: '+esc(err.message)+'</div>'});
+}
+async function updateStatus(id,status){
+ if(online){await db.collection('orders').doc(id).update({shopStatus:status});return}
+ let a=JSON.parse(localStorage.getItem(KEY)||'[]');const o=a.find(x=>x.id===id);if(o)o.shopStatus=status;localStorage.setItem(KEY,JSON.stringify(a));loadLocal();
+}
+async function removeOrder(id){
+ if(!confirm('ลบออเดอร์นี้?'))return;
+ if(online){
+  try{await db.collection('orders').doc(id).delete();}catch(e){alert(e.message)}
+  return;
+ }
+ let a=JSON.parse(localStorage.getItem(KEY)||'[]').filter(x=>x.id!==id);localStorage.setItem(KEY,JSON.stringify(a));loadLocal();
+}
+$('#reload').addEventListener('click',()=>online?startOnline():loadLocal());
+$('#clearAll').addEventListener('click',()=>{if(online){alert('โหมดออนไลน์ไม่รองรับการล้างทั้งหมด เพื่อป้องกันการลบพลาด');return} if(confirm('ล้างออเดอร์เดโมทั้งหมด?')){localStorage.removeItem(KEY);loadLocal()}});
+$('#login').addEventListener('click',async()=>{
+ if(!online){alert('ยังไม่ได้ใส่ Firebase config ใน firebase-config.js');return}
+ const email=prompt('อีเมลบัญชีแอดมิน Firebase');
+ if(!email) return;
+ const password=prompt('รหัสผ่านบัญชีแอดมิน (รหัสจะไม่ถูกบันทึกในหน้าเว็บ)');
+ if(!password) return;
+ try{await auth.signInWithEmailAndPassword(email.trim(),password)}catch(e){alert('เข้าสู่ระบบไม่สำเร็จ: '+e.message)}
+});
+$('#logout').addEventListener('click',()=>auth?.signOut());
+if(initFirebase()){
+ auth.onAuthStateChanged(user=>{
+  const allowedUid=String(window.YUIMELLKUB_ADMIN_UID||'').trim();
+  const ok=!!user && user.uid===allowedUid;
+  $('#login').style.display=ok?'none':'inline-block'; $('#logout').style.display=ok?'inline-block':'none';
+  if(ok) startOnline();
+  else {
+    if(user && user.uid!==allowedUid) auth.signOut();
+    if(unsubscribe)unsubscribe();
+    $('#orders').innerHTML='<div class="empty">เข้าสู่ระบบบัญชีร้านเพื่อดูออเดอร์ออนไลน์ ♡</div>';
+  }
+ });
+}else{loadLocal()}
 </script>
-</body></html>
+</body>
+</html>
