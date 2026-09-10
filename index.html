@@ -1078,16 +1078,24 @@ function watchTrackedOrderStatus(orderId){
 }
 
 
+
+});
+
+
 document.addEventListener('DOMContentLoaded',()=>{
   const btn=document.getElementById('mainTrackBtn');
   const input=document.getElementById('mainTrackId');
-  if(btn) btn.addEventListener('click',()=>trackOrderOnMain());
-  if(input) input.addEventListener('keydown',e=>{
-    if(e.key==='Enter'){
-      e.preventDefault();
-      trackOrderOnMain();
-    }
-  });
+  if(btn){
+    btn.onclick=()=>trackOrderOnMain();
+  }
+  if(input){
+    input.onkeydown=(e)=>{
+      if(e.key==='Enter'){
+        e.preventDefault();
+        trackOrderOnMain();
+      }
+    };
+  }
 });
 
 </script>
@@ -1919,7 +1927,7 @@ function handleTrackedStatusPopup(orderId,status){
 async function trackOrderOnMain(orderId){
   const input=document.getElementById('mainTrackId');
   const result=document.getElementById('mainTrackResult');
-  const id=String(orderId || input?.value || '').trim().toUpperCase();
+  const id=String(orderId || (input ? input.value : '') || '').trim().toUpperCase();
 
   if(input) input.value=id;
   if(!result) return;
@@ -1933,54 +1941,49 @@ async function trackOrderOnMain(orderId){
   }
 
   try{
-    if(!firebaseReady()){
+    if(!firebase.apps.length){
+      if(!window.YUIMELLKUB_FIREBASE_CONFIG){
+        result.classList.add('error');
+        result.textContent='ระบบติดตามยังเชื่อมต่อไม่ได้ กรุณาลองใหม่อีกครั้ง';
+        return;
+      }
+      firebase.initializeApp(window.YUIMELLKUB_FIREBASE_CONFIG);
+    }
+
+    const dbx=firebase.firestore();
+
+    const snap=await dbx.collection('order_status').doc(id).get();
+
+    if(!snap.exists){
       result.classList.add('error');
-      result.textContent='ระบบติดตามยังเชื่อมต่อไม่ได้ กรุณาลองใหม่อีกครั้ง';
+      result.textContent='ไม่พบเลขออเดอร์นี้';
       return;
     }
 
-    const services=getFirebaseServices();
-    const dbx=services.db;
+    const status=String((snap.data()||{}).status || 'รอตรวจสอบการชำระเงิน').trim();
+    result.classList.remove('error');
+    result.textContent='สถานะล่าสุด: '+status;
 
-    // Read current status immediately.
-    const doc=await dbx.collection('order_status').doc(id).get();
-
-    if(!doc.exists){
-      let fallback='';
-      try{ fallback=localStorage.getItem('ymk_order_status_'+id)||''; }catch(e){}
-      if(fallback){
-        result.classList.remove('error');
-        result.textContent='สถานะล่าสุด: '+fallback;
-        handleTrackedStatusPopup(id,fallback);
-      }else{
-        result.classList.add('error');
-        result.textContent='ไม่พบเลขออเดอร์นี้';
-      }
-    }else{
-      const status=String(doc.data()?.status||'รอตรวจสอบการชำระเงิน').trim();
-      result.classList.remove('error');
-      result.textContent='สถานะล่าสุด: '+status;
-      try{ localStorage.setItem('ymk_order_status_'+id,status); }catch(e){}
+    if(typeof handleTrackedStatusPopup==='function'){
       handleTrackedStatusPopup(id,status);
     }
 
-    // Then keep watching this exact order in realtime.
     if(window._ymkTrackUnsub){
       try{ window._ymkTrackUnsub(); }catch(e){}
     }
-    window._ymkTrackUnsub=dbx.collection('order_status').doc(id).onSnapshot(snap=>{
-      if(!snap.exists) return;
-      const status=String(snap.data()?.status||'รอตรวจสอบการชำระเงิน').trim();
+
+    window._ymkTrackUnsub=dbx.collection('order_status').doc(id).onSnapshot(doc=>{
+      if(!doc.exists) return;
+      const liveStatus=String((doc.data()||{}).status || 'รอตรวจสอบการชำระเงิน').trim();
       result.className='track-result show';
-      result.textContent='สถานะล่าสุด: '+status;
-      try{ localStorage.setItem('ymk_order_status_'+id,status); }catch(e){}
-      handleTrackedStatusPopup(id,status);
-    },err=>{
-      console.warn('realtime status listener failed',err);
-    });
+      result.textContent='สถานะล่าสุด: '+liveStatus;
+      if(typeof handleTrackedStatusPopup==='function'){
+        handleTrackedStatusPopup(id,liveStatus);
+      }
+    },err=>console.warn('track realtime failed',err));
 
   }catch(e){
-    console.error(e);
+    console.error('track failed',e);
     result.classList.add('error');
     result.textContent='ตรวจสอบสถานะไม่สำเร็จ กรุณาลองใหม่อีกครั้ง';
   }
