@@ -754,7 +754,7 @@
     <div class="track-sub">กรอกเลขออเดอร์ เช่น YMK260910-183536 เพื่อตรวจสอบสถานะล่าสุด</div>
     <div class="track-row">
       <input id="mainTrackId" type="text" autocomplete="off" placeholder="กรอกเลขออเดอร์ YMK...">
-      <button id="mainTrackBtn" type="button">ตรวจสอบสถานะ</button>
+      <button id="mainTrackBtn" type="button" onclick="trackOrderOnMain()">ตรวจสอบสถานะ</button>
     </div>
     <div id="mainTrackResult" class="track-result" aria-live="polite"></div>
   </section>
@@ -900,205 +900,7 @@
 <button id="soundToggle" class="sound-toggle" type="button" aria-pressed="true">🔊 เสียงเปิด</button>
 
 
-<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js">
-const successTrackBtn = document.getElementById('successTrackBtn');
-if(successTrackBtn){
-  successTrackBtn.addEventListener('click',()=>{
-    const id=(document.getElementById('paymentSuccessId')?.textContent||'').trim();
-    if(!id) return;
-    const url='track.html?order='+encodeURIComponent(id);
-    window.open(url,'_blank','noopener');
-  });
-}
-
-const successCopyIdBtn = document.getElementById('successCopyIdBtn');
-if(successCopyIdBtn){
-  successCopyIdBtn.addEventListener('click', async ()=>{
-    const id=(document.getElementById('paymentSuccessId')?.textContent||'').trim();
-    if(!id) return;
-    try{
-      await navigator.clipboard.writeText(id);
-      successCopyIdBtn.textContent='✓ คัดลอกแล้ว';
-      setTimeout(()=>successCopyIdBtn.textContent='คัดลอกเลขออเดอร์',1400);
-    }catch(e){
-      const ta=document.createElement('textarea');
-      ta.value=id; document.body.appendChild(ta); ta.select();
-      document.execCommand('copy'); ta.remove();
-      successCopyIdBtn.textContent='✓ คัดลอกแล้ว';
-      setTimeout(()=>successCopyIdBtn.textContent='คัดลอกเลขออเดอร์',1400);
-    }
-  });
-}
-
-
-try{
-  const qp=new URLSearchParams(location.search);
-  const qid=qp.get('order');
-  const inp=document.getElementById('mainTrackId');
-  if(qid && inp){
-    inp.value=qid.toUpperCase();
-    if(typeof trackOrderOnMain==='function') trackOrderOnMain(inp.value);
-  }
-}catch(e){}
-
-
-function updateOrderIdPreview(){
-  const box=document.getElementById('orderIdPreviewValue');
-  if(!box) return;
-  let id='';
-  try{
-    if(typeof currentOrder!=='undefined' && currentOrder && currentOrder.id) id=currentOrder.id;
-  }catch(e){}
-  try{
-    if(!id && typeof order!=='undefined' && order && order.id) id=order.id;
-  }catch(e){}
-  if(!id){
-    const m=(document.getElementById('orderText')?.textContent||'').match(/YMK\d{6}-\d{6}/i);
-    if(m) id=m[0];
-  }
-  box.textContent=id ? id.toUpperCase() : 'ระบบจะสร้างเลขออเดอร์เมื่อกดไปชำระเงิน';
-}
-document.addEventListener('input',()=>setTimeout(updateOrderIdPreview,0));
-document.addEventListener('click',()=>setTimeout(updateOrderIdPreview,50));
-setTimeout(updateOrderIdPreview,300);
-
-
-
-let completeStatusUnsub = null;
-let lastCompletePopupOrder = '';
-
-function playCompleteSound(){
-  try{
-    const Ctx=window.AudioContext||window.webkitAudioContext;
-    if(!Ctx) return;
-    const ctx=new Ctx();
-    if(ctx.state==='suspended') ctx.resume().catch(()=>{});
-    const now=ctx.currentTime;
-    [523.25,659.25,783.99].forEach((freq,i)=>{
-      const osc=ctx.createOscillator();
-      const gain=ctx.createGain();
-      osc.type='sine';
-      osc.frequency.value=freq;
-      gain.gain.setValueAtTime(0.0001,now+i*0.11);
-      gain.gain.exponentialRampToValueAtTime(0.18,now+i*0.11+0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001,now+i*0.11+0.24);
-      osc.connect(gain); gain.connect(ctx.destination);
-      osc.start(now+i*0.11); osc.stop(now+i*0.11+0.26);
-    });
-    setTimeout(()=>{ try{ctx.close()}catch(e){} },1000);
-  }catch(e){ console.warn('complete sound failed',e); }
-}
-
-function ensureCompleteStatusPopup(){
-  let p=document.getElementById('completeStatusPopup');
-  if(p) return p;
-  p=document.createElement('div');
-  p.id='completeStatusPopup';
-  p.className='complete-status-popup';
-  p.setAttribute('aria-hidden','true');
-  p.innerHTML=`
-    <div class="complete-status-card" role="dialog" aria-modal="true">
-      <div class="complete-status-check">✓</div>
-      <div class="complete-status-title">ออเดอร์เสร็จสิ้นแล้ว ♡</div>
-      <div id="completeStatusOrderId" class="complete-status-sub"></div>
-      <button id="completeStatusClose" class="complete-status-close" type="button">ปิด</button>
-    </div>`;
-  document.body.appendChild(p);
-  p.querySelector('#completeStatusClose')?.addEventListener('click',hideCompleteStatusPopup);
-  p.addEventListener('click',e=>{ if(e.target===p) hideCompleteStatusPopup(); });
-  return p;
-}
-
-function showOrderStatusPopup(orderId,status){
-  const id=String(orderId||'').trim().toUpperCase();
-  const s=String(status||'').trim();
-  const p=ensureCompleteStatusPopup();
-  const card=p.querySelector('.complete-status-card');
-  const check=p.querySelector('.complete-status-check');
-  const title=p.querySelector('.complete-status-title');
-  const idBox=p.querySelector('#completeStatusOrderId');
-
-  card.classList.remove('status-popup-wait','status-popup-problem');
-  check.textContent='✓';
-  title.textContent='ออเดอร์เสร็จสิ้นแล้ว ♡';
-  if(idBox) idBox.innerHTML=id ? ('เลขออเดอร์: '+id) : '';
-
-  if(s==='รอเติม' || s==='กำลังเติม'){
-    card.classList.add('status-popup-wait');
-    check.textContent='⏳';
-    title.textContent='กำลังรอเติมออเดอร์ ♡';
-    if(idBox) idBox.innerHTML=(id?('เลขออเดอร์: '+id+'<br>'):'')+'กรุณารอสักครู่นะคะ';
-  }else if(s==='มีปัญหา'){
-    card.classList.add('status-popup-problem');
-    check.textContent='✕';
-    title.textContent='ออเดอร์มีปัญหา';
-    if(idBox) idBox.innerHTML=(id?('เลขออเดอร์: '+id+'<br>'):'')+'รบกวนติดต่อเพจเพื่อให้ร้านตรวจสอบค่ะ';
-  }
-
-  p.classList.add('show');
-  p.setAttribute('aria-hidden','false');
-
-  const soundKey=id+'|'+s;
-  if(lastCompletePopupOrder!==soundKey){
-    lastCompletePopupOrder=soundKey;
-    playCompleteSound();
-  }
-}
-
-function showCompleteStatusPopup(orderId){
-  showOrderStatusPopup(orderId,'สำเร็จ');
-}
-
-function hideCompleteStatusPopup(){
-  const p=document.getElementById('completeStatusPopup');
-  if(!p) return;
-  p.classList.remove('show');
-  p.setAttribute('aria-hidden','true');
-}
-
-function watchTrackedOrderStatus(orderId){
-  const id=String(orderId||'').trim().toUpperCase();
-  if(!id || !firebaseReady()) return;
-  try{
-    if(completeStatusUnsub){ completeStatusUnsub(); completeStatusUnsub=null; }
-    const {db}=getFirebaseServices();
-    completeStatusUnsub=db.collection('order_status').doc(id).onSnapshot(doc=>{
-      if(!doc.exists) return;
-      const status=String(doc.data()?.status||'').trim();
-      const result=document.getElementById('mainTrackResult');
-      if(result){
-        result.className='track-result show';
-        result.textContent='สถานะล่าสุด: '+status;
-      }
-      if(status==='สำเร็จ') showOrderStatusPopup(id,'สำเร็จ');
-      else if(status==='รอเติม' || status==='กำลังเติม') showOrderStatusPopup(id,status);
-      else if(status==='มีปัญหา') showOrderStatusPopup(id,'มีปัญหา');
-    },err=>console.warn('status watch failed',err));
-  }catch(e){ console.warn('status watch failed',e); }
-}
-
-
-
-});
-
-
-document.addEventListener('DOMContentLoaded',()=>{
-  const btn=document.getElementById('mainTrackBtn');
-  const input=document.getElementById('mainTrackId');
-  if(btn){
-    btn.onclick=()=>trackOrderOnMain();
-  }
-  if(input){
-    input.onkeydown=(e)=>{
-      if(e.key==='Enter'){
-        e.preventDefault();
-        trackOrderOnMain();
-      }
-    };
-  }
-});
-
-</script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script>
@@ -1875,6 +1677,31 @@ async function saveOrderToDemoAdmin(){
 
 
 
+
+function playCompleteSound(){
+  try{
+    const Ctx=window.AudioContext||window.webkitAudioContext;
+    if(!Ctx) return;
+    const ctx=new Ctx();
+    if(ctx.state==='suspended') ctx.resume().catch(()=>{});
+    const now=ctx.currentTime;
+    [523.25,659.25,783.99].forEach((freq,i)=>{
+      const osc=ctx.createOscillator();
+      const gain=ctx.createGain();
+      osc.type='sine';
+      osc.frequency.value=freq;
+      gain.gain.setValueAtTime(0.0001,now+i*0.11);
+      gain.gain.exponentialRampToValueAtTime(0.18,now+i*0.11+0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001,now+i*0.11+0.24);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(now+i*0.11); osc.stop(now+i*0.11+0.26);
+    });
+    setTimeout(()=>{ try{ctx.close()}catch(e){} },1000);
+  }catch(e){
+    console.warn('status sound failed',e);
+  }
+}
+
 function forceStatusPopup(orderId,status){
   const s=String(status||'').trim();
   if(!['รอเติม','กำลังเติม','มีปัญหา','สำเร็จ'].includes(s)) return;
@@ -2025,6 +1852,19 @@ document.addEventListener('keydown',e=>{
 });
 
 render();
+
+document.addEventListener('DOMContentLoaded',()=>{
+  const input=document.getElementById('mainTrackId');
+  if(input){
+    input.addEventListener('keydown',e=>{
+      if(e.key==='Enter'){
+        e.preventDefault();
+        trackOrderOnMain();
+      }
+    });
+  }
+});
+
 </script>
 <footer class="site-footer">
   <div>♡ Yuimellkub Top-up ♡</div>
