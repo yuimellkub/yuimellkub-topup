@@ -432,8 +432,8 @@
     .order-field input,.order-field select{width:100%;height:44px;border-radius:12px;border:1px solid #efc8d7;background:#fff;padding:0 12px;color:#71465a;font:inherit;outline:none}
     .order-field input:focus,.order-field select:focus{border-color:#df8dae;box-shadow:0 0 0 3px rgba(223,141,174,.12)}
     .order-preview{white-space:pre-wrap;background:#fff7fa;border:1px solid #f5d5e2;border-radius:14px;padding:12px;font-size:12px;line-height:1.6;color:#7c5364;margin:12px 0;text-align:left}
-    .order-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-    .order-actions button{height:44px}
+    .order-actions{display:flex;justify-content:center;gap:9px}
+    .order-actions button{height:44px}.order-actions .order-send{width:min(240px,100%)}
     .order-copy{background:#fff0f6;color:#9b5871;border:1px solid #f2c6d7}
     .order-send{background:#e889ad;color:#fff}
     .order-back{margin-top:9px;width:100%;height:42px;background:#fff;color:#9b5871;border:1px solid #f2c6d7}
@@ -758,12 +758,16 @@
       <input id="orderName" type="text" autocomplete="name" placeholder="ไว้ให้ร้านเรียกลูกค้า">
     </div>
     <div id="orderPreview" class="order-preview"></div>
-    <div class="order-actions">
-      <button id="copyOrder" class="order-copy" type="button">📋 คัดลอกออเดอร์</button>
+    
+<div id="orderIdPreview" style="margin:10px 0;padding:10px 12px;border:1px solid #f2c6d7;border-radius:12px;background:#fff7fa;text-align:center;">
+  <div style="font-size:.82rem;opacity:.8;">เลขออเดอร์ของคุณ</div>
+  <strong id="orderIdPreviewValue" style="font-size:1.05rem;">ระบบจะสร้างเลขออเดอร์เมื่อกดไปชำระเงิน</strong>
+</div>
+<div class="order-actions">
       <button id="goPayment" class="order-send" type="button">💗 ไปชำระเงิน</button>
     </div>
-    <div id="copyOk" class="copy-ok">คัดลอกข้อความแล้ว ✓</div>
     <button id="closeOrder" class="order-back" type="button">ย้อนกลับ</button>
+    <button id="closeOrderWindow" class="order-back" type="button">✕ ปิดหน้าต่าง</button>
     <div class="order-note">เพื่อความปลอดภัย เว็บนี้ไม่ขอรหัสผ่านเกมและไม่บันทึก UID ไว้บนเว็บ</div>
   </div>
 </div>
@@ -844,12 +848,12 @@
   </div>
   <div class="payment-success-actions">
     <button id="successCopyIdBtn" type="button">คัดลอกเลขออเดอร์</button>
-    <button id="successTrackBtn" type="button">♡ ติดตามออเดอร์</button>
-    <a class="oneplus" href="https://www.facebook.com/share/1FLBudErPv/" target="_blank" rel="noopener noreferrer">One Plus</a>
+    
+    
     <a href="https://www.facebook.com/messages/t/61594269897110" target="_blank" rel="noopener noreferrer">Messenger</a>
   </div>
 </div>
-    <div class="payment-note">ออเดอร์จะถูกบันทึกเข้า Firebase เป็น “รอตรวจสอบการชำระเงิน” • เนื่องจากยังไม่ได้เปิด Firebase Storage รูปสลิปจริงจะต้องแนบส่งใน Messenger หลังจากกดส่งออเดอร์</div>
+    <div class="payment-note"></div>
   </div>
 </div>
 
@@ -896,6 +900,27 @@ try{
     if(typeof trackOrderOnMain==='function') trackOrderOnMain(inp.value);
   }
 }catch(e){}
+
+
+function updateOrderIdPreview(){
+  const box=document.getElementById('orderIdPreviewValue');
+  if(!box) return;
+  let id='';
+  try{
+    if(typeof currentOrder!=='undefined' && currentOrder && currentOrder.id) id=currentOrder.id;
+  }catch(e){}
+  try{
+    if(!id && typeof order!=='undefined' && order && order.id) id=order.id;
+  }catch(e){}
+  if(!id){
+    const m=(document.getElementById('orderText')?.textContent||'').match(/YMK\d{6}-\d{6}/i);
+    if(m) id=m[0];
+  }
+  box.textContent=id ? id.toUpperCase() : 'ระบบจะสร้างเลขออเดอร์เมื่อกดไปชำระเงิน';
+}
+document.addEventListener('input',()=>setTimeout(updateOrderIdPreview,0));
+document.addEventListener('click',()=>setTimeout(updateOrderIdPreview,50));
+setTimeout(updateOrderIdPreview,300);
 
 </script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
@@ -1491,14 +1516,6 @@ document.getElementById('openOrder').addEventListener('click', openOrderPopup);
     document.getElementById('copyOk').style.display='none';
   });
 });
-document.getElementById('copyOrder').addEventListener('click', async()=>{
-  if(!document.getElementById('orderUid').value.trim()){
-    document.getElementById('orderUid').focus();
-    return;
-  }
-  const ok=await copyOrderText();
-  if(ok) document.getElementById('copyOk').style.display='block';
-});
 document.getElementById('goPayment').addEventListener('click', openPaymentPopup);
 document.querySelectorAll('input[name="paymentMethod"]').forEach(radio=>{
   radio.addEventListener('change',()=>{ updatePaymentMethod(); refreshOrderPreview(); });
@@ -1578,6 +1595,17 @@ function fileToDataUrl(file){
 }
 
 function firebaseReady(){
+  if(!window.YUIMELLKUB_FIREBASE_CONFIG){
+    window.YUIMELLKUB_FIREBASE_CONFIG = {
+      apiKey: "AIzaSyB2_JvGY-ttHw-32yYZ03FMDsW8R5S6BSE",
+      authDomain: "yuimellkub-topup.firebaseapp.com",
+      projectId: "yuimellkub-topup",
+      storageBucket: "yuimellkub-topup.firebasestorage.app",
+      messagingSenderId: "858747570015",
+      appId: "1:858747570015:web:314732a955dec360df18ea",
+      measurementId: "G-VBPC096X50"
+    };
+  }
   return !!(window.YUIMELLKUB_FIREBASE_CONFIG &&
     window.YUIMELLKUB_FIREBASE_CONFIG.apiKey &&
     !String(window.YUIMELLKUB_FIREBASE_CONFIG.apiKey).includes('PUT_'));
@@ -1626,6 +1654,17 @@ async function saveOrderToDemoAdmin(){
         slipPath: '',
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       },{merge:true});
+        try{
+          await db.collection('order_status').doc(order.id).set({
+            status: order.shopStatus || order.paymentStatus || 'รอตรวจสอบการชำระเงิน',
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          }, {merge:true});
+        }catch(e){
+          console.warn('public status create skipped', e);
+        }
+        try{
+          localStorage.setItem('ymk_order_status_'+order.id, order.shopStatus || order.paymentStatus || 'รอตรวจสอบการชำระเงิน');
+        }catch(e){}
       st.className='verify-status ok';
       st.textContent='✓ ส่งออเดอร์เข้าระบบแล้ว: '+order.id+' • สถานะ: รอตรวจสอบการชำระเงิน • กรุณาแนบรูปสลิปใน Messenger';
       return true;
@@ -1671,14 +1710,33 @@ async function trackOrderOnMain(orderId){
     result.textContent='กำลังตรวจสอบสถานะ…';
     const {db}=getFirebaseServices();
     const doc=await db.collection('order_status').doc(id).get();
-    if(!doc.exists){ result.classList.add('error'); result.textContent='ไม่พบเลขออเดอร์นี้'; return; }
+    if(!doc.exists){
+      let localStatus='';
+      try{ localStatus=localStorage.getItem('ymk_order_status_'+id)||''; }catch(e){}
+      if(localStatus){
+        result.classList.remove('error');
+        result.textContent='สถานะล่าสุด: '+localStatus;
+        return;
+      }
+      result.classList.add('error');
+      result.textContent='ไม่พบเลขออเดอร์นี้';
+      return;
+    }
     const status=doc.data()?.status || 'รอตรวจสอบการชำระเงิน';
+    try{ localStorage.setItem('ymk_order_status_'+id,status); }catch(e){}
     result.classList.remove('error');
     result.textContent='สถานะล่าสุด: '+status;
   }catch(e){
     console.error(e);
-    result.classList.add('error');
-    result.textContent='ตรวจสอบสถานะไม่สำเร็จ กรุณาลองใหม่อีกครั้ง';
+    let localStatus='';
+    try{ localStatus=localStorage.getItem('ymk_order_status_'+id)||''; }catch(_){}
+    if(localStatus){
+      result.classList.remove('error');
+      result.textContent='สถานะล่าสุด: '+localStatus;
+    }else{
+      result.classList.add('error');
+      result.textContent='ตรวจสอบสถานะไม่สำเร็จ กรุณาลองใหม่อีกครั้ง';
+    }
   }
 }
 
@@ -1709,6 +1767,7 @@ document.getElementById('paidConfirm').addEventListener('click', async()=>{
 document.getElementById('backToOrder').addEventListener('click', backToOrderPopup);
 document.getElementById('paymentOverlay').addEventListener('click',e=>{if(e.target.id==='paymentOverlay') closePaymentPopup();});
 document.getElementById('closeOrder').addEventListener('click',closeOrderPopup);
+document.getElementById('closeOrderWindow').addEventListener('click',closeOrderPopup);
 document.getElementById('orderOverlay').addEventListener('click',e=>{if(e.target.id==='orderOverlay') closeOrderPopup();});
 document.addEventListener('keydown',e=>{
   if(e.key!=='Escape') return;
