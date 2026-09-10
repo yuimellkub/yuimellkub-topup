@@ -144,6 +144,16 @@
       box-shadow:0 8px 24px rgba(220,120,160,.18);
     }
     .contact-bar:hover{filter:brightness(.98)}
+    .main-quick-actions{
+      max-width:728px;margin:0 auto 14px;display:grid;grid-template-columns:1fr 1fr;gap:10px;
+    }
+    .main-quick-actions a{
+      display:flex;align-items:center;justify-content:center;min-height:48px;padding:12px 14px;
+      border-radius:14px;text-decoration:none;font-weight:850;text-align:center;
+      background:#fff0f6;color:#8f4f68;border:1px solid #f2c6d7;
+    }
+    .main-quick-actions a.primary{background:#e889ad;color:#fff;border-color:#e889ad}
+    @media(max-width:540px){.main-quick-actions{grid-template-columns:1fr}}
 
 
     .shop-banner{
@@ -474,6 +484,38 @@
     .copy-ok{display:none;margin-top:7px;font-size:11px;font-weight:800;color:#b76586;text-align:center}
     @media(max-width:540px){.order-actions{grid-template-columns:1fr}.order-btn{grid-column:auto}}
 
+
+    /* Order tracking on main page */
+    .track-card{
+      max-width:728px;margin:0 auto 22px;padding:18px;
+      background:rgba(255,255,255,.92);border:1px solid #f5d5e2;border-radius:18px;
+      box-shadow:0 10px 28px rgba(220,120,160,.10);text-align:center
+    }
+    .track-title{font-weight:900;font-size:19px;color:#8f4f68;margin-bottom:5px}
+    .track-sub{font-size:12px;color:#a16b80;line-height:1.5;margin-bottom:12px}
+    .track-row{display:flex;gap:8px}
+    .track-row input{font-size:15px;min-width:0}
+    .track-row button{min-width:130px}
+    .track-result{display:none;margin-top:12px;padding:12px;border-radius:13px;background:#fff0f6;border:1px solid #f2c6d7;color:#8f4f68;font-weight:800}
+    .track-result.show{display:block}
+    .track-result.error{background:#fff8fb;color:#a55373}
+    .payment-success{display:none;margin-top:14px;padding:14px;border:1px solid #f2c6d7;border-radius:14px;background:#fff8fb;text-align:center}
+    .payment-success.show{display:block}
+    .payment-success-title{font-weight:900;color:#8f4f68;margin-bottom:5px}
+    .payment-success-id{font-size:12px;color:#a16b80;margin-bottom:10px;word-break:break-word}
+    .payment-success-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+    .payment-success-actions a,.payment-success-actions button{
+      display:inline-flex;align-items:center;justify-content:center;min-width:0;height:42px;padding:0 13px;
+      border-radius:12px;text-decoration:none;font-weight:850;font-size:13px;border:1px solid #efbfd1;
+      background:#fde8f0;color:#a55373
+    }
+    .payment-success-actions .oneplus{background:#e889ad;color:#fff;border-color:#e889ad}
+    @media(max-width:540px){.track-row{flex-direction:column}.track-row button{width:100%}.payment-success-actions>*{width:100%}}
+
+
+    .payment-success-label{margin-top:8px;font-size:.88rem;font-weight:800;opacity:.8}
+    .payment-success-note{margin-top:8px;line-height:1.6;font-size:.92rem}
+
 </style>
 </head>
 <body>
@@ -655,12 +697,27 @@
   </section>
 </main>
 
+  <div class="main-quick-actions" aria-label="เมนูด่วน">
+    <a href="#trackOrder">♡ ติดตามออเดอร์</a>
+    <a class="primary" href="https://www.facebook.com/share/1FLBudErPv/" target="_blank" rel="noopener noreferrer">One Plus</a>
+  </div>
+
   <a class="contact-bar"
      href="https://www.facebook.com/profile.php?id=61594269897110"
      target="_blank"
      rel="noopener noreferrer">
     สนใจเติม 💗 ติดต่อ yuimellkub top-up
   </a>
+
+  <section id="trackOrder" class="track-card" aria-labelledby="trackTitle">
+    <div id="trackTitle" class="track-title">♡ ติดตามออเดอร์</div>
+    <div class="track-sub">กรอกเลขออเดอร์ เช่น YMK260910-183536 เพื่อตรวจสอบสถานะล่าสุด</div>
+    <div class="track-row">
+      <input id="mainTrackId" type="text" autocomplete="off" placeholder="กรอกเลขออเดอร์ YMK...">
+      <button id="mainTrackBtn" type="button">ตรวจสอบสถานะ</button>
+    </div>
+    <div id="mainTrackResult" class="track-result" aria-live="polite"></div>
+  </section>
 
 
 
@@ -777,6 +834,21 @@
       <button id="paidConfirm" class="payment-paid" type="button" disabled>✓ ส่งออเดอร์ให้ร้านตรวจสอบ</button>
       <button id="backToOrder" class="payment-back" type="button">ย้อนกลับแก้ไข UID / Server</button>
     </div>
+    <div id="paymentSuccess" class="payment-success">
+  <div class="payment-success-title">✓ ส่งออเดอร์เรียบร้อยแล้ว ♡</div>
+  <div class="payment-success-label">เลขออเดอร์ของคุณ</div>
+  <div id="paymentSuccessId" class="payment-success-id"></div>
+  <div class="payment-success-note">
+    กรุณาบันทึกเลขออเดอร์นี้ไว้สำหรับติดตามสถานะ<br>
+    <strong>รบกวนส่งสลิปในแชท Messenger อีกครั้งด้วยนะคะ ♡</strong>
+  </div>
+  <div class="payment-success-actions">
+    <button id="successCopyIdBtn" type="button">คัดลอกเลขออเดอร์</button>
+    <button id="successTrackBtn" type="button">♡ ติดตามออเดอร์</button>
+    <a class="oneplus" href="https://www.facebook.com/share/1FLBudErPv/" target="_blank" rel="noopener noreferrer">One Plus</a>
+    <a href="https://www.facebook.com/messages/t/61594269897110" target="_blank" rel="noopener noreferrer">Messenger</a>
+  </div>
+</div>
     <div class="payment-note">ออเดอร์จะถูกบันทึกเข้า Firebase เป็น “รอตรวจสอบการชำระเงิน” • เนื่องจากยังไม่ได้เปิด Firebase Storage รูปสลิปจริงจะต้องแนบส่งใน Messenger หลังจากกดส่งออเดอร์</div>
   </div>
 </div>
@@ -784,7 +856,48 @@
 <button id="soundToggle" class="sound-toggle" type="button" aria-pressed="true">🔊 เสียงเปิด</button>
 
 
-<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js">
+const successTrackBtn = document.getElementById('successTrackBtn');
+if(successTrackBtn){
+  successTrackBtn.addEventListener('click',()=>{
+    const id=(document.getElementById('paymentSuccessId')?.textContent||'').trim();
+    if(!id) return;
+    const url='track.html?order='+encodeURIComponent(id);
+    window.open(url,'_blank','noopener');
+  });
+}
+
+const successCopyIdBtn = document.getElementById('successCopyIdBtn');
+if(successCopyIdBtn){
+  successCopyIdBtn.addEventListener('click', async ()=>{
+    const id=(document.getElementById('paymentSuccessId')?.textContent||'').trim();
+    if(!id) return;
+    try{
+      await navigator.clipboard.writeText(id);
+      successCopyIdBtn.textContent='✓ คัดลอกแล้ว';
+      setTimeout(()=>successCopyIdBtn.textContent='คัดลอกเลขออเดอร์',1400);
+    }catch(e){
+      const ta=document.createElement('textarea');
+      ta.value=id; document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); ta.remove();
+      successCopyIdBtn.textContent='✓ คัดลอกแล้ว';
+      setTimeout(()=>successCopyIdBtn.textContent='คัดลอกเลขออเดอร์',1400);
+    }
+  });
+}
+
+
+try{
+  const qp=new URLSearchParams(location.search);
+  const qid=qp.get('order');
+  const inp=document.getElementById('mainTrackId');
+  if(qid && inp){
+    inp.value=qid.toUpperCase();
+    if(typeof trackOrderOnMain==='function') trackOrderOnMain(inp.value);
+  }
+}catch(e){}
+
+</script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script>
@@ -798,6 +911,8 @@ let paymentVerified = false;
 
 function resetPaymentVerification(){
   paymentVerified=false;
+  const success=document.getElementById('paymentSuccess');
+  if(success) success.classList.remove('show');
   const btn=document.getElementById('paidConfirm');
   if(btn) btn.disabled=true;
   const st=document.getElementById('verifyStatus');
@@ -1498,7 +1613,7 @@ async function saveOrderToDemoAdmin(){
   // so the slip stays on the customer's device and must be attached in Messenger.
   if(firebaseReady()){
     try{
-      st.textContent='กำลังส่งออเดอร์เข้าหลังบ้านออนไลน์…';
+      st.textContent='กำลังส่งออเดอร์เข้าระบบออนไลน์…';
       const {db}=getFirebaseServices();
       if(slip){
         if(slip.size>5*1024*1024) throw new Error('สลิปมีขนาดเกิน 5MB');
@@ -1512,7 +1627,7 @@ async function saveOrderToDemoAdmin(){
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       },{merge:true});
       st.className='verify-status ok';
-      st.textContent='✓ ส่งออเดอร์เข้าหลังบ้านแล้ว: '+order.id+' • สถานะ: รอตรวจสอบการชำระเงิน • กรุณาแนบรูปสลิปใน Messenger';
+      st.textContent='✓ ส่งออเดอร์เข้าระบบแล้ว: '+order.id+' • สถานะ: รอตรวจสอบการชำระเงิน • กรุณาแนบรูปสลิปใน Messenger';
       return true;
     }catch(e){
       console.error(e);
@@ -1538,20 +1653,58 @@ async function saveOrderToDemoAdmin(){
     return true;
   }catch(e){
     st.className='verify-status';
-    st.textContent='บันทึกหลังบ้านเดโมไม่สำเร็จ';
+    st.textContent='บันทึกออเดอร์เดโมไม่สำเร็จ';
     return false;
   }
 }
+
+async function trackOrderOnMain(orderId){
+  const input=document.getElementById('mainTrackId');
+  const result=document.getElementById('mainTrackResult');
+  const id=String(orderId || input?.value || '').trim().toUpperCase();
+  if(input) input.value=id;
+  if(!result) return;
+  result.className='track-result show';
+  if(!id){ result.classList.add('error'); result.textContent='กรุณากรอกเลขออเดอร์ก่อนนะคะ'; return; }
+  if(!firebaseReady()){ result.classList.add('error'); result.textContent='ระบบติดตามยังเชื่อมต่อไม่ได้ กรุณาลองใหม่อีกครั้ง'; return; }
+  try{
+    result.textContent='กำลังตรวจสอบสถานะ…';
+    const {db}=getFirebaseServices();
+    const doc=await db.collection('order_status').doc(id).get();
+    if(!doc.exists){ result.classList.add('error'); result.textContent='ไม่พบเลขออเดอร์นี้'; return; }
+    const status=doc.data()?.status || 'รอตรวจสอบการชำระเงิน';
+    result.classList.remove('error');
+    result.textContent='สถานะล่าสุด: '+status;
+  }catch(e){
+    console.error(e);
+    result.classList.add('error');
+    result.textContent='ตรวจสอบสถานะไม่สำเร็จ กรุณาลองใหม่อีกครั้ง';
+  }
+}
+
+document.getElementById('mainTrackBtn')?.addEventListener('click',()=>trackOrderOnMain());
+document.getElementById('mainTrackId')?.addEventListener('keydown',e=>{if(e.key==='Enter') trackOrderOnMain();});
+document.getElementById('successTrackBtn')?.addEventListener('click',()=>{
+  const id=currentOrderId||'';
+  closePaymentPopup();
+  document.getElementById('trackOrder')?.scrollIntoView({behavior:'smooth',block:'center'});
+  setTimeout(()=>trackOrderOnMain(id),250);
+});
 
 document.getElementById('paidConfirm').addEventListener('click', async()=>{
   if(!lastOrder) return;
   if(!paymentVerified) return;
   currentOrderId = currentOrderId || makeOrderId();
-  await saveOrderToDemoAdmin();
+  const saved=await saveOrderToDemoAdmin();
+  if(!saved) return;
   refreshOrderPreview();
   await copyOrderText();
-  closePaymentPopup();
-  window.open('https://www.facebook.com/messages/t/61594269897110','_blank','noopener');
+  const success=document.getElementById('paymentSuccess');
+  const successId=document.getElementById('paymentSuccessId');
+  if(successId) successId.textContent='เลขออเดอร์: '+currentOrderId+' • เก็บเลขนี้ไว้สำหรับติดตามสถานะ';
+  if(success) success.classList.add('show');
+  const paidBtn=document.getElementById('paidConfirm');
+  if(paidBtn) paidBtn.disabled=true;
 });
 document.getElementById('backToOrder').addEventListener('click', backToOrderPopup);
 document.getElementById('paymentOverlay').addEventListener('click',e=>{if(e.target.id==='paymentOverlay') closePaymentPopup();});
