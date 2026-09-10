@@ -1866,15 +1866,54 @@ async function saveOrderToDemoAdmin(){
 }
 
 
-function handleTrackedStatusPopup(orderId,status){
+
+function forceStatusPopup(orderId,status){
   const s=String(status||'').trim();
-  if(s==='สำเร็จ'){
-    showOrderStatusPopup(orderId,'สำเร็จ');
-  }else if(s==='รอเติม' || s==='กำลังเติม'){
-    showOrderStatusPopup(orderId,s);
-  }else if(s==='มีปัญหา'){
-    showOrderStatusPopup(orderId,'มีปัญหา');
+  if(!['รอเติม','กำลังเติม','มีปัญหา','สำเร็จ'].includes(s)) return;
+
+  let overlay=document.getElementById('ymkForceStatusPopup');
+  if(!overlay){
+    overlay=document.createElement('div');
+    overlay.id='ymkForceStatusPopup';
+    overlay.style.cssText='position:fixed;inset:0;z-index:2147483647;background:rgba(95,55,72,.22);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:18px;';
+    overlay.innerHTML='<div id="ymkForceCard" style="width:min(360px,92vw);background:white;border-radius:24px;padding:28px 22px;text-align:center;box-shadow:0 18px 55px rgba(120,60,85,.22);border:1px solid #f1bfd2"><div id="ymkForceIcon" style="width:78px;height:78px;border-radius:50%;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;color:white;font-size:42px;font-weight:900"></div><div id="ymkForceTitle" style="font-size:1.35rem;font-weight:900"></div><div id="ymkForceText" style="margin-top:9px;line-height:1.6;color:#966078"></div><button id="ymkForceClose" type="button" style="width:100%;margin-top:18px;min-height:46px;border:0;border-radius:14px;color:white;font-weight:850;cursor:pointer">ปิด</button></div>';
+    document.body.appendChild(overlay);
+    overlay.querySelector('#ymkForceClose').onclick=()=>overlay.remove();
+    overlay.onclick=e=>{if(e.target===overlay) overlay.remove()};
   }
+
+  const icon=overlay.querySelector('#ymkForceIcon');
+  const title=overlay.querySelector('#ymkForceTitle');
+  const desc=overlay.querySelector('#ymkForceText');
+  const close=overlay.querySelector('#ymkForceClose');
+  const id=String(orderId||'').trim().toUpperCase();
+
+  if(s==='มีปัญหา'){
+    icon.textContent='✕'; icon.style.background='#d96b7c';
+    title.textContent='ออเดอร์มีปัญหา'; title.style.color='#9b4252';
+    desc.innerHTML=(id?'เลขออเดอร์: '+id+'<br>':'')+'รบกวนติดต่อเพจเพื่อให้ร้านตรวจสอบค่ะ';
+    close.style.background='#d96b7c';
+  }else if(s==='สำเร็จ'){
+    icon.textContent='✓'; icon.style.background='#e885ad';
+    title.textContent='ออเดอร์เสร็จสิ้นแล้ว ♡'; title.style.color='#8f4f68';
+    desc.innerHTML=id?'เลขออเดอร์: '+id:'';
+    close.style.background='#e885ad';
+  }else{
+    icon.textContent='⏳'; icon.style.background='#f0a24a';
+    title.textContent='กำลังรอเติมออเดอร์ ♡'; title.style.color='#b46a1f';
+    desc.innerHTML=(id?'เลขออเดอร์: '+id+'<br>':'')+'กรุณารอสักครู่นะคะ';
+    close.style.background='#f0a24a';
+  }
+
+  const soundKey=id+'|'+s;
+  if(window._ymkLastPopupSound!==soundKey){
+    window._ymkLastPopupSound=soundKey;
+    try{ playCompleteSound(); }catch(e){}
+  }
+}
+
+function handleTrackedStatusPopup(orderId,status){
+  forceStatusPopup(orderId,status);
 }
 
 async function trackOrderOnMain(orderId){
