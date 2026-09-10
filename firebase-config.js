@@ -1,5 +1,5 @@
 window.YUIMELLKUB_FIREBASE_CONFIG = {
-  apiKey:AIzaSyB2_JvGY-ttHw-32yYZO3FMDsW8R5S6BSE
+  apiKey: "AIzaSyB2_JvGY-ttHw-32yYZO3FMDsW8R5S6BSE",
   authDomain: "yuimellkub-topup.firebaseapp.com",
   projectId: "yuimellkub-topup",
   storageBucket: "yuimellkub-topup.firebasestorage.app",
