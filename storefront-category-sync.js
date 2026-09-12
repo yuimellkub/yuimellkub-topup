@@ -7,7 +7,7 @@
   function esc(v=''){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
   function savedCategories(){try{const a=JSON.parse(localStorage.getItem(STORAGE)||'[]');return Array.isArray(a)?a.filter(x=>x&&x.id&&x.name):[];}catch(e){return [];}}
   function ready(){try{if(!window.firebase||!firebase.firestore)return false;if(!firebase.apps.length){if(!window.YUIMELLKUB_FIREBASE_CONFIG)return false;firebase.initializeApp(window.YUIMELLKUB_FIREBASE_CONFIG);}db=firebase.firestore();return true;}catch(e){return false;}}
-  function usable(p){return p&&p.visible!==false&&!(String(p.name||'').trim()==='สินค้าใหม่'&&Number(p.price||0)===0);}
+  function usable(p){return p&&p.visible!==false;}
   function categoryName(id){const s=savedCategories().find(x=>norm(x.id)===id);if(s)return s.name;const p=items.find(x=>norm(x.category)===id&&x.categoryLabel);return p?.categoryLabel||BASE[id]||id;}
   function host(){return document.querySelector('.ready-stock-tabs')||document.querySelector('.ready-stock-tab')?.parentElement;}
   function grid(){return document.querySelector('.ready-stock-grid');}
