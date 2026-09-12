@@ -10,6 +10,12 @@
   let productCategories=new Map();
   let productsUnsub=null;
 
+  function syncGlobals(){
+    window.YMK_ADMIN_ACTIVE_CATEGORY=active;
+    window.YMK_ADMIN_GET_ACTIVE_CATEGORY=()=>active;
+    window.YMK_ADMIN_GET_CATEGORY_LABEL=id=>labelFor(id);
+  }
+
   function loadCategories(){
     try{
       const saved=JSON.parse(localStorage.getItem(STORAGE)||'[]');
@@ -57,7 +63,7 @@
       b.dataset.cat=cat.id;
       b.textContent=cat.name;
       b.style.cssText='height:40px;padding:0 13px;border-radius:11px;border:1px solid #efc8d7;background:#fff0f6;color:#92566e;font-weight:850;cursor:pointer;';
-      b.addEventListener('click',()=>{active=cat.id;applyFilter();paintTabs();});
+      b.addEventListener('click',()=>{active=cat.id;syncGlobals();applyFilter();paintTabs();});
       bar.appendChild(b);
     });
 
@@ -133,6 +139,7 @@
     renderBar();
     addOptionsAndRestore();
     active=id;
+    syncGlobals();
     applyFilter();
     paintTabs();
   }
@@ -189,6 +196,7 @@
 
   function start(){
     loadCategories();
+    syncGlobals();
     renderBar();
     addOptionsAndRestore();
     const list=document.getElementById('productList');
