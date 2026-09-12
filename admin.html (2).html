@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Yuimellkub Admin</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#fff6fa;color:#6f4658}.wrap{max-width:920px;margin:auto;padding:24px 16px 60px}.head{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}.title{font-weight:900;font-size:25px;color:#8f4f68}.sub{color:#a16b80;font-size:13px;margin-top:4px}.notice{margin:16px 0;padding:13px 14px;border:1px solid #f1c7d8;border-radius:14px;background:#fff0f6;font-size:12px;line-height:1.6}.actions{display:flex;gap:8px;flex-wrap:wrap}.btn{border:0;border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer}.btn.primary{background:#e889ad;color:#fff}.btn.soft{background:#fff0f6;color:#92566e;border:1px solid #efc8d7}.grid{display:grid;gap:14px}.card{background:#fff;border:1px solid #f2ccdc;border-radius:18px;padding:16px;box-shadow:0 8px 24px rgba(190,105,145,.08)}.cardTop{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.oid{font-weight:900;color:#8f4f68}.time{font-size:11px;color:#af8193;margin-top:2px}.price{font-weight:900;font-size:20px;color:#d96f9a}.rows{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;margin-top:12px}.row{font-size:12px;line-height:1.5}.row b{display:block;color:#8f5d71;font-size:11px}.slip{margin-top:12px}.slip img{max-width:280px;width:100%;border:1px solid #f2ccdc;border-radius:14px;display:block}.slip.none{font-size:12px;color:#af8193}.statusBox{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:14px}.statusBox select{height:40px;border:1px solid #efc8d7;border-radius:11px;padding:0 10px;background:#fff;color:#71465a;font:inherit}.empty{text-align:center;padding:48px 10px;color:#aa7c8e}.pill{display:inline-block;padding:5px 9px;border-radius:999px;background:#fff0f6;border:1px solid #f2c6d7;font-size:11px;font-weight:800}.danger{background:#fff;color:#a65367;border:1px solid #efc8d7}.messenger{display:inline-flex;align-items:center;text-decoration:none;background:#e889ad;color:#fff;padding:10px 12px;border-radius:11px;font-weight:800;font-size:12px}.footer{margin-top:20px;text-align:center;color:#b38a99;font-size:11px}@media(max-width:620px){.rows{grid-template-columns:1fr}.price{font-size:18px}}
+</style>
+
+<style>
+.productAdmin{margin-top:22px}.productAdmin h2{margin:0;color:#8f4f68}.productAdminTop{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.productGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.productEdit{background:#fff;border:1px solid #f2ccdc;border-radius:18px;padding:14px}.productEdit img{width:100%;height:180px;object-fit:contain;background:#fff7fa;border:1px solid #f2ccdc;border-radius:14px;margin-bottom:10px}.productNoImg{height:180px;border:1px dashed #efc8d7;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#a16b80;margin-bottom:10px;background:#fff8fb}.productFields{display:grid;gap:8px}.productFields label{font-size:11px;font-weight:800;color:#8f5d71}.productFields input,.productFields select,.productFields textarea{width:100%;border:1px solid #efc8d7;border-radius:10px;padding:9px 10px;font:inherit;color:#71465a;background:#fff}.productFields textarea{min-height:66px;resize:vertical}.productRow2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.productActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.tiny{font-size:11px;color:#aa7c8e;line-height:1.5}.productImageInput{font-size:12px}.productEditorEmpty{text-align:center;padding:30px;color:#aa7c8e;background:#fff;border:1px dashed #efc8d7;border-radius:18px}@media(max-width:700px){.productGrid{grid-template-columns:1fr}.productRow2{grid-template-columns:1fr}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+ <div class="head">
+ <div><div class="title">♡ Yuimellkub จัดการออเดอร์</div><div class="sub">ดูออเดอร์ออนไลน์จากหน้าเว็บ • สลิปตรวจผ่าน Messenger</div></div>
+ <div class="actions"><button class="btn primary" id="login">เข้าสู่ระบบร้าน</button><button class="btn soft" id="logout" style="display:none">ออกจากระบบ</button><button class="btn soft" id="reload">รีเฟรช</button><button class="btn soft" id="notifyToggle">🔔 เปิดแจ้งเตือน</button><button class="btn danger" id="clearAll">ล้างออเดอร์</button></div>
+ </div>
+ <div class="notice">หลังบ้านนี้รองรับ <b>Firebase ออนไลน์</b> แล้ว หากยังไม่ได้ใส่ค่า Firebase จะกลับไปใช้โหมดในเบราว์เซอร์นี้อัตโนมัติ เพื่อความปลอดภัย โหมดออนไลน์ต้องเข้าสู่ระบบด้วยบัญชีร้านก่อนดู UID และรายละเอียดออเดอร์ • รูปสลิปให้ลูกค้าส่งใน Messenger</div>
+ <div id="orders" class="grid"></div>
+ 
+<section class="productAdmin" id="productAdmin">
+  <div class="productAdminTop">
+    <div><h2>♡ จัดการสินค้าพร้อมเติม</h2><div class="sub">เพิ่ม/แก้ชื่อ ราคา รายละเอียด รูป หมวดหมู่ และสถานะได้เองจากหลังบ้าน</div></div>
+    <div class="actions">
+      <button class="btn primary" id="addProduct">+ เพิ่มสินค้า</button>
+      <button class="btn danger" id="clearAllOrders">ล้างออเดอร์ทั้งหมด</button>
+      <button class="btn soft" id="seedProducts">ใส่แพ็กกระดุมเริ่มต้น</button>
+    </div>
+  </div>
+  <div class="notice">รูปที่เลือกจะถูกย่ออัตโนมัติก่อนบันทึก เพื่อไม่ให้ไฟล์ใหญ่เกินไป • ถ้ายังไม่ใส่รูป หน้าเว็บจะแสดงช่องรอรูปไว้ก่อนค่ะ</div>
+  <div id="productList" class="productGrid"><div class="productEditorEmpty">เข้าสู่ระบบร้านเพื่อจัดการสินค้า ♡</div></div>
+</section>
+
+<div class="footer">Yuimellkub Top-up • Admin</div>
+</div>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+const KEY='yuimellkub_admin_orders_v1';
+const $=s=>document.querySelector(s);
+
+let online=false, db=null, auth=null, unsubscribe=null;
+let initialOrdersLoaded=false;
+const seenOrderIds=new Set();
+let notificationsEnabled=localStorage.getItem('ymk_admin_notify')==='1';
+let audioCtx=null;
+
+function esc(v=''){
+  return String(v).replace(/[&<>"']/g,m=>({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[m]));
+}
+
+function firebaseReady(){
+  return !!(
+    window.YUIMELLKUB_FIREBASE_CONFIG?.apiKey &&
+    !String(window.YUIMELLKUB_FIREBASE_CONFIG.apiKey).includes('PUT_')
+  );
+}
+
+function initFirebase(){
+  if(!firebaseReady()) return false;
+  if(!firebase.apps.length) firebase.initializeApp(window.YUIMELLKUB_FIREBASE_CONFIG);
+  auth=firebase.auth();
+  db=firebase.firestore();
+  online=true;
+  return true;
+}
+
+function updateNotifyButton(){
+  const b=$('#notifyToggle');
+  if(!b) return;
+  const granted=('Notification' in window && Notification.permission==='granted');
+  if(notificationsEnabled && granted){
+    b.textContent='🔔 แจ้งเตือนเปิดอยู่';
+  }else{
+    b.textContent='🔔 เปิดแจ้งเตือน';
+  }
+}
+
+function playOrderSound(){
+  try{
+    audioCtx=audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+    const now=audioCtx.currentTime;
+    [660,880].forEach((freq,i)=>{
+      const osc=audioCtx.createOscillator();
+      const gain=audioCtx.createGain();
+      osc.frequency.value=freq;
+      gain.gain.setValueAtTime(0.0001,now+i*0.13);
+      gain.gain.exponentialRampToValueAtTime(0.16,now+i*0.13+0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001,now+i*0.13+0.18);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(now+i*0.13); osc.stop(now+i*0.13+0.2);
+    });
+  }catch(e){ console.warn('sound failed',e); }
+}
+
+function notifyNewOrder(o){
+  if(!notificationsEnabled) return;
+  playOrderSound();
+  if(!('Notification' in window) || Notification.permission!=='granted') return;
+  try{
+    const n=new Notification('Yuimellkub • มีออเดอร์ใหม่ 💗',{
+      body:`${o.item||'ออเดอร์ใหม่'} • ${o.price||''}\n${o.id||''}`,
+      tag:'ymk-'+(o.id||Date.now())
+    });
+    n.onclick=()=>{ window.focus(); n.close(); };
+  }catch(e){ console.warn('notification failed',e); }
+}
+
+async function enableNotifications(){
+  if(!('Notification' in window)){
+    alert('เบราว์เซอร์นี้ไม่รองรับการแจ้งเตือน');
+    return;
+  }
+  try{
+    if(Notification.permission!=='granted'){
+      const p=await Notification.requestPermission();
+      if(p!=='granted'){
+        notificationsEnabled=false;
+        localStorage.setItem('ymk_admin_notify','0');
+        updateNotifyButton();
+        alert('กรุณาอนุญาต Notifications ในการตั้งค่าเว็บไซต์ของเบราว์เซอร์');
+        return;
+      }
+    }
+    notificationsEnabled=true;
+    localStorage.setItem('ymk_admin_notify','1');
+    try{
+      audioCtx=audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+      if(audioCtx.state==='suspended') await audioCtx.resume();
+    }catch(e){}
+    updateNotifyButton();
+  }catch(e){
+    alert('เปิดแจ้งเตือนไม่สำเร็จ: '+e.message);
+  }
+}
+
+function render(arr){
+  const root=$('#orders');
+  if(!arr.length){
+    root.innerHTML='<div class="empty">ยังไม่มีออเดอร์ ♡</div>';
+    return;
+  }
+
+  root.innerHTML=arr.map(o=>`<div class="card" data-id="${esc(o.id)}">
+    <div class="cardTop">
+      <div>
+        <div class="oid">${esc(o.id)}</div>
+        <div class="time">${esc(o.createdAtText||'')}</div>
+      </div>
+      <div class="price">${esc(o.price)}</div>
+    </div>
+
+    <div class="rows">
+      <div class="row"><b>รายการ</b>${esc(o.item)}</div>
+      <div class="row"><b>แพ็ก</b>${esc(o.pack)}</div>
+      <div class="row"><b>UID</b>${esc(o.uid)}</div>
+      <div class="row"><b>Server</b>${esc(o.server)}</div>
+      <div class="row"><b>ชื่อเรียก</b>${esc(o.name||'-')}</div>
+      <div class="row"><b>ชำระผ่าน</b>${esc(o.paymentMethod)}</div>
+    </div>
+
+    <div class="slip none">${o.slipAttached?'ลูกค้าแนบสลิปไว้แล้ว • ตรวจรูปจริงใน Messenger':'รอรูปสลิปใน Messenger'}</div>
+
+    <div class="statusBox">
+      <span class="pill">${esc(o.paymentStatus||'รอตรวจสอบการชำระเงิน')}</span>
+      <select class="shopStatus">
+        <option ${o.shopStatus==='รอตรวจสอบการชำระเงิน'?'selected':''}>รอตรวจสอบการชำระเงิน</option>
+        <option ${o.shopStatus==='ชำระแล้ว'?'selected':''}>ชำระแล้ว</option>
+        <option ${o.shopStatus==='กำลังเติม'?'selected':''}>กำลังเติม</option>
+        <option ${o.shopStatus==='สำเร็จ'?'selected':''}>สำเร็จ</option>
+        <option ${o.shopStatus==='มีปัญหา'?'selected':''}>มีปัญหา</option>
+      </select>
+      <a class="messenger" target="_blank" rel="noopener" href="https://www.facebook.com/messages/t/61594269897110">เปิด Messenger</a>
+      <button class="btn danger delete">ลบ</button>
+    </div>
+  </div>`).join('');
+
+  root.querySelectorAll('.shopStatus').forEach(sel=>{
+    sel.addEventListener('change',e=>updateStatus(
+      e.target.closest('.card').dataset.id,
+      e.target.value
+    ));
+  });
+
+  root.querySelectorAll('.delete').forEach(btn=>{
+    btn.addEventListener('click',e=>removeOrder(
+      e.target.closest('.card').dataset.id
+    ));
+  });
+}
+
+async function syncPublicStatus(o){
+  if(!db || !o?.id) return;
+  try{
+    await db.collection('order_status').doc(o.id).set({
+      status:o.shopStatus||o.paymentStatus||'รอตรวจสอบการชำระเงิน',
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    },{merge:true});
+  }catch(e){
+    console.warn('status sync failed',e);
+  }
+}
+
+function startOnline(){
+  if(!db) return;
+  if(unsubscribe) unsubscribe();
+
+  initialOrdersLoaded=false;
+  seenOrderIds.clear();
+
+  unsubscribe=db.collection('orders')
+    .orderBy('createdAt','desc')
+    .limit(100)
+    .onSnapshot(async snap=>{
+      const arr=snap.docs.map(d=>{
+        const o=d.data();
+        const dt=o.createdAt?.toDate?.();
+        return {
+          ...o,
+          id:o.id||d.id,
+          createdAtText:dt?dt.toLocaleString('th-TH'):''
+        };
+      });
+
+      render(arr);
+
+      for(const o of arr){
+        syncPublicStatus(o);
+      }
+
+      if(!initialOrdersLoaded){
+        snap.docs.forEach(d=>seenOrderIds.add(d.id));
+        initialOrdersLoaded=true;
+        return;
+      }
+
+      snap.docChanges().forEach(change=>{
+        if(change.type!=='added') return;
+        if(seenOrderIds.has(change.doc.id)) return;
+        seenOrderIds.add(change.doc.id);
+        const o={...change.doc.data(),id:change.doc.id};
+        notifyNewOrder(o);
+      });
+    },err=>{
+      $('#orders').innerHTML='<div class="empty">โหลดออเดอร์ออนไลน์ไม่ได้: '+esc(err.message)+'</div>';
+    });
+}
+
+async function updateStatus(id,status){
+  if(!online || !db) return;
+  try{
+    await db.collection('orders').doc(id).update({shopStatus:status});
+    await db.collection('order_status').doc(id).set({
+      status,
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    },{merge:true});
+  }catch(e){
+    alert('อัปเดตสถานะไม่สำเร็จ: '+e.message);
+  }
+}
+
+async function removeOrder(id){
+  if(!confirm('ลบออเดอร์นี้?')) return;
+  if(!online || !db) return;
+  try{
+    await db.collection('orders').doc(id).delete();
+    try{ await db.collection('order_status').doc(id).delete(); }catch(e){}
+  }catch(e){
+    alert('ลบออเดอร์ไม่สำเร็จ: '+e.message);
+  }
+}
+
+$('#reload').addEventListener('click',()=>online?startOnline():location.reload());
+
+$('#clearAll').addEventListener('click',()=>{
+  alert('เพื่อป้องกันการลบพลาด ระบบออนไลน์ไม่รองรับการล้างออเดอร์ทั้งหมด');
+});
+
+$('#notifyToggle').addEventListener('click',enableNotifications);
+
+$('#login').addEventListener('click',async()=>{
+  if(!online){
+    alert('ยังไม่ได้เชื่อม Firebase กรุณาตรวจ firebase-config.js');
+    return;
+  }
+  const email=prompt('อีเมลบัญชีแอดมิน Firebase');
+  if(!email) return;
+  const password=prompt('รหัสผ่านบัญชีแอดมิน (รหัสจะไม่ถูกบันทึกในหน้าเว็บ)');
+  if(!password) return;
+  try{
+    await auth.signInWithEmailAndPassword(email.trim(),password);
+  }catch(e){
+    alert('เข้าสู่ระบบไม่สำเร็จ: '+e.message);
+  }
+});
+
+$('#logout').addEventListener('click',()=>auth?.signOut());
+
+updateNotifyButton();
+
+if(initFirebase()){
+  auth.onAuthStateChanged(user=>{
+    const allowedUid=String(window.YUIMELLKUB_ADMIN_UID||'').trim();
+    const ok=!!user && user.uid===allowedUid;
+
+    $('#login').style.display=ok?'none':'inline-block';
+    $('#logout').style.display=ok?'inline-block':'none';
+
+    if(ok){
+      startOnline();
+    }else{
+      if(user && user.uid!==allowedUid) auth.signOut();
+      if(unsubscribe){ unsubscribe(); unsubscribe=null; }
+      $('#orders').innerHTML='<div class="empty">เข้าสู่ระบบบัญชีร้านเพื่อดูออเดอร์ออนไลน์ ♡</div>';
+    }
+  });
+}else{
+  $('#orders').innerHTML='<div class="empty">ยังเชื่อม Firebase ไม่ได้ กรุณาตรวจ firebase-config.js</div>';
+}
+</script>
+
+<script>
+(function(){
+  let productUnsub=null;
+  let productCache=[];
+  const categoryNames={echoes:'เติมกระดุม',skins:'เติมสกิน',accessories:'เติมประดับ'};
+  const pEsc=(v='')=>String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+
+  function resizeImage(file,max=900,quality=.82){
+    return new Promise((resolve,reject)=>{
+      const img=new Image(); const r=new FileReader();
+      r.onload=()=>{img.onload=()=>{
+        let w=img.naturalWidth,h=img.naturalHeight;
+        const scale=Math.min(1,max/Math.max(w,h)); w=Math.round(w*scale); h=Math.round(h*scale);
+        const c=document.createElement('canvas'); c.width=w;c.height=h;
+        c.getContext('2d').drawImage(img,0,0,w,h);
+        resolve(c.toDataURL('image/jpeg',quality));
+      }; img.onerror=reject; img.src=r.result;};
+      r.onerror=reject; r.readAsDataURL(file);
+    });
+  }
+
+  function renderProductsAdmin(){
+    const root=document.getElementById('productList');
+    if(!root) return;
+    if(!productCache.length){root.innerHTML='<div class="productEditorEmpty">ยังไม่มีสินค้า กด “เพิ่มสินค้า” หรือ “ใส่แพ็กกระดุมเริ่มต้น” ได้เลยค่ะ</div>';return;}
+    root.innerHTML=productCache.map(p=>`<div class="productEdit" data-id="${pEsc(p.id)}">
+      ${p.image?`<img src="${pEsc(p.image)}" alt="${pEsc(p.name||'สินค้า')}">`:'<div class="productNoImg">🖼️ ยังไม่ได้ใส่รูป</div>'}
+      <div class="productFields">
+        <label>รูปสินค้า<input class="productImageInput p-image" type="file" accept="image/*"></label>
+        <label>ชื่อสินค้า<input class="p-name" value="${pEsc(p.name||'')}"></label>
+        <div class="productRow2">
+          <label>ราคา (บาท)<input class="p-price" type="number" min="0" value="${Number(p.price||0)}"></label>
+          <label>ลำดับ<input class="p-order" type="number" value="${Number(p.order||0)}"></label>
+        </div>
+        <div class="productRow2">
+          <label>หมวดหมู่<select class="p-category"><option value="echoes" ${p.category==='echoes'?'selected':''}>เติมกระดุม</option><option value="skins" ${p.category==='skins'?'selected':''}>เติมสกิน</option><option value="accessories" ${p.category==='accessories'?'selected':''}>เติมประดับ</option></select></label>
+          <label>สถานะ<select class="p-status">
+      <option value="ready" ${p.status==='ready' || !p.status?'selected':''}>พร้อมเติม</option>
+      <option value="paused" ${p.status==='paused'?'selected':''}>ปิดชั่วคราว</option>
+      <option value="out" ${p.status==='out'?'selected':''}>หมดชั่วคราว</option>
+    </select></label>
+        </div>
+        <label>รายละเอียด<textarea class="p-description">${pEsc(p.description||'')}</textarea></label>
+        <label>ตำแหน่งรูป<select class="p-position"><option value="center" ${p.imagePosition==='center'?'selected':''}>กึ่งกลาง</option><option value="top" ${p.imagePosition==='top'?'selected':''}>ด้านบน</option><option value="bottom" ${p.imagePosition==='bottom'?'selected':''}>ด้านล่าง</option></select></label>
+        <label><input class="p-visible" type="checkbox" ${p.visible!==false?'checked':''}> แสดงบนหน้าเว็บ</label>
+      </div>
+      <div class="productActions"><button class="btn primary p-save">บันทึก</button><button class="btn soft p-remove-image">ลบรูป</button><button class="btn danger p-delete">ลบสินค้า</button></div>
+      <div class="tiny">แก้เสร็จแล้วกด “บันทึก” การเปลี่ยนแปลงจะไปหน้าเว็บอัตโนมัติ</div>
+    </div>`).join('');
+
+    root.querySelectorAll('.p-image').forEach(inp=>inp.addEventListener('change',async e=>{
+      const card=e.target.closest('.productEdit'); const id=card.dataset.id; const f=e.target.files?.[0]; if(!f)return;
+      try{
+        const data=await resizeImage(f);
+        if(data.length>850000){alert('รูปยังใหญ่เกินไป ลองใช้รูปที่ขนาดเล็กกว่านี้ค่ะ');return;}
+        await db.collection('products').doc(id).set({image:data,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+      }catch(err){alert('ใส่รูปไม่สำเร็จ: '+err.message);}
+    }));
+    root.querySelectorAll('.p-save').forEach(btn=>btn.addEventListener('click',async e=>{
+      const c=e.target.closest('.productEdit'); const id=c.dataset.id;
+      try{await db.collection('products').doc(id).set({
+        name:c.querySelector('.p-name').value.trim(), price:Number(c.querySelector('.p-price').value||0), order:Number(c.querySelector('.p-order').value||0),
+        category:c.querySelector('.p-category').value,status:c.querySelector('.p-status').value,description:c.querySelector('.p-description').value.trim(),
+        imagePosition:c.querySelector('.p-position').value,visible:c.querySelector('.p-visible').checked,updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+      },{merge:true});}catch(err){alert('บันทึกไม่สำเร็จ: '+err.message);}
+    }));
+    root.querySelectorAll('.p-remove-image').forEach(btn=>btn.addEventListener('click',async e=>{
+      const id=e.target.closest('.productEdit').dataset.id; if(!confirm('ลบรูปสินค้านี้?'))return;
+      try{await db.collection('products').doc(id).set({image:'',updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});}catch(err){alert(err.message);}
+    }));
+    root.querySelectorAll('.p-delete').forEach(btn=>btn.addEventListener('click',async e=>{
+      const id=e.target.closest('.productEdit').dataset.id; if(!confirm('ลบสินค้านี้ออกจากเว็บ?'))return;
+      try{await db.collection('products').doc(id).delete();}catch(err){alert('ลบไม่สำเร็จ: '+err.message);}
+    }));
+  }
+
+  function startProductAdmin(){
+    if(!db) return;
+    if(productUnsub)productUnsub();
+    productUnsub=db.collection('products').onSnapshot(snap=>{
+      productCache=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.order||0)-(b.order||0));
+      renderProductsAdmin();
+    },e=>{document.getElementById('productList').innerHTML='<div class="productEditorEmpty">โหลดสินค้าไม่ได้: '+pEsc(e.message)+'</div>';});
+  }
+
+  document.getElementById('addProduct')?.addEventListener('click',async()=>{
+    if(!db||!auth?.currentUser){alert('กรุณาเข้าสู่ระบบร้านก่อนค่ะ');return;}
+    try{await db.collection('products').add({name:'สินค้าใหม่',price:0,description:'พร้อมเติมทันที',category:'skins',status:'ready',visible:true,order:Date.now(),image:'',imagePosition:'center',createdAt:firebase.firestore.FieldValue.serverTimestamp()});}catch(e){alert('เพิ่มสินค้าไม่สำเร็จ: '+e.message);}
+  });
+  document.getElementById('seedProducts')?.addEventListener('click',async()=>{
+    if(!db||!auth?.currentUser){alert('กรุณาเข้าสู่ระบบร้านก่อนค่ะ');return;}
+    if(productCache.length && !confirm('มีสินค้าอยู่แล้ว ต้องการเพิ่มแพ็กกระดุมเริ่มต้นอีกชุดหรือไม่?'))return;
+    const rows=[[66,30],[203,90],[335,145],[759,295],[2227,885],[3663,1475],[7249,2925]];
+    try{
+      const batch=db.batch(); rows.forEach((r,i)=>{const ref=db.collection('products').doc('echoes-'+r[0]);batch.set(ref,{name:r[0]+' กระดุม',price:r[1],description:'พร้อมเติมทันที',category:'echoes',status:'ready',visible:true,order:i+1,image:'',imagePosition:'center',updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});}); await batch.commit();
+    }catch(e){alert('เพิ่มแพ็กเริ่มต้นไม่สำเร็จ: '+e.message);}
+  });
+
+  const oldStartOnline=window.startOnline;
+  // Hook auth changes independently; existing admin code still handles orders.
+  if(typeof auth!=='undefined' && auth){auth.onAuthStateChanged(user=>{if(user && user.uid===String(window.YUIMELLKUB_ADMIN_UID||'').trim())startProductAdmin();else{if(productUnsub){productUnsub();productUnsub=null;} const r=document.getElementById('productList');if(r)r.innerHTML='<div class="productEditorEmpty">เข้าสู่ระบบร้านเพื่อจัดการสินค้า ♡</div>';}});}
+  else setTimeout(()=>{if(auth)auth.onAuthStateChanged(user=>{if(user && user.uid===String(window.YUIMELLKUB_ADMIN_UID||'').trim())startProductAdmin();});},800);
+
+  document.getElementById('clearAllOrders')?.addEventListener('click', async()=>{
+    if(!db || !auth?.currentUser){
+      alert('กรุณาเข้าสู่ระบบร้านก่อนค่ะ');
+      return;
+    }
+    const ok = confirm('ต้องการล้างออเดอร์ทั้งหมดใช่ไหมคะ?\nการล้างจะลบทั้งรายการออเดอร์และสถานะติดตาม และย้อนกลับไม่ได้');
+    if(!ok) return;
+
+    const btn = document.getElementById('clearAllOrders');
+    const oldText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'กำลังล้าง...';
+
+    async function deleteCollection(name){
+      while(true){
+        const snap = await db.collection(name).limit(100).get();
+        if(snap.empty) break;
+        const batch = db.batch();
+        snap.docs.forEach(d=>batch.delete(d.ref));
+        await batch.commit();
+        if(snap.size < 100) break;
+      }
+    }
+
+    try{
+      await deleteCollection('orders');
+      await deleteCollection('order_status');
+      alert('ล้างออเดอร์ทั้งหมดเรียบร้อยแล้วค่ะ ♡');
+    }catch(e){
+      alert('ล้างออเดอร์ไม่สำเร็จ: ' + e.message);
+    }finally{
+      btn.disabled = false;
+      btn.textContent = oldText;
+    }
+  });
+
+})();
+</script>
+
+</body>
+</html>
