@@ -1,7 +1,8 @@
 (function(){
   // Yuimellkub calculator rules for normal Echoes + gacha calculators only.
-  // Main pack: 759. If the remaining amount is 0-500, fill with small packs.
-  // If the remaining amount is over 500, use one more 759 pack.
+  // Rule 1: amounts/remainders 0-607 use small packs first.
+  // Rule 2: above that, 759 is the main pack; if the remainder is over 607, add one more 759.
+  // Rule 3: 759 uses bulk tier pricing.
   // Small-pack limits: 335 <= 1, 203 <= 1, 66 <= 2.
 
   function price759Tier(qty){
@@ -43,16 +44,21 @@
       return {counts:[0,0,0,0],totalEchoes:0,totalTopup:0,cost:0,extra:0,count:0};
     }
 
-    let d=Math.floor(target/759);
-    let remainder=target-d*759;
-    let a=0,b=0,c=0;
+    let a=0,b=0,c=0,d=0;
 
-    if(remainder>500){
-      d+=1;
-      remainder=0;
-    }else if(remainder>0){
-      const small=bestSmallPackFill(remainder);
+    if(target<=607){
+      const small=bestSmallPackFill(target);
       a=small.a; b=small.b; c=small.c;
+    }else{
+      d=Math.floor(target/759);
+      const remainder=target-d*759;
+
+      if(remainder>607){
+        d+=1;
+      }else if(remainder>0){
+        const small=bestSmallPackFill(remainder);
+        a=small.a; b=small.b; c=small.c;
+      }
     }
 
     const totalEchoes=a*66+b*203+c*335+d*759;
