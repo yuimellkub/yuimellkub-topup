@@ -26,7 +26,7 @@
       if(!p || !['skins','accessories'].includes(String(p.category||''))) return;
       const amount=buttonAmountFromName(p.name);
       if(!amount) return;
-      const qty=Math.max(1,Math.floor(Number(lastOrder.quantity)||1);
+      const qty=Math.max(1,Math.floor(Number(lastOrder.quantity)||1));
       lastOrder.pack=amount+' กระดุม'+(qty>1?' × '+qty:'');
       lastOrder.buttonPack=Number(amount)*qty;
     }catch(e){console.warn('button pack patch failed',e);}
