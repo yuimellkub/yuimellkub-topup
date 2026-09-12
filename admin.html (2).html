@@ -10,7 +10,7 @@
 
 <style>
 .productAdmin{margin-top:22px}.productAdmin h2{margin:0;color:#8f4f68}.productAdminTop{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
-.productGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.productEdit{background:#fff;border:1px solid #f2ccdc;border-radius:18px;padding:14px}.productEdit img{width:100%;height:180px;object-fit:contain;background:#fff7fa;border:1px solid #f2ccdc;border-radius:14px;margin-bottom:10px}.productNoImg{height:180px;border:1px dashed #efc8d7;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#a16b80;margin-bottom:10px;background:#fff8fb}.productFields{display:grid;gap:8px}.productFields label{font-size:11px;font-weight:800;color:#8f5d71}.productFields input,.productFields select,.productFields textarea{width:100%;border:1px solid #efc8d7;border-radius:10px;padding:9px 10px;font:inherit;color:#71465a;background:#fff}.productFields textarea{min-height:66px;resize:vertical}.productRow2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.productActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.tiny{font-size:11px;color:#aa7c8e;line-height:1.5}.productImageInput{font-size:12px}.productEditorEmpty{text-align:center;padding:30px;color:#aa7c8e;background:#fff;border:1px dashed #efc8d7;border-radius:18px}@media(max-width:700px){.productGrid{grid-template-columns:1fr}.productRow2{grid-template-columns:1fr}}
+.productGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.productEdit{background:#fff;border:1px solid #f2ccdc;border-radius:18px;padding:14px}.productEdit img{width:100%;height:180px;object-fit:contain;background:#fff7fa;border:1px solid #f2ccdc;border-radius:14px;margin-bottom:10px}.productNoImg{height:180px;border:1px dashed #efc8d7;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#a16b80;margin-bottom:10px;background:#fff8fb}.productFields{display:grid;gap:8px}.productFields label{font-size:11px;font-weight:800;color:#8f5d71}.productFields input,.productFields select,.productFields textarea{width:100%;border:1px solid #efc8d7;border-radius:10px;padding:9px 10px;font:inherit;color:#71465a;background:#fff}.productFields textarea{min-height:66px;resize:vertical}.productRow2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.productActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.tiny{font-size:11px;color:#aa7c8e;line-height:1.5}.stockHint{font-size:11px;color:#9b6a7d;background:#fff8fb;border:1px solid #f2ccdc;border-radius:10px;padding:8px 10px}.stockBadge{display:inline-block;padding:5px 8px;border-radius:999px;background:#eef9f1;color:#48845a;font-size:11px;font-weight:800}.stockBadge.low{background:#fff5e7;color:#9c6a2b}.stockBadge.zero{background:#fff0f3;color:#a65367}.productImageInput{font-size:12px}.productEditorEmpty{text-align:center;padding:30px;color:#aa7c8e;background:#fff;border:1px dashed #efc8d7;border-radius:18px}@media(max-width:700px){.productGrid{grid-template-columns:1fr}.productRow2{grid-template-columns:1fr}}
 </style>
 
 </head>
@@ -25,14 +25,13 @@
  
 <section class="productAdmin" id="productAdmin">
   <div class="productAdminTop">
-    <div><h2>♡ จัดการสินค้าพร้อมเติม</h2><div class="sub">เพิ่ม/แก้ชื่อ ราคา รายละเอียด รูป หมวดหมู่ และสถานะได้เองจากหลังบ้าน</div></div>
+    <div><h2>♡ จัดการสินค้าพร้อมเติม</h2><div class="sub">เพิ่ม/แก้ชื่อ ราคา รายละเอียด รูป หมวดหมู่ สถานะ และจัดเก็บสต๊อกสินค้าได้เองจากหลังบ้าน</div></div>
     <div class="actions">
       <button class="btn primary" id="addProduct">+ เพิ่มสินค้า</button>
-      <button class="btn danger" id="clearAllOrders">ล้างออเดอร์ทั้งหมด</button>
       <button class="btn soft" id="seedProducts">ใส่แพ็กกระดุมเริ่มต้น</button>
     </div>
   </div>
-  <div class="notice">รูปที่เลือกจะถูกย่ออัตโนมัติก่อนบันทึก เพื่อไม่ให้ไฟล์ใหญ่เกินไป • ถ้ายังไม่ใส่รูป หน้าเว็บจะแสดงช่องรอรูปไว้ก่อนค่ะ</div>
+  <div class="notice">รูปที่เลือกจะถูกย่ออัตโนมัติก่อนบันทึก • สินค้าที่มีจำนวนจำกัดใส่จำนวนคงเหลือได้ ส่วนบริการเติมกระดุมเลือก “ไม่จำกัดสต๊อก” ได้ค่ะ</div>
   <div id="productList" class="productGrid"><div class="productEditorEmpty">เข้าสู่ระบบร้านเพื่อจัดการสินค้า ♡</div></div>
 </section>
 
@@ -54,7 +53,7 @@ let audioCtx=null;
 
 function esc(v=''){
   return String(v).replace(/[&<>"']/g,m=>({
-    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'
   }[m]));
 }
 
@@ -281,8 +280,17 @@ async function removeOrder(id){
 
 $('#reload').addEventListener('click',()=>online?startOnline():location.reload());
 
-$('#clearAll').addEventListener('click',()=>{
-  alert('เพื่อป้องกันการลบพลาด ระบบออนไลน์ไม่รองรับการล้างออเดอร์ทั้งหมด');
+$('#clearAll').addEventListener('click',async()=>{
+  if(!online || !db || !auth?.currentUser){
+    alert('กรุณาเข้าสู่ระบบร้านก่อนค่ะ');
+    return;
+  }
+  if(!confirm('ต้องการล้างออเดอร์ทั้งหมดใช่ไหมคะ?\nการล้างจะลบทั้งรายการออเดอร์และสถานะติดตาม และย้อนกลับไม่ได้')) return;
+  const btn=$('#clearAll'), old=btn.textContent; btn.disabled=true; btn.textContent='กำลังล้าง...';
+  async function del(name){while(true){const snap=await db.collection(name).limit(100).get();if(snap.empty)break;const batch=db.batch();snap.docs.forEach(d=>batch.delete(d.ref));await batch.commit();if(snap.size<100)break;}}
+  try{await del('orders');await del('order_status');alert('ล้างออเดอร์ทั้งหมดเรียบร้อยแล้วค่ะ ♡');}
+  catch(e){alert('ล้างออเดอร์ไม่สำเร็จ: '+e.message);}
+  finally{btn.disabled=false;btn.textContent=old;}
 });
 
 $('#notifyToggle').addEventListener('click',enableNotifications);
@@ -332,8 +340,7 @@ if(initFirebase()){
 (function(){
   let productUnsub=null;
   let productCache=[];
-  const categoryNames={echoes:'เติมกระดุม',skins:'เติมสกิน',accessories:'เติมประดับ'};
-  const pEsc=(v='')=>String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const pEsc=(v='')=>String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[m]));
 
   function resizeImage(file,max=900,quality=.82){
     return new Promise((resolve,reject)=>{
@@ -364,12 +371,13 @@ if(initFirebase()){
         </div>
         <div class="productRow2">
           <label>หมวดหมู่<select class="p-category"><option value="echoes" ${p.category==='echoes'?'selected':''}>เติมกระดุม</option><option value="skins" ${p.category==='skins'?'selected':''}>เติมสกิน</option><option value="accessories" ${p.category==='accessories'?'selected':''}>เติมประดับ</option></select></label>
-          <label>สถานะ<select class="p-status">
-      <option value="ready" ${p.status==='ready' || !p.status?'selected':''}>พร้อมเติม</option>
-      <option value="paused" ${p.status==='paused'?'selected':''}>ปิดชั่วคราว</option>
-      <option value="out" ${p.status==='out'?'selected':''}>หมดชั่วคราว</option>
-    </select></label>
+          <label>สถานะ<select class="p-status"><option value="ready" ${p.status==='ready' || !p.status?'selected':''}>พร้อมเติม</option><option value="paused" ${p.status==='paused'?'selected':''}>ปิดชั่วคราว</option><option value="out" ${p.status==='out'?'selected':''}>หมดชั่วคราว</option></select></label>
         </div>
+        <div class="productRow2">
+          <label>จำนวนคงเหลือ<input class="p-stock" type="number" min="0" step="1" value="${p.unlimitedStock?'':Number(p.stock??0)}" ${p.unlimitedStock?'disabled':''}></label>
+          <label style="display:flex;align-items:end"><span style="display:flex;gap:7px;align-items:center;padding:10px 0"><input class="p-unlimited" type="checkbox" ${p.unlimitedStock?'checked':''} style="width:auto"> ไม่จำกัดสต๊อก</span></label>
+        </div>
+        <div class="stockHint">${p.unlimitedStock?'<span class="stockBadge">สต๊อกไม่จำกัด</span>':Number(p.stock||0)===0?'<span class="stockBadge zero">คงเหลือ 0</span>':Number(p.stock||0)<=3?`<span class="stockBadge low">คงเหลือ ${Number(p.stock||0)}</span>`:`<span class="stockBadge">คงเหลือ ${Number(p.stock||0)}</span>`}</div>
         <label>รายละเอียด<textarea class="p-description">${pEsc(p.description||'')}</textarea></label>
         <label>ตำแหน่งรูป<select class="p-position"><option value="center" ${p.imagePosition==='center'?'selected':''}>กึ่งกลาง</option><option value="top" ${p.imagePosition==='top'?'selected':''}>ด้านบน</option><option value="bottom" ${p.imagePosition==='bottom'?'selected':''}>ด้านล่าง</option></select></label>
         <label><input class="p-visible" type="checkbox" ${p.visible!==false?'checked':''}> แสดงบนหน้าเว็บ</label>
@@ -386,11 +394,19 @@ if(initFirebase()){
         await db.collection('products').doc(id).set({image:data,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
       }catch(err){alert('ใส่รูปไม่สำเร็จ: '+err.message);}
     }));
+    root.querySelectorAll('.p-unlimited').forEach(chk=>chk.addEventListener('change',e=>{
+      const c=e.target.closest('.productEdit'); const stock=c.querySelector('.p-stock');
+      stock.disabled=e.target.checked; if(e.target.checked) stock.value='';
+    }));
     root.querySelectorAll('.p-save').forEach(btn=>btn.addEventListener('click',async e=>{
       const c=e.target.closest('.productEdit'); const id=c.dataset.id;
       try{await db.collection('products').doc(id).set({
         name:c.querySelector('.p-name').value.trim(), price:Number(c.querySelector('.p-price').value||0), order:Number(c.querySelector('.p-order').value||0),
-        category:c.querySelector('.p-category').value,status:c.querySelector('.p-status').value,description:c.querySelector('.p-description').value.trim(),
+        category:c.querySelector('.p-category').value,
+        status:(!c.querySelector('.p-unlimited').checked && Number(c.querySelector('.p-stock').value||0)===0)?'out':c.querySelector('.p-status').value,
+        stock:c.querySelector('.p-unlimited').checked?null:Math.max(0,Number(c.querySelector('.p-stock').value||0)),
+        unlimitedStock:c.querySelector('.p-unlimited').checked,
+        description:c.querySelector('.p-description').value.trim(),
         imagePosition:c.querySelector('.p-position').value,visible:c.querySelector('.p-visible').checked,updatedAt:firebase.firestore.FieldValue.serverTimestamp()
       },{merge:true});}catch(err){alert('บันทึกไม่สำเร็จ: '+err.message);}
     }));
@@ -415,58 +431,19 @@ if(initFirebase()){
 
   document.getElementById('addProduct')?.addEventListener('click',async()=>{
     if(!db||!auth?.currentUser){alert('กรุณาเข้าสู่ระบบร้านก่อนค่ะ');return;}
-    try{await db.collection('products').add({name:'สินค้าใหม่',price:0,description:'พร้อมเติมทันที',category:'skins',status:'ready',visible:true,order:Date.now(),image:'',imagePosition:'center',createdAt:firebase.firestore.FieldValue.serverTimestamp()});}catch(e){alert('เพิ่มสินค้าไม่สำเร็จ: '+e.message);}
+    try{await db.collection('products').add({name:'สินค้าใหม่',price:0,description:'พร้อมเติมทันที',category:'skins',status:'out',stock:0,unlimitedStock:false,visible:true,order:Date.now(),image:'',imagePosition:'center',createdAt:firebase.firestore.FieldValue.serverTimestamp()});}catch(e){alert('เพิ่มสินค้าไม่สำเร็จ: '+e.message);}
   });
   document.getElementById('seedProducts')?.addEventListener('click',async()=>{
     if(!db||!auth?.currentUser){alert('กรุณาเข้าสู่ระบบร้านก่อนค่ะ');return;}
     if(productCache.length && !confirm('มีสินค้าอยู่แล้ว ต้องการเพิ่มแพ็กกระดุมเริ่มต้นอีกชุดหรือไม่?'))return;
     const rows=[[66,30],[203,90],[335,145],[759,295],[2227,885],[3663,1475],[7249,2925]];
     try{
-      const batch=db.batch(); rows.forEach((r,i)=>{const ref=db.collection('products').doc('echoes-'+r[0]);batch.set(ref,{name:r[0]+' กระดุม',price:r[1],description:'พร้อมเติมทันที',category:'echoes',status:'ready',visible:true,order:i+1,image:'',imagePosition:'center',updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});}); await batch.commit();
+      const batch=db.batch(); rows.forEach((r,i)=>{const ref=db.collection('products').doc('echoes-'+r[0]);batch.set(ref,{name:r[0]+' กระดุม',price:r[1],description:'พร้อมเติมทันที',category:'echoes',status:'ready',stock:null,unlimitedStock:true,visible:true,order:i+1,image:'',imagePosition:'center',updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});}); await batch.commit();
     }catch(e){alert('เพิ่มแพ็กเริ่มต้นไม่สำเร็จ: '+e.message);}
   });
 
-  const oldStartOnline=window.startOnline;
-  // Hook auth changes independently; existing admin code still handles orders.
   if(typeof auth!=='undefined' && auth){auth.onAuthStateChanged(user=>{if(user && user.uid===String(window.YUIMELLKUB_ADMIN_UID||'').trim())startProductAdmin();else{if(productUnsub){productUnsub();productUnsub=null;} const r=document.getElementById('productList');if(r)r.innerHTML='<div class="productEditorEmpty">เข้าสู่ระบบร้านเพื่อจัดการสินค้า ♡</div>';}});}
   else setTimeout(()=>{if(auth)auth.onAuthStateChanged(user=>{if(user && user.uid===String(window.YUIMELLKUB_ADMIN_UID||'').trim())startProductAdmin();});},800);
-
-  document.getElementById('clearAllOrders')?.addEventListener('click', async()=>{
-    if(!db || !auth?.currentUser){
-      alert('กรุณาเข้าสู่ระบบร้านก่อนค่ะ');
-      return;
-    }
-    const ok = confirm('ต้องการล้างออเดอร์ทั้งหมดใช่ไหมคะ?\nการล้างจะลบทั้งรายการออเดอร์และสถานะติดตาม และย้อนกลับไม่ได้');
-    if(!ok) return;
-
-    const btn = document.getElementById('clearAllOrders');
-    const oldText = btn.textContent;
-    btn.disabled = true;
-    btn.textContent = 'กำลังล้าง...';
-
-    async function deleteCollection(name){
-      while(true){
-        const snap = await db.collection(name).limit(100).get();
-        if(snap.empty) break;
-        const batch = db.batch();
-        snap.docs.forEach(d=>batch.delete(d.ref));
-        await batch.commit();
-        if(snap.size < 100) break;
-      }
-    }
-
-    try{
-      await deleteCollection('orders');
-      await deleteCollection('order_status');
-      alert('ล้างออเดอร์ทั้งหมดเรียบร้อยแล้วค่ะ ♡');
-    }catch(e){
-      alert('ล้างออเดอร์ไม่สำเร็จ: ' + e.message);
-    }finally{
-      btn.disabled = false;
-      btn.textContent = oldText;
-    }
-  });
-
 })();
 </script>
 
