@@ -1,14 +1,136 @@
 (function(){
- const base={all:'ทั้งหมด',echoes:'เติมกระดุม',skins:'เติมสกิน',accessories:'เติมประดับ'};let labels={...base},custom=[],active='all';
- const save=()=>{try{localStorage.setItem('ymk_category_labels',JSON.stringify(labels));localStorage.setItem('ymk_custom_categories',JSON.stringify(custom));}catch(e){}};
- function load(){try{Object.assign(labels,JSON.parse(localStorage.getItem('ymk_category_labels')||'{}'));custom=JSON.parse(localStorage.getItem('ymk_custom_categories')||'[]');if(!Array.isArray(custom))custom=[];}catch(e){custom=[];}custom.forEach(x=>labels[x.id]=x.name);}
- const keys=()=>['all','echoes','skins','accessories',...custom.map(x=>x.id)];
- function options(){document.querySelectorAll('.p-category').forEach(sel=>{const wanted=sel.dataset.ymkCategory||sel.value;custom.forEach(x=>{let o=[...sel.options].find(a=>a.value===x.id);if(!o){o=document.createElement('option');o.value=x.id;sel.appendChild(o);}o.textContent=labels[x.id]||x.name;});['echoes','skins','accessories'].forEach(id=>{const o=[...sel.options].find(a=>a.value===id);if(o)o.textContent=labels[id]||base[id];});if(wanted&&[...sel.options].some(o=>o.value===wanted))sel.value=wanted;});}
- function filter(){document.querySelectorAll('#productList .productEdit').forEach(c=>{const s=c.querySelector('.p-category'),cat=s?.value||s?.dataset.ymkCategory||'';c.style.display=active==='all'||cat===active?'':'none';});document.querySelectorAll('#productCategoryTabs [data-category]').forEach(b=>{const on=b.dataset.category===active;b.style.background=on?'#e889ad':'#fff0f6';b.style.color=on?'#fff':'#92566e';});}
- function render(){const list=document.getElementById('productList');if(!list)return;let bar=document.getElementById('productCategoryTabs');if(!bar){bar=document.createElement('div');bar.id='productCategoryTabs';bar.style.cssText='display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px;padding:6px;background:#fff;border:1px solid #f2ccdc;border-radius:16px';list.before(bar);}bar.innerHTML='';keys().forEach(id=>{const b=document.createElement('button');b.type='button';b.dataset.category=id;b.textContent=labels[id]||id;b.className='btn soft';b.onclick=()=>{active=id;filter()};bar.appendChild(b)});const add=document.createElement('button');add.type='button';add.className='btn soft';add.textContent='+ สร้างหมวด';add.onclick=()=>{const n=prompt('ชื่อหมวดหมู่ใหม่');if(!n?.trim())return;const id='custom_'+Date.now();custom.push({id,name:n.trim()});labels[id]=n.trim();save();render();options();};bar.appendChild(add);const edit=document.createElement('button');edit.type='button';edit.className='btn soft';edit.textContent='✎ แก้ชื่อหมวด';edit.onclick=()=>{const ids=keys().filter(x=>x!=='all'),p=prompt('เลือกหมวดที่จะแก้ชื่อ โดยพิมพ์เลข\n\n'+ids.map((x,i)=>`${i+1}. ${labels[x]}`).join('\n'));const i=Number(p)-1;if(!Number.isInteger(i)||i<0||i>=ids.length)return;const id=ids[i],n=prompt('ชื่อใหม่ของหมวด',labels[id]);if(!n?.trim())return;labels[id]=n.trim();const c=custom.find(x=>x.id===id);if(c)c.name=n.trim();save();render();options();};bar.appendChild(edit);filter();}
- function bindCards(){document.querySelectorAll('#productList .productEdit').forEach(card=>{const sel=card.querySelector('.p-category');if(!sel)return;if(!sel.dataset.ymkBound){sel.dataset.ymkBound='1';sel.dataset.ymkCategory=sel.value;sel.addEventListener('change',()=>{sel.dataset.ymkCategory=sel.value;filter()});}const id=card.dataset.id;if(id&&typeof db!=='undefined'&&db){/* Firestore snapshot below restores real category */}});options();filter();}
- function syncProducts(){if(typeof db==='undefined'||!db)return setTimeout(syncProducts,300);db.collection('products').onSnapshot(s=>{const map={};let changed=false;s.docs.forEach(d=>{const p=d.data()||{};map[d.id]=p.category||'echoes';const id=p.category;if(id&&!base[id]&&!custom.some(x=>x.id===id)){const n=p.categoryLabel||id;custom.push({id,name:n});labels[id]=n;changed=true;}});if(changed){save();render();}setTimeout(()=>{document.querySelectorAll('#productList .productEdit').forEach(card=>{const sel=card.querySelector('.p-category'),cat=map[card.dataset.id];if(sel&&cat){sel.dataset.ymkCategory=cat;options();sel.value=cat;}});filter();},50);});}
- function interceptSave(e){const btn=e.target.closest('.p-save');if(!btn)return;const card=btn.closest('.productEdit'),sel=card?.querySelector('.p-category');if(!card||!sel||!db||!auth?.currentUser)return;const category=sel.value,categoryLabel=labels[category]||sel.selectedOptions?.[0]?.textContent||category;setTimeout(()=>db.collection('products').doc(card.dataset.id).set({category,categoryLabel},{merge:true}).catch(console.warn),100);}
- function start(){load();render();bindCards();document.addEventListener('click',interceptSave,true);new MutationObserver(bindCards).observe(document.getElementById('productList'),{childList:true,subtree:true});syncProducts();}
- if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
+  const BASE={all:'ทั้งหมด',echoes:'เติมกระดุม',skins:'เติมสกิน',accessories:'เติมประดับ'};
+  let labels={...BASE}, custom=[], active='all', productCats={};
+
+  function loadLocal(){
+    try{
+      Object.assign(labels,JSON.parse(localStorage.getItem('ymk_category_labels')||'{}'));
+      const c=JSON.parse(localStorage.getItem('ymk_custom_categories')||'[]');
+      custom=Array.isArray(c)?c:[];
+    }catch(e){custom=[];}
+    custom.forEach(x=>labels[x.id]=x.name);
+  }
+  function saveLocal(){
+    try{
+      localStorage.setItem('ymk_category_labels',JSON.stringify(labels));
+      localStorage.setItem('ymk_custom_categories',JSON.stringify(custom));
+    }catch(e){}
+  }
+  function keys(){return ['all','echoes','skins','accessories',...custom.map(x=>x.id)];}
+
+  function patchSelects(){
+    document.querySelectorAll('#productList .productEdit').forEach(card=>{
+      const sel=card.querySelector('.p-category');
+      if(!sel)return;
+      const id=card.dataset.id||'';
+      const wanted=sel.dataset.userChoice || productCats[id] || sel.value || 'echoes';
+      ['echoes','skins','accessories'].forEach(k=>{
+        const o=[...sel.options].find(x=>x.value===k);
+        if(o)o.textContent=labels[k]||BASE[k];
+      });
+      custom.forEach(x=>{
+        let o=[...sel.options].find(v=>v.value===x.id);
+        if(!o){o=document.createElement('option');o.value=x.id;sel.appendChild(o);}
+        o.textContent=labels[x.id]||x.name;
+      });
+      if([...sel.options].some(o=>o.value===wanted)) sel.value=wanted;
+      if(!sel.dataset.categoryListener){
+        sel.dataset.categoryListener='1';
+        sel.addEventListener('change',()=>{
+          sel.dataset.userChoice=sel.value;
+          applyFilter();
+        });
+      }
+    });
+  }
+
+  function applyFilter(){
+    document.querySelectorAll('#productList .productEdit').forEach(card=>{
+      const sel=card.querySelector('.p-category');
+      const id=card.dataset.id||'';
+      const cat=sel?.dataset.userChoice || productCats[id] || sel?.value || '';
+      card.style.display=(active==='all'||cat===active)?'':'none';
+    });
+    document.querySelectorAll('#productCategoryTabs button[data-category]').forEach(b=>{
+      const on=b.dataset.category===active;
+      b.style.background=on?'#e889ad':'#fff0f6';
+      b.style.color=on?'#fff':'#92566e';
+      b.style.borderColor=on?'#e889ad':'#efc8d7';
+    });
+  }
+
+  function renderBar(){
+    const list=document.getElementById('productList');
+    if(!list)return;
+    let bar=document.getElementById('productCategoryTabs');
+    if(!bar){
+      bar=document.createElement('div');
+      bar.id='productCategoryTabs';
+      bar.style.cssText='display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px;padding:6px;background:#fff;border:1px solid #f2ccdc;border-radius:16px;';
+      list.parentNode.insertBefore(bar,list);
+    }
+    bar.innerHTML='';
+    keys().forEach(id=>{
+      const b=document.createElement('button');
+      b.type='button'; b.dataset.category=id; b.textContent=labels[id]||id;
+      b.className='btn soft';
+      b.addEventListener('click',()=>{active=id;applyFilter();});
+      bar.appendChild(b);
+    });
+    const add=document.createElement('button');
+    add.type='button'; add.className='btn soft'; add.textContent='+ สร้างหมวด';
+    add.addEventListener('click',()=>{
+      const name=prompt('ชื่อหมวดหมู่ใหม่');
+      if(!name||!name.trim())return;
+      const id='custom_'+Date.now();
+      custom.push({id,name:name.trim()}); labels[id]=name.trim(); saveLocal();
+      renderBar(); patchSelects(); active=id; applyFilter();
+    });
+    bar.appendChild(add);
+
+    const edit=document.createElement('button');
+    edit.type='button'; edit.className='btn soft'; edit.textContent='✎ แก้ชื่อหมวด';
+    edit.addEventListener('click',()=>{
+      const editable=keys().filter(x=>x!=='all');
+      const pick=prompt('เลือกหมวดที่จะแก้ชื่อ โดยพิมพ์เลข\n\n'+editable.map((id,i)=>(i+1)+'. '+(labels[id]||id)).join('\n'));
+      if(!pick)return;
+      const idx=Number(pick)-1;
+      if(!Number.isInteger(idx)||idx<0||idx>=editable.length){alert('เลขหมวดไม่ถูกต้องค่ะ');return;}
+      const id=editable[idx];
+      const name=prompt('ชื่อใหม่ของหมวด',labels[id]||id);
+      if(!name||!name.trim())return;
+      labels[id]=name.trim();
+      const c=custom.find(x=>x.id===id); if(c)c.name=name.trim();
+      saveLocal(); renderBar(); patchSelects(); applyFilter();
+    });
+    bar.appendChild(edit);
+    applyFilter();
+  }
+
+  function startFirestoreSync(){
+    try{
+      if(typeof db==='undefined'||!db)return setTimeout(startFirestoreSync,400);
+      db.collection('products').onSnapshot(snap=>{
+        const next={}; let added=false;
+        snap.docs.forEach(doc=>{
+          const p=doc.data()||{};
+          const cat=String(p.category||'echoes');
+          next[doc.id]=cat;
+          if(cat && !BASE[cat] && !custom.some(x=>x.id===cat)){
+            const name=String(p.categoryLabel||cat);
+            custom.push({id:cat,name}); labels[cat]=name; added=true;
+          }
+        });
+        productCats=next;
+        if(added){saveLocal();renderBar();}
+        setTimeout(()=>{patchSelects();applyFilter();},50);
+      },()=>{});
+    }catch(e){console.warn('category sync failed',e);}
+  }
+
+  function start(){
+    loadLocal(); renderBar(); patchSelects(); startFirestoreSync();
+    setInterval(()=>{patchSelects();applyFilter();},700);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
 })();
