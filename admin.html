@@ -12,8 +12,8 @@
 document.getElementById('adminFrame').addEventListener('load',function(){
   const d=this.contentDocument;
   if(!d) return;
-  const s=d.createElement('script');
-  s.textContent=`(function(){
+  const clearFix=d.createElement('script');
+  clearFix.textContent=`(function(){
     const extra=document.getElementById('clearAllOrders');
     if(extra) extra.style.display='none';
     const old=document.getElementById('clearAll');
@@ -30,7 +30,10 @@ document.getElementById('adminFrame').addEventListener('load',function(){
       finally{btn.disabled=false;btn.textContent=oldText;}
     });
   })();`;
-  d.body.appendChild(s);
+  d.body.appendChild(clearFix);
+  const productFix=d.createElement('script');
+  productFix.src='admin-product-fix.js?v=2';
+  d.body.appendChild(productFix);
 });
 </script>
 </body>
