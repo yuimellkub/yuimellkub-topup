@@ -43,6 +43,15 @@ document.getElementById('site').addEventListener('load',function(){
     start();
   })();`;
   d.body.appendChild(s);
+
+  const cfg=d.createElement('script');
+  cfg.src='emailjs-config.js?v=1';
+  cfg.onload=()=>{
+    const mail=d.createElement('script');
+    mail.src='order-email-notify.js?v=1';
+    d.body.appendChild(mail);
+  };
+  d.body.appendChild(cfg);
 });
 </script>
 </body>
