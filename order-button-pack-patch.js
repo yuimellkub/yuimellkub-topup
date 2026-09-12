@@ -2,14 +2,18 @@
   let products=[];
 
   function normalize(v){return String(v||'').trim();}
+  function cleanOrderName(v){return normalize(v).replace(/\s*[×xX]\s*\d+\s*$/,'').trim();}
   function buttonAmountFromName(name){
-    const m=normalize(name).match(/(\d[\d,]*)/);
-    if(!m) return '';
-    return m[1].replace(/,/g,'');
+    const text=normalize(name);
+    const labeled=text.match(/(\d[\d,]*)\s*(?:กระดุม|ปุ่ม|buttons?)/i);
+    if(labeled) return labeled[1].replace(/,/g,'');
+    const nums=[...text.matchAll(/\d[\d,]*/g)];
+    if(!nums.length) return '';
+    return nums[nums.length-1][0].replace(/,/g,'');
   }
   function findProduct(order){
-    const item=normalize(order?.item);
-    const pack=normalize(order?.pack);
+    const item=cleanOrderName(order?.item);
+    const pack=cleanOrderName(order?.pack);
     return products.find(p=>{
       const name=normalize(p.name);
       return name && (name===item || name===pack);
@@ -22,8 +26,9 @@
       if(!p || !['skins','accessories'].includes(String(p.category||''))) return;
       const amount=buttonAmountFromName(p.name);
       if(!amount) return;
-      lastOrder.pack=amount+' กระดุม';
-      lastOrder.buttonPack=amount;
+      const qty=Math.max(1,Math.floor(Number(lastOrder.quantity)||1);
+      lastOrder.pack=amount+' กระดุม'+(qty>1?' × '+qty:'');
+      lastOrder.buttonPack=Number(amount)*qty;
     }catch(e){console.warn('button pack patch failed',e);}
   }
 
