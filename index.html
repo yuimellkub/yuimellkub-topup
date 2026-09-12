@@ -45,7 +45,12 @@ document.getElementById('site').addEventListener('load',function(){
   d.body.appendChild(s);
 
   const qty=d.createElement('script');
-  qty.src='ready-stock-quantity.js?v=2';
+  qty.src='ready-stock-quantity.js?v=3';
+  qty.onload=()=>{
+    const packBefore=d.createElement('script');
+    packBefore.src='ready-stock-pack-before-order.js?v=1';
+    d.body.appendChild(packBefore);
+  };
   d.body.appendChild(qty);
 
   const pack=d.createElement('script');
