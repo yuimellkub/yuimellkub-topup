@@ -67,6 +67,8 @@
     const cost=a*30+b*90+c*145+d*unit759;
     const count=a+b+c+d;
 
+    // Return counts in the same order as packs[] (66,203,335,759).
+    // Rendering is overridden below so the visible pack list is largest -> smallest.
     return {
       counts:[a,b,c,d],
       totalEchoes,
@@ -77,8 +79,49 @@
     };
   }
 
+  function formatLargestFirst(best){
+    const order=[3,2,1,0];
+    const echoes=[66,203,335,759];
+    return order.map(i=>best.counts[i]>0 ? `${echoes[i].toLocaleString()} × ${best.counts[i]}` : '').filter(Boolean).join(' + ');
+  }
+
   // Override only calculator pricing/pack selection functions.
   window.price759=price759Tier;
   window.findBest=ymkFindBest;
-  window.YMK_CALCULATOR_PACK_RULES={price759:price759Tier,findBest:ymkFindBest,bestSmallPackFill};
+  window.YMK_CALCULATOR_PACK_RULES={price759:price759Tier,findBest:ymkFindBest,bestSmallPackFill,formatLargestFirst};
+
+  // Replace calculator result renderers only to display packs largest -> smallest.
+  window.showNormalDone=function(){
+    currentOrderId=null;
+    const target=Math.max(0,Math.floor(Number(document.getElementById('target').value)||0));
+    if(!target)return;
+    const best=findBest(target);
+    const detail=formatLargestFirst(best);
+    lastOrder={item:target.toLocaleString()+' กระดุม',pack:detail,price:best.cost.toLocaleString()+' บาท'};
+    openDonePopup([
+      ['ต้องการ',target.toLocaleString()+' กระดุม'],
+      ['ได้ทั้งหมด',best.totalEchoes.toLocaleString()+' กระดุม'],
+      ['แพ็ก',detail],
+      ['ยอดรวม',best.cost.toLocaleString()+' บาท','done-price']
+    ]);
+  };
+
+  window.showGachaDone=function(){
+    currentOrderId=null;
+    const rolls=Math.max(0,Math.floor(Number(document.getElementById('gachaRolls').value)||0));
+    const special=Math.min(3,Math.max(0,Number(document.getElementById('specialCrystalPacks').value)||0));
+    if(!rolls&&!special)return;
+    const totalBalls=rolls+special*10;
+    const need=rolls*96+special*576;
+    const best=findBest(need);
+    const detail=formatLargestFirst(best);
+    lastOrder={item:totalBalls.toLocaleString()+' ลูก (ปกติ '+rolls.toLocaleString()+' + พิเศษ '+special.toLocaleString()+' แพ็ก)',pack:detail,price:best.cost.toLocaleString()+' บาท'};
+    openDonePopup([
+      ['ลูกทั้งหมด',totalBalls.toLocaleString()+' ลูก'],
+      ['แพ็กพิเศษ',special.toLocaleString()+' แพ็ก'],
+      ['ใช้กระดุม',need.toLocaleString()+' กระดุม'],
+      ['แพ็ก',detail],
+      ['ยอดรวม',best.cost.toLocaleString()+' บาท','done-price']
+    ],'คำนวณกาชาเรียบร้อยแล้ว');
+  };
 })();
