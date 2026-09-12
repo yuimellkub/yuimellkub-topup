@@ -99,7 +99,7 @@
     if(!btn||!input) return;
     const max=maxFor(btn);
     input.max=String(max);
-    let q=Math.max(1,Math.min(max,Math.floor(Number(input.value)||1)););
+    const q=Math.max(1,Math.min(max,Math.floor(Number(input.value)||1)));
     input.value=String(q);
     const pricing=currentPricing(btn,q);
     const totalEl=card.querySelector('.ymk-qty-total');
@@ -155,7 +155,7 @@
       try{
         if(typeof lastOrder!=='undefined' && lastOrder){
           lastOrder.quantity=q;
-          lastOrder.item= q>1 ? (base+' × '+q) : base;
+          lastOrder.item=q>1 ? (base+' × '+q) : base;
           lastOrder.price=pricing.total;
           if(pricing.auto && pricing.plan){
             lastOrder.unitButtonAmount=pricing.each;
