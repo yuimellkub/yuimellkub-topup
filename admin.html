@@ -13,33 +13,11 @@ document.getElementById('adminFrame').addEventListener('load',function(){
   const d=this.contentDocument;
   if(!d) return;
   const clearFix=d.createElement('script');
-  clearFix.textContent=`(function(){
-    const extra=document.getElementById('clearAllOrders');
-    if(extra) extra.style.display='none';
-    const old=document.getElementById('clearAll');
-    if(!old) return;
-    const btn=old.cloneNode(true);
-    old.replaceWith(btn);
-    btn.addEventListener('click',async()=>{
-      if(!online||!db||!auth?.currentUser){alert('กรุณาเข้าสู่ระบบร้านก่อนค่ะ');return;}
-      if(!confirm('ต้องการล้างออเดอร์ทั้งหมดใช่ไหมคะ?\\nรายการออเดอร์และสถานะติดตามจะถูกลบทั้งหมด และย้อนกลับไม่ได้')) return;
-      const oldText=btn.textContent;btn.disabled=true;btn.textContent='กำลังล้าง...';
-      async function wipe(name){while(true){const snap=await db.collection(name).limit(100).get();if(snap.empty)break;const batch=db.batch();snap.docs.forEach(x=>batch.delete(x.ref));await batch.commit();if(snap.size<100)break;}}
-      try{await wipe('orders');await wipe('order_status');alert('ล้างออเดอร์ทั้งหมดเรียบร้อยแล้วค่ะ ♡');}
-      catch(e){alert('ล้างออเดอร์ไม่สำเร็จ: '+e.message);}
-      finally{btn.disabled=false;btn.textContent=oldText;}
-    });
-  })();`;
+  clearFix.textContent=`(function(){const extra=document.getElementById('clearAllOrders');if(extra)extra.style.display='none';const old=document.getElementById('clearAll');if(!old)return;const btn=old.cloneNode(true);old.replaceWith(btn);btn.addEventListener('click',async()=>{if(!online||!db||!auth?.currentUser){alert('กรุณาเข้าสู่ระบบร้านก่อนค่ะ');return;}if(!confirm('ต้องการล้างออเดอร์ทั้งหมดใช่ไหมคะ?\\nรายการออเดอร์และสถานะติดตามจะถูกลบทั้งหมด และย้อนกลับไม่ได้'))return;const oldText=btn.textContent;btn.disabled=true;btn.textContent='กำลังล้าง...';async function wipe(name){while(true){const snap=await db.collection(name).limit(100).get();if(snap.empty)break;const batch=db.batch();snap.docs.forEach(x=>batch.delete(x.ref));await batch.commit();if(snap.size<100)break;}}try{await wipe('orders');await wipe('order_status');alert('ล้างออเดอร์ทั้งหมดเรียบร้อยแล้วค่ะ ♡');}catch(e){alert('ล้างออเดอร์ไม่สำเร็จ: '+e.message);}finally{btn.disabled=false;btn.textContent=oldText;}});})();`;
   d.body.appendChild(clearFix);
-  const orderFilter=d.createElement('script');
-  orderFilter.src='admin-order-filter.js?v=1';
-  d.body.appendChild(orderFilter);
-  const productFix=d.createElement('script');
-  productFix.src='admin-product-fix.js?v=2';
-  d.body.appendChild(productFix);
-  const categoryFix=d.createElement('script');
-  categoryFix.src='admin-category-patch.js?v=1';
-  d.body.appendChild(categoryFix);
+  const orderFilter=d.createElement('script');orderFilter.src='admin-order-filter.js?v=1';d.body.appendChild(orderFilter);
+  const productFix=d.createElement('script');productFix.src='admin-product-fix.js?v=2';d.body.appendChild(productFix);
+  const categoryFix=d.createElement('script');categoryFix.src='admin-category-patch.js?v=2';d.body.appendChild(categoryFix);
 });
 </script>
 </body>
