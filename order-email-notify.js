@@ -4,34 +4,44 @@
     return !!(c.publicKey&&c.serviceId&&c.templateId);
   }
 
-  function loadEmailJS(){
-    return new Promise((resolve,reject)=>{
-      if(window.emailjs) return resolve(window.emailjs);
-      const s=document.createElement('script');
-      s.src='https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js';
-      s.onload=()=>resolve(window.emailjs);
-      s.onerror=()=>reject(new Error('โหลด EmailJS ไม่สำเร็จ'));
-      document.head.appendChild(s);
-    });
-  }
-
   function val(id){return (document.getElementById(id)?.value||'').trim();}
 
   async function sendOrderEmail(payload){
-    if(!cfgReady()) return false;
+    if(!cfgReady()){
+      console.warn('EmailJS config is incomplete');
+      return false;
+    }
+
     const key='ymk_email_sent_'+payload.order_id;
     try{ if(localStorage.getItem(key)==='1') return true; }catch(e){}
 
     try{
       const c=window.YUIMELLKUB_EMAILJS;
-      const sdk=await loadEmailJS();
-      sdk.init({publicKey:c.publicKey});
-      await sdk.send(c.serviceId,c.templateId,payload);
+      const response=await fetch('https://api.emailjs.com/api/v1.0/email/send',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          service_id:c.serviceId,
+          template_id:c.templateId,
+          user_id:c.publicKey,
+          template_params:payload
+        })
+      });
+
+      const text=await response.text();
+      if(!response.ok) throw new Error((text||'EmailJS error')+' ('+response.status+')');
+
       try{localStorage.setItem(key,'1');}catch(e){}
-      console.log('Yuimellkub order email sent',payload.order_id);
+      console.log('Yuimellkub order email sent',payload.order_id,text);
       return true;
     }catch(e){
       console.warn('Yuimellkub order email failed',e);
+      try{
+        const st=document.getElementById('adminSaveStatus');
+        if(st && st.textContent.includes('ส่งออเดอร์เข้าระบบแล้ว')){
+          st.textContent += ' • แจ้งเตือนอีเมลไม่สำเร็จ (ออเดอร์ยังเข้าระบบแล้ว)';
+        }
+      }catch(_){}
       return false;
     }
   }
@@ -64,13 +74,13 @@
             price:before.price||'',
             uid:val('orderUid'),
             server:val('orderServer')||'Asia',
-            customer_name:val('orderName')||'-',
+            name:val('orderName')||'-',
             payment_method:getPaymentSafe(),
             status:'รอตรวจสอบการชำระเงิน',
             created_at:new Date().toLocaleString('th-TH'),
             admin_url:'https://yuimellkub.github.io/yuimellkub-topup/admin.html'
           };
-          sendOrderEmail(p);
+          await sendOrderEmail(p);
         }
       }
       return result;
