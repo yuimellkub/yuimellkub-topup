@@ -1,0 +1,23 @@
+(function(){
+  let products=[];
+  const PACKS=[{amount:7249,price:2925},{amount:3663,price:1475},{amount:2227,price:885},{amount:759,price:295},{amount:335,price:145},{amount:203,price:90},{amount:66,price:30}];
+  const cats=new Set(['skins','accessories','houses','house','home','furniture']);
+  function clean(v){return String(v||'').replace(/\s*[×xX]\s*\d+\s*$/,'').trim();}
+  function amountFromName(name){const t=clean(name);const m=t.match(/(\d[\d,]*)\s*(?:กระดุม|ปุ่ม|buttons?)/i);if(m)return Number(m[1].replace(/,/g,''));const nums=[...t.matchAll(/\d[\d,]*/g)];return nums.length?Number(nums[nums.length-1][0].replace(/,/g,''))||0:0;}
+  function bestPlan(target){target=Math.max(1,Math.floor(Number(target)||1));let best=null;PACKS.forEach(pack=>{const qty=Math.max(1,Math.ceil(target/pack.amount)),received=pack.amount*qty,price=pack.price*qty,c={target,received,price,text:pack.amount+' × '+qty,packAmount:pack.amount,packQty:qty};if(!best||price<best.price||(price===best.price&&(received<best.received||(received===best.received&&qty<best.packQty))))best=c;});return best;}
+  function findProduct(card){const btn=card?.querySelector('.ready-stock-order-btn');if(!btn)return null;const n=clean(btn.dataset.ymkBaseName||btn.dataset.readyName||'');const c=String(btn.dataset.readyCategory||'');return products.find(p=>clean(p.name)===n&&(String(p.category||'')===c||!c))||products.find(p=>clean(p.name)===n)||null;}
+  function isTarget(p){return p&&cats.has(String(p.category||'').toLowerCase());}
+  function patch(meta){if(!meta)return;const packText=meta.plan.text;
+    try{if(typeof lastOrder!=='undefined'&&lastOrder){lastOrder.pack=packText;lastOrder.packPlan=packText;lastOrder.quantity=meta.qty;lastOrder.price=meta.plan.price;lastOrder.requiredButtons=meta.plan.target;lastOrder.receivedButtons=meta.plan.received;}}catch(e){}
+    document.querySelectorAll('textarea').forEach(el=>{let v=el.value||'';if(!/รายการ:|แพ็ก:|ยอดรวม:/.test(v))return;if(/แพ็ก(?:ที่เติม)?:\s*[^\n\r]*/.test(v))v=v.replace(/แพ็ก(?:ที่เติม)?:\s*[^\n\r]*/,'แพ็ก: '+packText);else v=v.replace(/(รายการ:[^\n\r]*[\n\r]+)/,'$1แพ็ก: '+packText+'\n');el.value=v;el.dispatchEvent(new Event('input',{bubbles:true}));});
+    const leaves=[...document.querySelectorAll('div,p,span')].filter(x=>!x.children.length);
+    let done=false;leaves.forEach(el=>{const t=(el.textContent||'').trim();if(/^แพ็ก(?:ที่เติม)?:/.test(t)){el.textContent='แพ็กที่เติม: '+packText;done=true;}});
+    if(!done){const qtyLeaf=leaves.find(el=>/^จำนวน:\s*\d+/.test((el.textContent||'').trim()));if(qtyLeaf&&!document.querySelector('.ymk-forced-pack-line')){const line=document.createElement('div');line.className='ymk-forced-pack-line';line.textContent='แพ็กที่เติม: '+packText;line.style.cssText='margin-top:4px;color:inherit;font:inherit;';qtyLeaf.insertAdjacentElement('afterend',line);}}
+  }
+  function repatch(meta){[0,40,100,220,450,800].forEach(ms=>setTimeout(()=>patch(meta),ms));}
+  document.addEventListener('click',e=>{const confirm=e.target.closest('.ymk-confirm-order');if(!confirm)return;const card=confirm.closest('.ready-stock-card'),p=findProduct(card);if(!isTarget(p))return;const input=card.querySelector('.ymk-qty-input'),qty=Math.max(1,Math.floor(Number(input?.value)||1)),each=amountFromName(p.name);if(!each)return;const plan=bestPlan(each*qty);if(!plan)return;const meta={qty,product:p,plan};window.YMK_FORCED_PACK_META=meta;repatch(meta);},true);
+  const mo=new MutationObserver(()=>{if(window.YMK_FORCED_PACK_META)patch(window.YMK_FORCED_PACK_META);});
+  if(document.body)mo.observe(document.body,{childList:true,subtree:true});else document.addEventListener('DOMContentLoaded',()=>mo.observe(document.body,{childList:true,subtree:true}));
+  function load(){try{if(!window.firebase||!firebase.firestore)return setTimeout(load,250);if(!firebase.apps.length){if(!window.YUIMELLKUB_FIREBASE_CONFIG)return setTimeout(load,250);firebase.initializeApp(window.YUIMELLKUB_FIREBASE_CONFIG);}firebase.firestore().collection('products').onSnapshot(s=>{products=s.docs.map(d=>({id:d.id,...d.data()}));});}catch(e){setTimeout(load,500);}}
+  load();
+})();
