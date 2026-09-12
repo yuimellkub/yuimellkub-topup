@@ -7,6 +7,43 @@
 <style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#fff6fa}iframe{border:0;width:100%;height:100%;display:block;background:#fff6fa}</style>
 </head>
 <body>
-<iframe src="index.html.html" title="Yuimellkub Top-up"></iframe>
+<iframe id="site" src="index.html.html" title="Yuimellkub Top-up"></iframe>
+<script>
+document.getElementById('site').addEventListener('load',function(){
+  const d=this.contentDocument;
+  if(!d) return;
+  const s=d.createElement('script');
+  s.textContent=`(function(){
+    function applyStockStates(items){
+      document.querySelectorAll('.ready-stock-order-btn').forEach(btn=>{
+        const p=items.find(x=>String(x.name||'สินค้า')===String(btn.dataset.readyName||'') && String(Number(x.price||0))===String(Number(btn.dataset.readyPrice||0)) && String(x.category||'echoes')===String(btn.dataset.readyCategory||'echoes'));
+        if(!p) return;
+        const status=p.status||'ready';
+        const label=status==='out'?'หมดชั่วคราว':status==='paused'?'ปิดชั่วคราว':'พร้อมเติม';
+        const disabled=status==='out'||status==='paused';
+        const card=btn.closest('.ready-stock-card');
+        const badge=card&&card.querySelector('.ready-stock-status');
+        btn.disabled=disabled;
+        btn.textContent=disabled?label:'สั่งซื้อ';
+        if(card) card.classList.toggle('is-soldout',disabled);
+        if(badge){badge.textContent=label;badge.classList.toggle('is-ready',!disabled);badge.classList.toggle('is-out',disabled);}
+      });
+    }
+    function start(){
+      try{
+        if(!window.firebase||!firebase.firestore) return setTimeout(start,250);
+        if(!firebase.apps.length){if(!window.YUIMELLKUB_FIREBASE_CONFIG)return;firebase.initializeApp(window.YUIMELLKUB_FIREBASE_CONFIG);}
+        firebase.firestore().collection('products').onSnapshot(snap=>{
+          if(snap.empty)return;
+          const items=snap.docs.map(d=>({id:d.id,...d.data()}));
+          setTimeout(()=>applyStockStates(items),0);
+        });
+      }catch(e){console.warn('stock state patch failed',e);}
+    }
+    start();
+  })();`;
+  d.body.appendChild(s);
+});
+</script>
 </body>
 </html>
