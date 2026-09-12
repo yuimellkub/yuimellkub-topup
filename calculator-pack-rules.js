@@ -7,10 +7,10 @@
 
   function price759Tier(qty){
     qty=Math.max(0,Math.floor(Number(qty)||0));
-    if(qty>=30) return 287;
-    if(qty>=20) return 290;
-    if(qty>=10) return 293;
-    return qty>0 ? 295 : 0;
+    if(qty>=30) return 283;
+    if(qty>=20) return 285;
+    if(qty>=10) return 287;
+    return qty>0 ? 290 : 0;
   }
 
   function bestSmallPackFill(need){
