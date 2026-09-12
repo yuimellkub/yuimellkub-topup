@@ -9,6 +9,9 @@
     if(!c)return;
     const id=c.dataset.id;
     const unlimited=!!c.querySelector('.p-unlimited')?.checked;
+    const catSel=c.querySelector('.p-category');
+    const category=catSel?.value||'echoes';
+    const categoryLabel=catSel?.selectedOptions?.[0]?.textContent?.trim()||category;
     const text=btn.textContent;
     btn.disabled=true;
     btn.textContent='กำลังบันทึก...';
@@ -16,7 +19,8 @@
       name:c.querySelector('.p-name').value.trim(),
       price:Number(c.querySelector('.p-price').value||0),
       order:Number(c.querySelector('.p-order').value||0),
-      category:c.querySelector('.p-category').value,
+      category,
+      categoryLabel,
       status:c.querySelector('.p-status').value,
       stock:unlimited?null:Math.max(0,Number(c.querySelector('.p-stock').value||0)),
       unlimitedStock:unlimited,
@@ -27,6 +31,7 @@
       updatedAt:firebase.firestore.FieldValue.serverTimestamp()
     },{merge:true}).then(()=>{
       btn.textContent='บันทึกแล้ว ✓';
+      document.dispatchEvent(new CustomEvent('ymk-product-saved',{detail:{category,categoryLabel}}));
       setTimeout(()=>{btn.disabled=false;btn.textContent=text;},700);
     }).catch(err=>{
       btn.disabled=false;btn.textContent=text;alert('บันทึกไม่สำเร็จ: '+err.message);
