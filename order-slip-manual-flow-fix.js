@@ -18,6 +18,11 @@
 
   function statusEl(){return document.getElementById('adminSaveStatus');}
 
+  function stopStatusWatch(){
+    if(statusUnsub){try{statusUnsub();}catch(e){}statusUnsub=null;}
+    pendingId='';
+  }
+
   function rewritePendingText(){
     const root=document.body;if(!root)return;
     const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;
@@ -68,13 +73,14 @@
 
   function startStatusWatch(id){
     const db=getDb();if(!db||!id)return;
+    stopStatusWatch();
     pendingId=id;
-    if(statusUnsub){try{statusUnsub();}catch(e){}}
     rewritePendingText();
     showResult('wait','กำลังรอร้านตรวจสอบสลิป • ยังไม่สร้างออเดอร์จนกว่าร้านจะยืนยัน');
     try{
       statusUnsub=db.collection('order_status').doc(id).onSnapshot(snap=>{
-        if(!snap.exists){rewritePendingText();return;}
+        if(id!==pendingId)return;
+        if(!snap.exists){rewritePendingText();showResult('wait','กำลังรอร้านตรวจสอบสลิป • ยังไม่สร้างออเดอร์จนกว่าร้านจะยืนยัน');return;}
         const d=snap.data()||{};
         const status=String(d.status||'');
         if(status==='สลิปไม่ผ่าน'||d.paymentStatus==='สลิปไม่ผ่าน'){
@@ -84,7 +90,7 @@
           if(btn)btn.disabled=false;
           return;
         }
-        if(status==='รอเติม'||d.orderReady===true||d.paymentStatus==='ชำระแล้ว'){
+        if(status==='รอเติม'&&d.orderReady===true&&d.paymentStatus==='ชำระแล้ว'){
           rewriteApprovedText();
           showResult('ok','✓ ร้านยืนยันสลิปแล้ว • ออเดอร์ถูกสร้างและอยู่ในสถานะรอเติม');
           try{localStorage.setItem('ymk_order_status_'+id,'รอเติม')}catch(e){}
@@ -134,12 +140,14 @@
       const manual=await isManualMode(db);
       if(!manual)return original.apply(this,arguments);
 
+      stopStatusWatch();
+      const oldBox=document.getElementById('ymkManualReviewResult');if(oldBox)oldBox.remove();
       const slip=document.getElementById('slipFile')?.files?.[0]||null;
       const st=statusEl();if(st){st.style.display='block';st.className='verify-status';st.textContent='กำลังส่งสลิปให้ร้านตรวจสอบ…';}
       try{
         if(!slip)throw new Error('กรุณาแนบสลิปก่อนส่ง');
         const compressed=await compressSlip(slip);
-        const id=(window.currentOrderId||window.makeOrderId?.()||('YMK'+Date.now()));
+        const id=(window.makeOrderId?.()||('YMK'+Date.now()+'-'+Math.random().toString(36).slice(2,7).toUpperCase()));
         window.currentOrderId=id;
         const order={
           id,
