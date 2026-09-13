@@ -4,6 +4,8 @@
   const MAX_SOURCE_BYTES=5*1024*1024;
   const MAX_DATA_URL_BYTES=520000;
   const EASYSLIP_WORKER_URL='https://yuimellkub-slip.yuimellkubtopup.workers.dev/';
+  const MAX_SLIP_AGE_MS=30*60*1000;
+  const FUTURE_TOLERANCE_MS=5*60*1000;
 
   function parseMoney(value){
     const n=Number(String(value??'').replace(/[^0-9.-]/g,''));
@@ -38,6 +40,20 @@
       throw new Error('สลิปนี้ถูกใช้ไปแล้ว กรุณาใช้สลิปใหม่');
     }
 
+    const slipDate=data.rawSlip?.date||'';
+    const slipTime=Date.parse(slipDate);
+    if(!slipDate||Number.isNaN(slipTime)){
+      throw new Error('ไม่พบวันและเวลาของรายการในสลิป กรุณาใช้สลิปใหม่');
+    }
+
+    const slipAge=Date.now()-slipTime;
+    if(slipAge>MAX_SLIP_AGE_MS){
+      throw new Error('สลิปนี้เก่าเกิน 30 นาที กรุณาใช้สลิปจากการชำระเงินครั้งล่าสุด');
+    }
+    if(slipAge< -FUTURE_TOLERANCE_MS){
+      throw new Error('วันหรือเวลาในสลิปไม่ถูกต้อง กรุณาตรวจสอบเวลาในอุปกรณ์แล้วลองใหม่');
+    }
+
     const amount=Number(data.amountInSlip??data.rawSlip?.amount?.amount);
     const expected=parseMoney(expectedAmount);
     if(expected>0&&Number.isFinite(amount)&&Math.abs(amount-expected)>0.01){
@@ -48,7 +64,7 @@
       verified:true,
       amount:Number.isFinite(amount)?amount:null,
       transRef:data.rawSlip?.transRef||'',
-      slipDate:data.rawSlip?.date||'',
+      slipDate,
       isDuplicate:false
     };
   }
