@@ -1,7 +1,7 @@
 (function(){
   'use strict';
 
-  const SETTINGS_ID='__ymk_settings__';
+  const SETTINGS_ID='ymk_store_settings';
   let unsub=null;
 
   const style=document.createElement('style');
@@ -26,76 +26,34 @@
     const head=document.querySelector('.head');
     if(!head)return;
     const box=document.createElement('section');
-    box.id='ymkSlipMode';
-    box.className='ymk-slip-mode';
-    box.innerHTML=`
-      <div class="ymk-slip-mode-top">
-        <div>
-          <div class="ymk-slip-mode-title">♡ การตรวจสอบสลิป</div>
-          <div class="ymk-slip-mode-sub">โหมดอัตโนมัติจะใช้ EasySlip • ถ้า EasySlip หมดโควตา/แพ็กหมด/ระบบขัดข้อง ออเดอร์จะเปลี่ยนเป็นให้ร้านตรวจเองอัตโนมัติ</div>
-        </div>
-      </div>
-      <div class="ymk-slip-mode-actions">
-        <button type="button" data-mode="auto">ระบบอัตโนมัติ</button>
-        <button type="button" data-mode="manual">ร้านตรวจเอง</button>
-      </div>
-      <div class="ymk-slip-mode-status" id="ymkSlipModeStatus">กำลังโหลดสถานะ…</div>
-    `;
+    box.id='ymkSlipMode';box.className='ymk-slip-mode';
+    box.innerHTML=`<div class="ymk-slip-mode-top"><div><div class="ymk-slip-mode-title">♡ การตรวจสอบสลิป</div><div class="ymk-slip-mode-sub">โหมดอัตโนมัติจะใช้ EasySlip • ถ้า EasySlip หมดโควตา/แพ็กหมด/ระบบขัดข้อง ออเดอร์จะเปลี่ยนเป็นให้ร้านตรวจเองอัตโนมัติ</div></div></div><div class="ymk-slip-mode-actions"><button type="button" data-mode="auto">ระบบอัตโนมัติ</button><button type="button" data-mode="manual">ร้านตรวจเอง</button></div><div class="ymk-slip-mode-status" id="ymkSlipModeStatus">กำลังโหลดสถานะ…</div>`;
     head.after(box);
-
     box.querySelectorAll('[data-mode]').forEach(btn=>btn.addEventListener('click',async()=>{
       if(!db||!auth?.currentUser){alert('กรุณาเข้าสู่ระบบร้านก่อนค่ะ');return;}
-      const mode=btn.dataset.mode;
-      const old=btn.textContent;
-      btn.disabled=true;btn.textContent='กำลังบันทึก…';
-      try{
-        await db.collection('products').doc(SETTINGS_ID).set({
-          hidden:true,
-          visible:false,
-          type:'settings',
-          category:'echoes',
-          name:'',
-          slipVerificationMode:mode,
-          updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-        },{merge:true});
-      }catch(e){
-        alert('เปลี่ยนโหมดไม่สำเร็จ: '+e.message);
-      }finally{
-        btn.disabled=false;btn.textContent=old;
-      }
+      const mode=btn.dataset.mode,old=btn.textContent;btn.disabled=true;btn.textContent='กำลังบันทึก…';
+      try{await db.collection('products').doc(SETTINGS_ID).set({hidden:true,visible:false,type:'settings',category:'echoes',name:'',slipVerificationMode:mode,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});}
+      catch(e){alert('เปลี่ยนโหมดไม่สำเร็จ: '+e.message);}
+      finally{btn.disabled=false;btn.textContent=old;}
     }));
   }
 
   function paint(mode){
     const box=document.getElementById('ymkSlipMode');if(!box)return;
     box.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));
-    const st=document.getElementById('ymkSlipModeStatus');
-    if(st)st.textContent=mode==='manual'
-      ? 'ตอนนี้: ร้านตรวจสลิปเอง — ระบบ EasySlip จะไม่ถูกเรียกใช้งาน'
-      : 'ตอนนี้: ระบบอัตโนมัติ — หาก EasySlip ใช้งานไม่ได้ จะส่งออเดอร์เข้ารอร้านตรวจแทน';
+    const st=document.getElementById('ymkSlipModeStatus');if(st)st.textContent=mode==='manual'?'ตอนนี้: ร้านตรวจสลิปเอง — ระบบ EasySlip จะไม่ถูกเรียกใช้งาน':'ตอนนี้: ระบบอัตโนมัติ — หาก EasySlip ใช้งานไม่ได้ จะส่งออเดอร์เข้ารอร้านตรวจแทน';
   }
 
   function connect(){
-    mount();
-    removeSettingsProductCard();
-    if(!db||!auth)return setTimeout(connect,300);
+    mount();removeSettingsProductCard();if(!db||!auth)return setTimeout(connect,300);
     auth.onAuthStateChanged(user=>{
       if(unsub){unsub();unsub=null;}
       if(!user){paint('auto');return;}
       unsub=db.collection('products').doc(SETTINGS_ID).onSnapshot(async snap=>{
-        if(!snap.exists){
-          paint('auto');
-          try{
-            await db.collection('products').doc(SETTINGS_ID).set({hidden:true,visible:false,type:'settings',category:'echoes',name:'',slipVerificationMode:'auto',updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
-          }catch(e){console.warn('create slip settings failed',e);}
-          return;
-        }
-        paint(snap.data()?.slipVerificationMode==='manual'?'manual':'auto');
-        removeSettingsProductCard();
+        if(!snap.exists){paint('auto');try{await db.collection('products').doc(SETTINGS_ID).set({hidden:true,visible:false,type:'settings',category:'echoes',name:'',slipVerificationMode:'auto',updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});}catch(e){console.warn('create slip settings failed',e);}return;}
+        paint(snap.data()?.slipVerificationMode==='manual'?'manual':'auto');removeSettingsProductCard();
       },e=>{console.warn('slip mode listener failed',e);paint('auto');});
     });
   }
-
-  new MutationObserver(removeSettingsProductCard).observe(document.getElementById('productList')||document.body,{childList:true,subtree:true});
-  connect();
+  new MutationObserver(removeSettingsProductCard).observe(document.getElementById('productList')||document.body,{childList:true,subtree:true});connect();
 })();
