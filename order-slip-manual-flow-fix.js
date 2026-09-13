@@ -11,11 +11,26 @@
   function makeReviewId(){const d=new Date(),p=n=>String(n).padStart(2,'0');return 'SLIP'+String(d.getFullYear()).slice(-2)+p(d.getMonth()+1)+p(d.getDate())+'-'+p(d.getHours())+p(d.getMinutes())+p(d.getSeconds())+'-'+Math.random().toString(36).slice(2,5).toUpperCase();}
   function getLastOrderSafe(){try{return typeof lastOrder!=='undefined'&&lastOrder?lastOrder:{};}catch(e){return {};}}
   function getPaymentSafe(){try{return typeof getPaymentMethod==='function'?getPaymentMethod():'';}catch(e){return '';}}
+  function scrubReferenceText(root){
+    const walker=document.createTreeWalker(root||document.body,NodeFilter.SHOW_TEXT);let n;
+    while((n=walker.nextNode())){
+      const t=n.nodeValue||'';
+      if(!t)continue;
+      n.nodeValue=t
+        .replace(/เลขออเดอร์:\s*(?:SLIP|YMK)[A-Z0-9-]+\s*•\s*เก็บเลขนี้ไว้สำหรับติดตามสถานะ/g,'')
+        .replace(/เลขออเดอร์:\s*(?:SLIP|YMK)[A-Z0-9-]+/g,'')
+        .replace(/เลขอ้างอิงสลิป/g,'')
+        .replace(/เลขออเดอร์ของคุณ/g,'')
+        .replace(/ยังไม่มีเลขออเดอร์\s*•\s*ร้านจะสร้างออเดอร์หลังยืนยันสลิปแล้ว/g,'')
+        .replace(/ร้านได้รับสลิปในระบบแล้ว\s*ไม่ต้องส่งซ้ำค่ะ\s*♡?/g,'');
+    }
+  }
   function cleanPostOrderPanel(){
     document.querySelectorAll('button,a').forEach(el=>{const t=(el.textContent||'').trim();if(/^(Messenger|LINE)$/i.test(t)){const wrap=el.parentElement;if(wrap&&wrap.children.length<=2&&[...wrap.children].every(x=>/^(Messenger|LINE)$/i.test((x.textContent||'').trim())))wrap.style.display='none';else el.style.display='none';}});
-    document.querySelectorAll('div,p,span,strong,b,h1,h2,h3,h4,small').forEach(el=>{if(el.children.length)return;const t=(el.textContent||'').trim();if(!t)return;if(t==='เลขอ้างอิงสลิป'||t==='เลขออเดอร์ของคุณ'||/^เลขออเดอร์:\s*(?:SLIP|YMK)[A-Z0-9-]+(?:\s*•.*)?$/.test(t)||/ยังไม่มีเลขออเดอร์\s*•\s*ร้านจะสร้างออเดอร์หลังยืนยันสลิปแล้ว/.test(t)||t==='ร้านได้รับสลิปในระบบแล้ว ไม่ต้องส่งซ้ำค่ะ ♡'||t==='กรุณาบันทึกเลขออเดอร์นี้ไว้สำหรับติดตามสถานะ')el.style.display='none';});
+    scrubReferenceText(document.body);
+    document.querySelectorAll('div,p,span,strong,b,h1,h2,h3,h4,small').forEach(el=>{if(el.children.length)return;const t=(el.textContent||'').trim();if(!t)el.style.display='none';});
   }
-  function rewritePending(reviewId){const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let n;while((n=w.nextNode())){if(!n.nodeValue)continue;n.nodeValue=n.nodeValue.replace('✓ ส่งออเดอร์เรียบร้อยแล้ว ♡','✓ ส่งสลิปเรียบร้อยแล้ว • รอร้านตรวจสอบ ♡').replace('ส่งออเดอร์เรียบร้อยแล้ว ♡','ส่งสลิปเรียบร้อยแล้ว • รอร้านตรวจสอบ ♡').replace('กรุณาบันทึกเลขออเดอร์นี้ไว้สำหรับติดตามสถานะ','ยังไม่มีเลขออเดอร์ • ร้านจะสร้างออเดอร์หลังยืนยันสลิปแล้ว').replace('รบกวนส่งสลิปในแชท Messenger อีกครั้งด้วยนะคะ ♡','ร้านได้รับสลิปในระบบแล้ว ไม่ต้องส่งซ้ำค่ะ ♡');}cleanPostOrderPanel();if(reviewId)document.querySelectorAll('button,a').forEach(el=>{if(/คัดลอกเลขออเดอร์/.test(el.textContent||''))el.style.display='none';});}
+  function rewritePending(reviewId){const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let n;while((n=w.nextNode())){if(!n.nodeValue)continue;n.nodeValue=n.nodeValue.replace('✓ ส่งออเดอร์เรียบร้อยแล้ว ♡','✓ ส่งสลิปเรียบร้อยแล้ว • รอร้านตรวจสอบ ♡').replace('ส่งออเดอร์เรียบร้อยแล้ว ♡','ส่งสลิปเรียบร้อยแล้ว • รอร้านตรวจสอบ ♡').replace('กรุณาบันทึกเลขออเดอร์นี้ไว้สำหรับติดตามสถานะ','').replace('รบกวนส่งสลิปในแชท Messenger อีกครั้งด้วยนะคะ ♡','');}cleanPostOrderPanel();if(reviewId)document.querySelectorAll('button,a').forEach(el=>{if(/คัดลอกเลขออเดอร์/.test(el.textContent||''))el.style.display='none';});}
   function rewriteApproved(reviewId,orderId){window.currentOrderId=orderId;const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let n;while((n=w.nextNode())){if(!n.nodeValue)continue;n.nodeValue=n.nodeValue.replace('✓ ส่งสลิปเรียบร้อยแล้ว • รอร้านตรวจสอบ ♡','✓ ร้านยืนยันสลิปแล้ว ♡').replace('✓ ยืนยันสลิปแล้ว • สร้างออเดอร์เรียบร้อยแล้ว ♡','✓ ร้านยืนยันสลิปแล้ว ♡').replace(reviewId,orderId);}cleanPostOrderPanel();[50,150,400,900,1600].forEach(ms=>setTimeout(cleanPostOrderPanel,ms));}
   function show(kind,msg){const st=statusEl();if(!st)return;st.style.display='block';st.className=kind==='ok'?'verify-status ok':'verify-status';st.textContent=msg;}
   function watchReview(reviewId){const db=getDb();if(!db)return;stopWatch();pendingReviewId=reviewId;rewritePending(reviewId);show('wait','กำลังรอร้านตรวจสอบสลิป • ยังไม่มีการสร้างออเดอร์');statusUnsub=db.collection('order_status').doc(reviewId).onSnapshot(snap=>{if(reviewId!==pendingReviewId||!snap.exists)return;const d=snap.data()||{};if(d.status==='สลิปไม่ผ่าน'||d.paymentStatus==='สลิปไม่ผ่าน'){rewritePending(reviewId);show('bad',d.slipReviewMessage||'ตรวจสอบสลิปไม่สำเร็จ กรุณาแนบสลิปที่ถูกต้องแล้วส่งใหม่อีกครั้ง');document.querySelectorAll('button').forEach(b=>{if(/ส่งสลิปให้ร้านตรวจสอบ|ส่งออเดอร์ให้ร้านตรวจสอบ/.test(b.textContent||''))b.disabled=false;});return;}if(d.status==='ยืนยันแล้ว'&&d.paymentStatus==='ชำระแล้ว'&&d.approvedOrderId){rewriteApproved(reviewId,String(d.approvedOrderId));show('ok','✓ ร้านยืนยันสลิปแล้ว • เลขออเดอร์ '+d.approvedOrderId);try{localStorage.setItem('ymk_order_status_'+d.approvedOrderId,'รอเติม')}catch(e){}}},e=>console.warn('manual review watch failed',e));}
