@@ -3,6 +3,7 @@
   const SETTINGS_ID='ymk_store_settings';
   const MAX_SOURCE_BYTES=5*1024*1024;
   const MAX_DATA_URL_BYTES=520000;
+  const SUBMIT_URL='https://asia-southeast1-yuimellkub-topup.cloudfunctions.net/submitManualSlip';
   let patched=false,statusUnsub=null,pendingReviewId='';
 
   function getDb(){try{if(!window.firebase||!window.YUIMELLKUB_FIREBASE_CONFIG)return null;if(!firebase.apps.length)firebase.initializeApp(window.YUIMELLKUB_FIREBASE_CONFIG);return firebase.firestore();}catch(e){return null;}}
@@ -49,6 +50,12 @@
 
   function compressSlip(file){return new Promise((resolve,reject)=>{if(!file)return reject(new Error('กรุณาแนบสลิปก่อนส่ง'));if(!String(file.type||'').startsWith('image/'))return reject(new Error('กรุณาแนบสลิปเป็นรูปภาพ'));if(file.size>MAX_SOURCE_BYTES)return reject(new Error('สลิปมีขนาดเกิน 5MB กรุณาใช้รูปที่เล็กลง'));const r=new FileReader(),img=new Image();r.onerror=()=>reject(new Error('อ่านรูปสลิปไม่สำเร็จ'));img.onerror=()=>reject(new Error('เปิดรูปสลิปไม่สำเร็จ'));r.onload=()=>img.src=String(r.result||'');img.onload=()=>{try{const s=Math.min(1,1400/Math.max(img.naturalWidth,img.naturalHeight)),width=Math.max(1,Math.round(img.naturalWidth*s)),height=Math.max(1,Math.round(img.naturalHeight*s)),c=document.createElement('canvas');c.width=width;c.height=height;const x=c.getContext('2d',{alpha:false});x.fillStyle='#fff';x.fillRect(0,0,width,height);x.drawImage(img,0,0,width,height);let q=.78,data=c.toDataURL('image/jpeg',q);while(data.length>MAX_DATA_URL_BYTES&&q>.42){q-=.08;data=c.toDataURL('image/jpeg',q);}if(data.length>MAX_DATA_URL_BYTES)throw new Error('รูปสลิปมีขนาดใหญ่เกินไป กรุณาครอปหรือใช้ภาพที่เล็กลง');resolve({data,width,height,bytes:data.length});}catch(e){reject(e)}};r.readAsDataURL(file);});}
   async function isManual(db){try{const s=await db.collection('products').doc(SETTINGS_ID).get();return s.exists&&s.data()?.slipVerificationMode==='manual';}catch(e){return false;}}
+  async function submitReview(payload){
+    const r=await fetch(SUBMIT_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    let data={};try{data=await r.json();}catch(e){}
+    if(!r.ok||!data.ok){const code=data.error||('HTTP_'+r.status);throw new Error(code==='IMAGE_TOO_LARGE'?'รูปสลิปมีขนาดใหญ่เกินไป กรุณาใช้ภาพที่เล็กลง':code==='INVALID_IMAGE'?'รูปสลิปไม่ถูกต้อง กรุณาเลือกภาพใหม่':code==='REVIEW_ID_EXISTS'?'ระบบสร้างเลขอ้างอิงซ้ำ กรุณากดส่งอีกครั้ง':'ระบบส่งสลิปขัดข้อง กรุณาลองใหม่อีกครั้ง');}
+    return data;
+  }
 
   function install(){
     if(patched)return;if(typeof window.saveOrderToDemoAdmin!=='function')return setTimeout(install,120);patched=true;const original=window.saveOrderToDemoAdmin;
@@ -59,7 +66,7 @@
         const compressed=await compressSlip(slip),reviewId=makeReviewId();
         window.currentOrderId=reviewId;
         const draft={item:window.lastOrder?.item||'',pack:window.lastOrder?.pack||'',price:window.lastOrder?.price||'',paymentMethod:typeof window.getPaymentMethod==='function'?window.getPaymentMethod():'',uid:(document.getElementById('orderUid')?.value||'').trim(),server:document.getElementById('orderServer')?.value||'Asia',name:(document.getElementById('orderName')?.value||'').trim()};
-        await db.collection('order_slips').doc(reviewId).set({reviewId,reviewPending:true,reviewDecision:'pending',...draft,imageData:compressed.data,mimeType:'image/jpeg',width:compressed.width,height:compressed.height,bytes:compressed.bytes,verified:false,verificationMode:'manual',createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+        await submitReview({reviewId,...draft,imageData:compressed.data,width:compressed.width,height:compressed.height,bytes:compressed.bytes});
         show('ok','✓ ส่งสลิปแล้ว • รอร้านตรวจสอบ');
         setTimeout(()=>watchReview(reviewId),60);setTimeout(()=>rewritePending(reviewId),150);setTimeout(()=>rewritePending(reviewId),500);
         return true;
