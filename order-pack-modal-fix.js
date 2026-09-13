@@ -1,18 +1,150 @@
 (function(){
   let products=[];
+  let selectedCard=null;
   const cats=new Set(['skins','skin','accessories','accessory','pets','pet','room','rooms','house','houses','home','furniture']);
+
   function clean(v){return String(v||'').replace(/\s*[×xX]\s*\d+\s*$/,'').trim();}
-  function amountFromName(name){const nums=[...clean(name).matchAll(/\d[\d,]*/g)];return nums.length?Number(nums[nums.length-1][0].replace(/,/g,''))||0:0;}
-  function planOne(target){target=Math.max(1,Math.floor(Number(target)||1));if(target===888)return{parts:[{amount:66,qty:2},{amount:759,qty:1}],received:891,price:355};if(target>759){const q=Math.ceil(target/759);return{parts:[{amount:759,qty:q}],received:759*q,price:295*q};}const packs=[{amount:66,price:30},{amount:203,price:90},{amount:335,price:145},{amount:759,price:295}],p=packs.find(x=>x.amount>=target)||packs[packs.length-1];return{parts:[{amount:p.amount,qty:1}],received:p.amount,price:p.price};}
-  function planFor(each,qty){const one=planOne(each),parts=one.parts.map(x=>({amount:x.amount,qty:x.qty*qty}));return{target:each*qty,received:one.received*qty,price:one.price*qty,text:parts.map(x=>x.amount+' × '+x.qty).join(' + ')};}
-  function infoFromCard(card){const btn=card?.querySelector('.ready-stock-order-btn');if(!btn)return null;const name=clean(btn.dataset.ymkBaseName||btn.dataset.readyName||''),cat=String(btn.dataset.readyCategory||card.dataset.readyCategory||card.dataset.category||'').toLowerCase().trim();const p=products.find(x=>clean(x.name)===name&&(String(x.category||'').toLowerCase()===cat||!cat))||products.find(x=>clean(x.name)===name)||null;return{name:(p&&p.name)||name,category:String((p&&p.category)||cat).toLowerCase().trim(),product:p,btn};}
-  function isTarget(info){if(!info||info.category==='echoes')return false;if(cats.has(info.category))return true;return /สกิน|ประดับ|สัตว์เลี้ยง|ห้อง/.test(String(info.product?.categoryLabel||''));}
-  function patch(meta){if(!meta)return;const packText=meta.plan.text,total=meta.plan.price;try{if(typeof lastOrder!=='undefined'&&lastOrder){lastOrder.pack=packText;lastOrder.packPlan=packText;lastOrder.quantity=meta.qty;lastOrder.price=total;lastOrder.requiredButtons=meta.plan.target;lastOrder.receivedButtons=meta.plan.received;}}catch(e){}
-    document.querySelectorAll('textarea').forEach(el=>{let v=el.value||'';if(!/รายการ:|แพ็ก:|ยอดรวม:/.test(v))return;v=/แพ็ก(?:ที่เติม)?:\s*[^\n\r]*/.test(v)?v.replace(/แพ็ก(?:ที่เติม)?:\s*[^\n\r]*/,'แพ็ก: '+packText):v.replace(/(รายการ:[^\n\r]*[\n\r]+)/,'$1แพ็ก: '+packText+'\n');v=v.replace(/ยอดรวม:\s*[^\n\r]*/,'ยอดรวม: '+total.toLocaleString('th-TH')+' บาท');el.value=v;el.dispatchEvent(new Event('input',{bubbles:true}));});
-    const leaves=[...document.querySelectorAll('div,p,span')].filter(x=>!x.children.length);leaves.forEach(el=>{const t=(el.textContent||'').trim();if(/^แพ็ก(?:ที่เติม)?:/.test(t))el.textContent='แพ็ก: '+packText;if(/^ยอดรวม:/.test(t))el.textContent='ยอดรวม: '+total.toLocaleString('th-TH')+' บาท';});
+  function amountFromName(name){
+    const t=clean(name);
+    const m=t.match(/(\d[\d,]*)\s*(?:กระดุม|ปุ่ม|buttons?)/i);
+    if(m)return Number(m[1].replace(/,/g,''))||0;
+    const nums=[...t.matchAll(/\d[\d,]*/g)];
+    return nums.length?Number(nums[nums.length-1][0].replace(/,/g,''))||0:0;
   }
+
+  function planForTarget(target){
+    target=Math.max(1,Math.floor(Number(target)||1));
+    const rules=window.YMK_CALCULATOR_PACK_RULES;
+    if(rules?.findBest){
+      const best=rules.findBest(target);
+      const text=rules.formatLargestFirst?rules.formatLargestFirst(best):'';
+      return {target,received:best.totalEchoes,price:best.cost,text};
+    }
+
+    // fallback ใช้กติกาเดียวกับเว็บหลัก
+    const packs=[
+      {amount:66,price:30},
+      {amount:203,price:90},
+      {amount:335,price:145},
+      {amount:759,price:290}
+    ];
+    let best=null;
+    for(let d=0;d<=Math.ceil(target/759)+1;d++){
+      for(let c=0;c<=1;c++){
+        for(let b=0;b<=2;b++){
+          for(let a=0;a<=2;a++){
+            const received=a*66+b*203+c*335+d*759;
+            if(received<target)continue;
+            const unit759=d>=30?283:d>=20?285:d>=10?287:d>0?290:0;
+            const raw=a*30+b*90+c*145+d*unit759;
+            const last=raw%10;
+            const price=(last===0||last===5)?raw:(last<=4?raw+(5-last):raw+(10-last));
+            const count=a+b+c+d;
+            const candidate={a,b,c,d,target,received,price,extra:received-target,count};
+            if(!best||candidate.extra<best.extra||(candidate.extra===best.extra&&candidate.price<best.price)||(candidate.extra===best.extra&&candidate.price===best.price&&candidate.count<best.count))best=candidate;
+          }
+        }
+      }
+    }
+    if(!best)return null;
+    const text=[[759,best.d],[335,best.c],[203,best.b],[66,best.a]].filter(x=>x[1]>0).map(x=>x[0].toLocaleString()+' × '+x[1]).join(' + ');
+    return {...best,text};
+  }
+
+  function infoFromCard(card){
+    const btn=card?.querySelector('.ready-stock-order-btn');
+    if(!btn)return null;
+    const name=clean(btn.dataset.ymkBaseName||btn.dataset.readyName||'');
+    const cat=String(btn.dataset.readyCategory||card.dataset.readyCategory||card.dataset.category||'').toLowerCase().trim();
+    const p=products.find(x=>clean(x.name)===name&&(String(x.category||'').toLowerCase()===cat||!cat))||products.find(x=>clean(x.name)===name)||null;
+    return {name:(p&&p.name)||name,category:String((p&&p.category)||cat).toLowerCase().trim(),product:p,btn,card};
+  }
+
+  function isTarget(info){
+    if(!info||info.category==='echoes')return false;
+    if(cats.has(info.category))return true;
+    return /สกิน|ประดับ|สัตว์เลี้ยง|ห้อง/.test(String(info.product?.categoryLabel||''));
+  }
+
+  function patch(meta){
+    if(!meta?.plan?.text)return;
+    const packText=meta.plan.text,total=meta.plan.price;
+    try{
+      if(typeof lastOrder!=='undefined'&&lastOrder){
+        lastOrder.pack=packText;
+        lastOrder.packPlan=packText;
+        lastOrder.quantity=meta.qty;
+        lastOrder.price=total;
+        lastOrder.requiredButtons=meta.plan.target;
+        lastOrder.receivedButtons=meta.plan.received;
+      }
+    }catch(e){}
+
+    document.querySelectorAll('textarea').forEach(el=>{
+      let v=el.value||'';
+      if(!/รายการ:|แพ็ก:|ยอดรวม:/.test(v))return;
+      v=/แพ็ก(?:ที่เติม)?:\s*[^\n\r]*/.test(v)
+        ?v.replace(/แพ็ก(?:ที่เติม)?:\s*[^\n\r]*/,'แพ็ก: '+packText)
+        :v.replace(/(รายการ:[^\n\r]*[\n\r]+)/,'$1แพ็ก: '+packText+'\n');
+      v=v.replace(/ยอดรวม:\s*[^\n\r]*/,'ยอดรวม: '+total.toLocaleString('th-TH')+' บาท');
+      el.value=v;
+      el.dispatchEvent(new Event('input',{bubbles:true}));
+    });
+
+    const leaves=[...document.querySelectorAll('div,p,span')].filter(x=>!x.children.length);
+    leaves.forEach(el=>{
+      const t=(el.textContent||'').trim();
+      if(/^แพ็ก(?:ที่เติม)?:/.test(t))el.textContent='แพ็ก: '+packText;
+      if(/^ยอดรวม:/.test(t))el.textContent='ยอดรวม: '+total.toLocaleString('th-TH')+' บาท';
+    });
+  }
+
+  function makeMeta(card){
+    const info=infoFromCard(card);
+    if(!isTarget(info))return null;
+    const input=card?.querySelector('.ymk-qty-input');
+    const qty=Math.max(1,Math.floor(Number(input?.value)||1));
+    const each=amountFromName(info.name);
+    if(!each)return null;
+    const plan=planForTarget(each*qty);
+    if(!plan)return null;
+    return {qty,info,plan};
+  }
+
   function repatch(meta){[0,20,50,100,180,300,500,800,1200].forEach(ms=>setTimeout(()=>patch(meta),ms));}
-  document.addEventListener('click',e=>{const confirm=e.target.closest('.ymk-confirm-order');if(!confirm)return;const card=confirm.closest('.ready-stock-card'),info=infoFromCard(card);if(!isTarget(info)){window.YMK_FORCED_PACK_META=null;return;}const input=card.querySelector('.ymk-qty-input'),qty=Math.max(1,Math.floor(Number(input?.value)||1)),each=amountFromName(info.name);if(!each)return;const meta={qty,info,plan:planFor(each,qty)};window.YMK_FORCED_PACK_META=meta;repatch(meta);},true);
-  const mo=new MutationObserver(()=>{if(window.YMK_FORCED_PACK_META)patch(window.YMK_FORCED_PACK_META);});if(document.body)mo.observe(document.body,{childList:true,subtree:true});else document.addEventListener('DOMContentLoaded',()=>mo.observe(document.body,{childList:true,subtree:true}));
-  function load(){try{if(!window.firebase||!firebase.firestore)return setTimeout(load,250);if(!firebase.apps.length){if(!window.YUIMELLKUB_FIREBASE_CONFIG)return setTimeout(load,250);firebase.initializeApp(window.YUIMELLKUB_FIREBASE_CONFIG);}firebase.firestore().collection('products').onSnapshot(s=>{products=s.docs.map(d=>({id:d.id,...d.data()}));});}catch(e){setTimeout(load,500);}}load();
+
+  document.addEventListener('click',e=>{
+    const orderBtn=e.target.closest('.ready-stock-order-btn');
+    if(orderBtn){
+      selectedCard=orderBtn.closest('.ready-stock-card');
+      const meta=makeMeta(selectedCard);
+      if(meta){window.YMK_FORCED_PACK_META=meta;repatch(meta);}
+      else window.YMK_FORCED_PACK_META=null;
+      return;
+    }
+
+    const confirm=e.target.closest('.ymk-confirm-order');
+    if(!confirm)return;
+    const card=confirm.closest('.ready-stock-card')||selectedCard;
+    const meta=makeMeta(card);
+    if(!meta){window.YMK_FORCED_PACK_META=null;return;}
+    window.YMK_FORCED_PACK_META=meta;
+    repatch(meta);
+  },true);
+
+  const mo=new MutationObserver(()=>{if(window.YMK_FORCED_PACK_META)patch(window.YMK_FORCED_PACK_META);});
+  if(document.body)mo.observe(document.body,{childList:true,subtree:true});
+  else document.addEventListener('DOMContentLoaded',()=>mo.observe(document.body,{childList:true,subtree:true}));
+
+  function load(){
+    try{
+      if(!window.firebase||!firebase.firestore)return setTimeout(load,250);
+      if(!firebase.apps.length){
+        if(!window.YUIMELLKUB_FIREBASE_CONFIG)return setTimeout(load,250);
+        firebase.initializeApp(window.YUIMELLKUB_FIREBASE_CONFIG);
+      }
+      firebase.firestore().collection('products').onSnapshot(s=>{products=s.docs.map(d=>({id:d.id,...d.data()}));});
+    }catch(e){setTimeout(load,500);}
+  }
+  load();
 })();
