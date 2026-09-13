@@ -10,6 +10,12 @@
   function statusEl(){return document.getElementById('adminSaveStatus');}
   function stopWatch(){if(statusUnsub){try{statusUnsub();}catch(e){}statusUnsub=null;}pendingReviewId='';}
   function makeReviewId(){const d=new Date(),p=n=>String(n).padStart(2,'0');return 'SLIP'+String(d.getFullYear()).slice(-2)+p(d.getMonth()+1)+p(d.getDate())+'-'+p(d.getHours())+p(d.getMinutes())+p(d.getSeconds())+'-'+Math.random().toString(36).slice(2,5).toUpperCase();}
+  function getLastOrderSafe(){
+    try{return typeof lastOrder!=='undefined'&&lastOrder?lastOrder:{};}catch(e){return {};}
+  }
+  function getPaymentSafe(){
+    try{return typeof getPaymentMethod==='function'?getPaymentMethod():'';}catch(e){return '';}
+  }
 
   function rewritePending(reviewId){
     const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let n;
@@ -65,7 +71,9 @@
       try{
         const compressed=await compressSlip(slip),reviewId=makeReviewId();
         window.currentOrderId=reviewId;
-        const draft={item:window.lastOrder?.item||'',pack:window.lastOrder?.pack||'',price:window.lastOrder?.price||'',paymentMethod:typeof window.getPaymentMethod==='function'?window.getPaymentMethod():'',uid:(document.getElementById('orderUid')?.value||'').trim(),server:document.getElementById('orderServer')?.value||'Asia',name:(document.getElementById('orderName')?.value||'').trim()};
+        const order=getLastOrderSafe();
+        const draft={item:order.item||'',pack:order.pack||'',price:order.price||'',paymentMethod:getPaymentSafe(),uid:(document.getElementById('orderUid')?.value||'').trim(),server:document.getElementById('orderServer')?.value||'Asia',name:(document.getElementById('orderName')?.value||'').trim()};
+        if(!draft.item||!draft.pack){console.warn('manual review order detail missing',draft);}
         await submitReview({reviewId,...draft,imageData:compressed.data,width:compressed.width,height:compressed.height,bytes:compressed.bytes});
         show('ok','✓ ส่งสลิปแล้ว • รอร้านตรวจสอบ');
         setTimeout(()=>watchReview(reviewId),60);setTimeout(()=>rewritePending(reviewId),150);setTimeout(()=>rewritePending(reviewId),500);
