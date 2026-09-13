@@ -8,7 +8,8 @@
     .ymk-customer-fulfillment-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
     .ymk-customer-fulfillment-item{padding:8px;border-radius:12px;background:#fff;border:1px solid #f4d6e2}
     .ymk-customer-fulfillment img{display:block;width:100%;height:220px;object-fit:contain;border-radius:10px;background:#fff}
-    .ymk-customer-fulfillment-save{display:flex;align-items:center;justify-content:center;width:100%;min-height:40px;margin-top:8px;border-radius:10px;text-decoration:none;background:#e889ad;color:#fff;font-weight:850;font-size:12px}
+    .ymk-customer-fulfillment-save-all{display:flex;align-items:center;justify-content:center;width:100%;min-height:44px;margin-top:10px;border:0;border-radius:12px;background:#e889ad;color:#fff;font-weight:850;font-size:13px;cursor:pointer}
+    .ymk-customer-fulfillment-save-all:disabled{opacity:.65;cursor:default}
     .ymk-customer-fulfillment-note{text-align:center;font-size:11px;color:#a16b80;line-height:1.5;margin-top:8px}
   `;
   document.head.appendChild(style);
@@ -35,6 +36,35 @@
     return data.fulfillmentSlipData?[data.fulfillmentSlipData]:[];
   }
 
+  function downloadOne(src,name){
+    const a=document.createElement('a');
+    a.href=src;
+    a.download=name;
+    a.style.display='none';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
+
+  async function downloadAll(images,safeId,btn){
+    if(!images.length)return;
+    const old=btn.textContent;
+    btn.disabled=true;
+    try{
+      for(let i=0;i<images.length;i++){
+        btn.textContent=`กำลังบันทึก ${i+1}/${images.length}…`;
+        downloadOne(images[i],`Yuimellkub-${safeId}-slip-${i+1}.jpg`);
+        await new Promise(r=>setTimeout(r,180));
+      }
+      btn.textContent='✓ ส่งบันทึกครบแล้ว';
+      setTimeout(()=>{btn.textContent=old;btn.disabled=false;},1200);
+    }catch(e){
+      btn.textContent=old;
+      btn.disabled=false;
+      alert('บันทึกสลิปไม่สำเร็จ กรุณาลองใหม่อีกครั้งค่ะ');
+    }
+  }
+
   async function attachSlip(orderId,status){
     removeOld();
     if(String(status||'').trim()!=='สำเร็จ')return;
@@ -51,15 +81,16 @@
       const box=document.createElement('div');
       box.className='ymk-customer-fulfillment';
       const safeId=String(orderId||'order').replace(/[^A-Za-z0-9_-]/g,'');
-      box.innerHTML=`<div class="ymk-customer-fulfillment-title">สลิปการเติมเกม ${images.length>1?'('+images.length+' รูป)':''}</div><div class="ymk-customer-fulfillment-grid"></div><div class="ymk-customer-fulfillment-note">กด “บันทึกรูป” ใต้แต่ละรูปเพื่อเก็บไว้ในเครื่องได้เลยค่ะ</div>`;
+      box.innerHTML=`<div class="ymk-customer-fulfillment-title">สลิปการเติมเกม ${images.length>1?'('+images.length+' รูป)':''}</div><div class="ymk-customer-fulfillment-grid"></div><button type="button" class="ymk-customer-fulfillment-save-all">บันทึกสลิปทั้งหมด${images.length>1?' ('+images.length+' รูป)':''}</button><div class="ymk-customer-fulfillment-note">กดครั้งเดียวเพื่อบันทึกสลิปทั้งหมดค่ะ • หากเบราว์เซอร์ถามเรื่องดาวน์โหลดหลายไฟล์ ให้กดอนุญาต</div>`;
       const grid=box.querySelector('.ymk-customer-fulfillment-grid');
       images.forEach((src,i)=>{
         const item=document.createElement('div');
         item.className='ymk-customer-fulfillment-item';
         const img=document.createElement('img');img.alt='สลิปการเติมเกม '+(i+1);img.src=src;
-        const save=document.createElement('a');save.className='ymk-customer-fulfillment-save';save.textContent='บันทึกรูป '+(i+1);save.href=src;save.download=`Yuimellkub-${safeId}-slip-${i+1}.jpg`;
-        item.appendChild(img);item.appendChild(save);grid.appendChild(item);
+        item.appendChild(img);grid.appendChild(item);
       });
+      const saveAll=box.querySelector('.ymk-customer-fulfillment-save-all');
+      saveAll.onclick=()=>downloadAll(images,safeId,saveAll);
       if(close)card.insertBefore(box,close);else card.appendChild(box);
     }catch(e){console.warn('load fulfillment slips failed',e);}
   }
