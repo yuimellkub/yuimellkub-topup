@@ -3,6 +3,55 @@
 
   const MAX_SOURCE_BYTES=5*1024*1024;
   const MAX_DATA_URL_BYTES=520000;
+  const EASYSLIP_WORKER_URL='https://yuimellkub-slip.yuimellkubtopup.workers.dev/';
+
+  function parseMoney(value){
+    const n=Number(String(value??'').replace(/[^0-9.-]/g,''));
+    return Number.isFinite(n)?n:0;
+  }
+
+  async function verifySlip(file,expectedAmount){
+    if(!file) return null;
+    if(!String(file.type||'').startsWith('image/'))throw new Error('กรุณาแนบสลิปเป็นรูปภาพ');
+    if(file.size>MAX_SOURCE_BYTES)throw new Error('สลิปมีขนาดเกิน 5MB กรุณาใช้รูปที่เล็กลง');
+
+    const form=new FormData();
+    form.append('image',file,file.name||'slip.jpg');
+
+    let response;
+    try{
+      response=await fetch(EASYSLIP_WORKER_URL,{method:'POST',body:form});
+    }catch(error){
+      throw new Error('เชื่อมระบบตรวจสลิปไม่สำเร็จ กรุณาลองใหม่อีกครั้ง');
+    }
+
+    let result=null;
+    try{result=await response.json()}catch(error){}
+
+    if(!response.ok||!result?.success){
+      const message=result?.error?.message||result?.message||'ตรวจสอบสลิปไม่ผ่าน';
+      throw new Error(message);
+    }
+
+    const data=result.data||{};
+    if(data.isDuplicate){
+      throw new Error('สลิปนี้ถูกใช้ไปแล้ว กรุณาใช้สลิปใหม่');
+    }
+
+    const amount=Number(data.amountInSlip??data.rawSlip?.amount?.amount);
+    const expected=parseMoney(expectedAmount);
+    if(expected>0&&Number.isFinite(amount)&&Math.abs(amount-expected)>0.01){
+      throw new Error('ยอดในสลิปไม่ตรงกับยอดออเดอร์ (สลิป '+amount.toFixed(2)+' บาท / ออเดอร์ '+expected.toFixed(2)+' บาท)');
+    }
+
+    return {
+      verified:true,
+      amount:Number.isFinite(amount)?amount:null,
+      transRef:data.rawSlip?.transRef||'',
+      slipDate:data.rawSlip?.date||'',
+      isDuplicate:false
+    };
+  }
 
   function compressSlip(file){
     return new Promise((resolve,reject)=>{
@@ -58,7 +107,18 @@
 
     if(firebaseReady()){
       try{
-        st.textContent=slip?'กำลังย่อและบันทึกรูปสลิป…':'กำลังส่งออเดอร์เข้าระบบออนไลน์…';
+        let verification=null;
+        if(slip){
+          st.textContent='กำลังตรวจสอบสลิปอัตโนมัติ…';
+          verification=await verifySlip(slip,order.price);
+          order.paymentStatus='ตรวจสอบสลิปแล้ว';
+          order.slipVerified=true;
+          order.slipVerifiedAmount=verification.amount;
+          order.slipTransRef=verification.transRef;
+          order.slipTransactionDate=verification.slipDate;
+        }
+
+        st.textContent=slip?'ตรวจสลิปผ่านแล้ว กำลังบันทึกรูปและส่งออเดอร์…':'กำลังส่งออเดอร์เข้าระบบออนไลน์…';
         const {db}=getFirebaseServices();
         const compressed=await compressSlip(slip);
         const batch=db.batch();
@@ -66,7 +126,7 @@
         batch.set(orderRef,{...order,slipAttached:!!compressed.data,slipFileName:slip?(slip.name||'slip.jpg'):'',slipPath:compressed.data?'order_slips/'+order.id:'',createdAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
         if(compressed.data){
           const slipRef=db.collection('order_slips').doc(order.id);
-          batch.set(slipRef,{orderId:order.id,imageData:compressed.data,mimeType:'image/jpeg',width:compressed.width,height:compressed.height,bytes:compressed.bytes,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+          batch.set(slipRef,{orderId:order.id,imageData:compressed.data,mimeType:'image/jpeg',width:compressed.width,height:compressed.height,bytes:compressed.bytes,verified:!!verification,verifiedAmount:verification?.amount??null,transRef:verification?.transRef||'',createdAt:firebase.firestore.FieldValue.serverTimestamp()});
         }
         await batch.commit();
         try{
@@ -79,7 +139,7 @@
         }
         try{localStorage.setItem('ymk_order_status_'+order.id,order.shopStatus)}catch(e){}
         st.className='verify-status ok';
-        st.textContent='✓ ส่งออเดอร์และบันทึกรูปสลิปเข้าระบบแล้ว: '+order.id;
+        st.textContent=(verification?'✓ ตรวจสลิปผ่านและส่งออเดอร์แล้ว: ':'✓ ส่งออเดอร์แล้ว: ')+order.id;
         return true;
       }catch(e){
         console.error(e);st.className='verify-status';
