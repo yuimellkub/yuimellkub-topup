@@ -3,7 +3,7 @@
   const SETTINGS_ID='ymk_store_settings';
   const MAX_SOURCE_BYTES=5*1024*1024;
   const MAX_DATA_URL_BYTES=520000;
-  const SUBMIT_URL='https://asia-southeast1-yuimellkub-topup.cloudfunctions.net/submitManualSlip';
+  const SUBMIT_URL='https://yuimellkub-slip.yuimellkubtopup.workers.dev/manual-slip';
   let patched=false,statusUnsub=null,pendingReviewId='';
 
   function getDb(){try{if(!window.firebase||!window.YUIMELLKUB_FIREBASE_CONFIG)return null;if(!firebase.apps.length)firebase.initializeApp(window.YUIMELLKUB_FIREBASE_CONFIG);return firebase.firestore();}catch(e){return null;}}
