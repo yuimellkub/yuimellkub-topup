@@ -2,7 +2,8 @@
   'use strict';
 
   const MAX_SOURCE_BYTES=5*1024*1024;
-  const MAX_DATA_URL_BYTES=480000;
+  const MAX_DATA_URL_BYTES=155000;
+  const MAX_IMAGES=5;
 
   const style=document.createElement('style');
   style.textContent=`
@@ -13,9 +14,9 @@
     .ymk-fulfillment-slip-actions button{border:1px solid #efc8d7;border-radius:11px;padding:9px 12px;font-weight:800;cursor:pointer;background:#fff0f6;color:#92566e}
     .ymk-fulfillment-slip-actions .primary{background:#e889ad;color:#fff;border-color:#e889ad}
     .ymk-fulfillment-slip-note{font-size:11px;line-height:1.5;color:#a16b80;margin-top:8px}
-    .ymk-fulfillment-slip-preview{display:none;margin-top:10px}
-    .ymk-fulfillment-slip-preview.show{display:block}
-    .ymk-fulfillment-slip-preview img{display:block;max-width:360px;width:100%;max-height:520px;object-fit:contain;border:1px solid #f2ccdc;border-radius:12px;background:#fff;margin-top:8px}
+    .ymk-fulfillment-slip-preview{display:none;margin-top:10px;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
+    .ymk-fulfillment-slip-preview.show{display:grid}
+    .ymk-fulfillment-slip-preview img{display:block;width:100%;height:190px;object-fit:contain;border:1px solid #f2ccdc;border-radius:12px;background:#fff}
   `;
   document.head.appendChild(style);
 
@@ -30,20 +31,27 @@
       r.onload=()=>{img.src=String(r.result||'');};
       img.onload=()=>{
         try{
-          const maxSide=1400;
+          const maxSide=1200;
           const scale=Math.min(1,maxSide/Math.max(img.naturalWidth,img.naturalHeight));
           const w=Math.max(1,Math.round(img.naturalWidth*scale));
           const h=Math.max(1,Math.round(img.naturalHeight*scale));
           const c=document.createElement('canvas');c.width=w;c.height=h;
           const ctx=c.getContext('2d',{alpha:false});ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);ctx.drawImage(img,0,0,w,h);
-          let q=.82,data=c.toDataURL('image/jpeg',q);
-          while(data.length>MAX_DATA_URL_BYTES&&q>.42){q-=.08;data=c.toDataURL('image/jpeg',q);}
+          let q=.76,data=c.toDataURL('image/jpeg',q);
+          while(data.length>MAX_DATA_URL_BYTES&&q>.30){q-=.07;data=c.toDataURL('image/jpeg',q);}
           if(data.length>MAX_DATA_URL_BYTES)throw new Error('รูปยังมีขนาดใหญ่เกินไป กรุณาครอปหรือใช้ภาพที่เล็กลง');
           resolve(data);
         }catch(e){reject(e);}
       };
       r.readAsDataURL(file);
     });
+  }
+
+  function getSavedImages(data){
+    if(Array.isArray(data.fulfillmentSlipDataList)&&data.fulfillmentSlipDataList.length){
+      return data.fulfillmentSlipDataList.filter(x=>typeof x==='string'&&x.startsWith('data:image/')).slice(0,MAX_IMAGES);
+    }
+    return data.fulfillmentSlipData?[data.fulfillmentSlipData]:[];
   }
 
   async function refreshPanel(card){
@@ -57,22 +65,23 @@
       if(!db)return;
       const snap=await db.collection('order_status').doc(card.dataset.id).get();
       const data=snap.exists?(snap.data()||{}):{};
-      paintSaved(panel,data.fulfillmentSlipData||'');
-    }catch(e){console.warn('load fulfillment slip failed',e);}
+      paintSaved(panel,getSavedImages(data));
+    }catch(e){console.warn('load fulfillment slips failed',e);}
   }
 
-  function paintSaved(panel,data){
+  function paintSaved(panel,images){
     const preview=panel.querySelector('.ymk-fulfillment-slip-preview');
-    const img=preview?.querySelector('img');
     const note=panel.querySelector('.ymk-fulfillment-slip-note');
-    if(data){
-      if(img)img.src=data;
-      preview?.classList.add('show');
-      if(note)note.textContent='แนบสลิปเติมเกมแล้ว ✓ ลูกค้าจะเห็นเมื่อเช็กสถานะออเดอร์สำเร็จ';
-    }else{
-      if(img)img.removeAttribute('src');
-      preview?.classList.remove('show');
-      if(note)note.textContent='เมื่อแนบแล้ว ลูกค้าจะเห็นรูปนี้ในหน้าตรวจสอบสถานะและกดบันทึกได้';
+    const list=Array.isArray(images)?images.filter(Boolean):[];
+    if(preview){
+      preview.innerHTML='';
+      list.forEach((src,i)=>{const img=document.createElement('img');img.alt='สลิปเติมเกม '+(i+1);img.src=src;preview.appendChild(img);});
+      preview.classList.toggle('show',list.length>0);
+    }
+    if(note){
+      note.textContent=list.length
+        ? `แนบสลิปเติมเกมแล้ว ${list.length} รูป ✓ ลูกค้าจะเห็นทั้งหมดเมื่อเช็กสถานะออเดอร์สำเร็จ`
+        : `แนบได้สูงสุด ${MAX_IMAGES} รูป • ลูกค้าจะเห็นรูปทั้งหมดในหน้าตรวจสอบสถานะและกดบันทึกได้`;
     }
   }
 
@@ -87,13 +96,13 @@
       panel.className='ymk-fulfillment-slip';
       panel.innerHTML=`
         <div class="ymk-fulfillment-slip-title">สลิปเติมเกมสำหรับลูกค้า</div>
-        <input class="ymk-fulfillment-slip-input" type="file" accept="image/*" hidden>
+        <input class="ymk-fulfillment-slip-input" type="file" accept="image/*" multiple hidden>
         <div class="ymk-fulfillment-slip-actions">
           <button type="button" class="primary ymk-fulfillment-slip-upload">แนบ / เปลี่ยนสลิปเติมเกม</button>
-          <button type="button" class="ymk-fulfillment-slip-remove">ลบสลิปเติมเกม</button>
+          <button type="button" class="ymk-fulfillment-slip-remove">ลบสลิปเติมเกมทั้งหมด</button>
         </div>
-        <div class="ymk-fulfillment-slip-note">เมื่อแนบแล้ว ลูกค้าจะเห็นรูปนี้ในหน้าตรวจสอบสถานะและกดบันทึกได้</div>
-        <div class="ymk-fulfillment-slip-preview"><img alt="สลิปเติมเกม"></div>
+        <div class="ymk-fulfillment-slip-note">แนบได้สูงสุด ${MAX_IMAGES} รูป • ลูกค้าจะเห็นรูปทั้งหมดในหน้าตรวจสอบสถานะและกดบันทึกได้</div>
+        <div class="ymk-fulfillment-slip-preview"></div>
       `;
       statusBox.after(panel);
       const input=panel.querySelector('.ymk-fulfillment-slip-input');
@@ -102,35 +111,46 @@
         input.click();
       };
       input.onchange=async()=>{
-        const file=input.files?.[0];if(!file)return;
+        const files=[...(input.files||[])];if(!files.length)return;
+        if(files.length>MAX_IMAGES){alert(`แนบได้สูงสุด ${MAX_IMAGES} รูปต่อออเดอร์ค่ะ`);input.value='';return;}
         if(!db||!auth?.currentUser){alert('กรุณาเข้าสู่ระบบร้านก่อนค่ะ');input.value='';return;}
         const btn=panel.querySelector('.ymk-fulfillment-slip-upload'),old=btn.textContent;
-        btn.disabled=true;btn.textContent='กำลังแนบ…';
+        btn.disabled=true;btn.textContent=`กำลังแนบ 0/${files.length}…`;
         try{
-          const imageData=await compressImage(file);
+          const images=[];
+          for(let i=0;i<files.length;i++){
+            btn.textContent=`กำลังแนบ ${i+1}/${files.length}…`;
+            images.push(await compressImage(files[i]));
+          }
           await db.collection('order_status').doc(card.dataset.id).set({
             fulfillmentSlipAttached:true,
-            fulfillmentSlipData:imageData,
-            fulfillmentSlipFileName:file.name||'topup-slip.jpg',
+            fulfillmentSlipCount:images.length,
+            fulfillmentSlipDataList:images,
+            fulfillmentSlipFileNames:files.map(f=>f.name||'topup-slip.jpg'),
+            fulfillmentSlipData:firebase.firestore.FieldValue.delete(),
+            fulfillmentSlipFileName:firebase.firestore.FieldValue.delete(),
             fulfillmentSlipUpdatedAt:firebase.firestore.FieldValue.serverTimestamp()
           },{merge:true});
-          try{await db.collection('orders').doc(card.dataset.id).set({fulfillmentSlipAttached:true},{merge:true});}catch(e){}
-          paintSaved(panel,imageData);
+          try{await db.collection('orders').doc(card.dataset.id).set({fulfillmentSlipAttached:true,fulfillmentSlipCount:images.length},{merge:true});}catch(e){}
+          paintSaved(panel,images);
         }catch(e){alert('แนบสลิปเติมเกมไม่สำเร็จ: '+(e?.message||e));}
         finally{btn.disabled=false;btn.textContent=old;input.value='';}
       };
       panel.querySelector('.ymk-fulfillment-slip-remove').onclick=async()=>{
         if(!db||!auth?.currentUser){alert('กรุณาเข้าสู่ระบบร้านก่อนค่ะ');return;}
-        if(!confirm('ลบสลิปเติมเกมของออเดอร์นี้ใช่ไหมคะ?'))return;
+        if(!confirm('ลบสลิปเติมเกมทั้งหมดของออเดอร์นี้ใช่ไหมคะ?'))return;
         try{
           await db.collection('order_status').doc(card.dataset.id).set({
             fulfillmentSlipAttached:false,
+            fulfillmentSlipCount:0,
+            fulfillmentSlipDataList:firebase.firestore.FieldValue.delete(),
+            fulfillmentSlipFileNames:firebase.firestore.FieldValue.delete(),
             fulfillmentSlipData:firebase.firestore.FieldValue.delete(),
             fulfillmentSlipFileName:firebase.firestore.FieldValue.delete(),
             fulfillmentSlipUpdatedAt:firebase.firestore.FieldValue.serverTimestamp()
           },{merge:true});
-          try{await db.collection('orders').doc(card.dataset.id).set({fulfillmentSlipAttached:false},{merge:true});}catch(e){}
-          paintSaved(panel,'');
+          try{await db.collection('orders').doc(card.dataset.id).set({fulfillmentSlipAttached:false,fulfillmentSlipCount:0},{merge:true});}catch(e){}
+          paintSaved(panel,[]);
         }catch(e){alert('ลบสลิปเติมเกมไม่สำเร็จ: '+(e?.message||e));}
       };
       select.addEventListener('change',()=>{panel.dataset.loaded='';refreshPanel(card);});
