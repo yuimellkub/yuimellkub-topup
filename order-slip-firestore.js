@@ -6,33 +6,89 @@
   const EASYSLIP_WORKER_URL='https://yuimellkub-slip.yuimellkubtopup.workers.dev/';
   const MAX_SLIP_AGE_MS=30*60*1000;
   const FUTURE_TOLERANCE_MS=5*60*1000;
+  const SETTINGS_ID='__ymk_settings__';
   const OLD_SLIP_COPY='ร้านจะตรวจสอบการชำระเงินภายหลัง ไม่มีการยืนยันว่าเงินเข้าอัตโนมัติ';
-  const NEW_SLIP_COPY='ระบบจะตรวจสอบสลิปอัตโนมัติก่อนส่งออเดอร์';
+  const AUTO_SLIP_COPY='ระบบจะตรวจสอบสลิปอัตโนมัติก่อนส่งออเดอร์';
+  const MANUAL_SLIP_COPY='ร้านจะตรวจสอบสลิปและการชำระเงินให้ภายหลัง';
+  let currentSlipMode='auto';
+  let modeUnsub=null;
 
   function updateSlipCopy(root=document.body){
     if(!root)return;
+    const replacement=currentSlipMode==='manual'?MANUAL_SLIP_COPY:AUTO_SLIP_COPY;
     const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
     let node;
     while((node=walker.nextNode())){
-      if(node.nodeValue&&node.nodeValue.includes(OLD_SLIP_COPY)){
-        node.nodeValue=node.nodeValue.replace(OLD_SLIP_COPY,NEW_SLIP_COPY);
-      }
+      if(!node.nodeValue)continue;
+      [OLD_SLIP_COPY,AUTO_SLIP_COPY,MANUAL_SLIP_COPY].forEach(text=>{
+        if(node.nodeValue.includes(text))node.nodeValue=node.nodeValue.replace(text,replacement);
+      });
+      if(currentSlipMode==='manual'&&node.nodeValue.trim()==='ตรวจสลิปและส่งออเดอร์')node.nodeValue='ส่งออเดอร์ให้ร้านตรวจสอบ';
+      if(currentSlipMode==='auto'&&node.nodeValue.trim()==='ส่งออเดอร์ให้ร้านตรวจสอบ')node.nodeValue='ตรวจสลิปและส่งออเดอร์';
+    }
+  }
+
+  function setSlipMode(mode){
+    currentSlipMode=mode==='manual'?'manual':'auto';
+    updateSlipCopy();
+  }
+
+  function startModeListener(){
+    try{
+      if(!firebaseReady())return setTimeout(startModeListener,500);
+      const {db}=getFirebaseServices();
+      if(!db)return setTimeout(startModeListener,500);
+      if(modeUnsub)modeUnsub();
+      modeUnsub=db.collection('products').doc(SETTINGS_ID).onSnapshot(snap=>{
+        setSlipMode(snap.exists&&snap.data()?.slipVerificationMode==='manual'?'manual':'auto');
+      },()=>setSlipMode('auto'));
+    }catch(e){
+      setTimeout(startModeListener,800);
     }
   }
 
   if(document.body){
     updateSlipCopy();
     new MutationObserver(()=>updateSlipCopy()).observe(document.body,{childList:true,subtree:true});
+    startModeListener();
   }else{
     document.addEventListener('DOMContentLoaded',()=>{
       updateSlipCopy();
       new MutationObserver(()=>updateSlipCopy()).observe(document.body,{childList:true,subtree:true});
+      startModeListener();
     },{once:true});
   }
 
   function parseMoney(value){
     const n=Number(String(value??'').replace(/[^0-9.-]/g,''));
     return Number.isFinite(n)?n:0;
+  }
+
+  function systemUnavailable(message,code='SYSTEM_UNAVAILABLE'){
+    const e=new Error(message||'ระบบตรวจสลิปอัตโนมัติไม่พร้อมใช้งาน');
+    e.slipSystemUnavailable=true;
+    e.slipSystemCode=code;
+    return e;
+  }
+
+  function isSystemFailure(response,result){
+    const code=String(result?.error?.code||'').toUpperCase();
+    if(response?.status===429||response?.status>=500)return true;
+    if(response?.status===401)return true;
+    if(response?.status===403)return true;
+    return ['QUOTA_EXCEEDED','RATE_LIMIT_EXCEEDED','API_SERVER_ERROR','BRANCH_INACTIVE','SERVICE_BANNED','USER_BANNED','IP_NOT_ALLOWED','INVALID_API_KEY','MISSING_API_KEY'].includes(code);
+  }
+
+  async function getSlipMode(db){
+    try{
+      const snap=await db.collection('products').doc(SETTINGS_ID).get();
+      const mode=snap.exists?snap.data()?.slipVerificationMode:'auto';
+      setSlipMode(mode==='manual'?'manual':'auto');
+    }catch(e){
+      console.warn('read slip mode failed, using auto',e);
+      setSlipMode('auto');
+    }
+    return currentSlipMode;
   }
 
   async function verifySlip(file,expectedAmount){
@@ -47,7 +103,7 @@
     try{
       response=await fetch(EASYSLIP_WORKER_URL,{method:'POST',body:form});
     }catch(error){
-      throw new Error('เชื่อมระบบตรวจสลิปไม่สำเร็จ กรุณาลองใหม่อีกครั้ง');
+      throw systemUnavailable('เชื่อมระบบตรวจสลิปไม่ได้ ออเดอร์จะให้ร้านตรวจสอบแทน','NETWORK_ERROR');
     }
 
     let result=null;
@@ -55,6 +111,8 @@
 
     if(!response.ok||!result?.success){
       const message=result?.error?.message||result?.message||'ตรวจสอบสลิปไม่ผ่าน';
+      const code=result?.error?.code||('HTTP_'+response.status);
+      if(isSystemFailure(response,result))throw systemUnavailable(message,code);
       throw new Error(message);
     }
 
@@ -146,26 +204,45 @@
 
     if(firebaseReady()){
       try{
+        const {db}=getFirebaseServices();
+        const selectedMode=await getSlipMode(db);
         let verification=null;
-        if(slip){
+        let manualReason='';
+
+        if(slip&&selectedMode==='auto'){
           st.textContent='กำลังตรวจสอบสลิปอัตโนมัติ…';
-          verification=await verifySlip(slip,order.price);
-          order.paymentStatus='ตรวจสอบสลิปแล้ว';
-          order.slipVerified=true;
-          order.slipVerifiedAmount=verification.amount;
-          order.slipTransRef=verification.transRef;
-          order.slipTransactionDate=verification.slipDate;
+          try{
+            verification=await verifySlip(slip,order.price);
+            order.paymentStatus='ตรวจสอบสลิปแล้ว';
+            order.slipVerified=true;
+            order.slipVerifiedAmount=verification.amount;
+            order.slipTransRef=verification.transRef;
+            order.slipTransactionDate=verification.slipDate;
+            order.slipVerificationMode='auto';
+          }catch(e){
+            if(!e?.slipSystemUnavailable)throw e;
+            manualReason=e.slipSystemCode||'SYSTEM_UNAVAILABLE';
+            order.paymentStatus='รอร้านตรวจสอบการชำระเงิน';
+            order.slipVerified=false;
+            order.slipVerificationMode='manual-fallback';
+            order.slipFallbackReason=manualReason;
+            st.textContent='ระบบตรวจสลิปอัตโนมัติไม่พร้อมใช้งาน • จะส่งออเดอร์ให้ร้านตรวจสอบแทน…';
+          }
+        }else if(slip){
+          order.paymentStatus='รอร้านตรวจสอบการชำระเงิน';
+          order.slipVerified=false;
+          order.slipVerificationMode='manual';
+          st.textContent='โหมดร้านตรวจเอง • กำลังส่งสลิปและออเดอร์เข้าหลังบ้าน…';
         }
 
-        st.textContent=slip?'ตรวจสลิปผ่านแล้ว กำลังบันทึกรูปและส่งออเดอร์…':'กำลังส่งออเดอร์เข้าระบบออนไลน์…';
-        const {db}=getFirebaseServices();
+        if(!manualReason)st.textContent=verification?'ตรวจสลิปผ่านแล้ว กำลังบันทึกรูปและส่งออเดอร์…':(slip?'กำลังบันทึกรูปและส่งออเดอร์…':'กำลังส่งออเดอร์เข้าระบบออนไลน์…');
         const compressed=await compressSlip(slip);
         const batch=db.batch();
         const orderRef=db.collection('orders').doc(order.id);
         batch.set(orderRef,{...order,slipAttached:!!compressed.data,slipFileName:slip?(slip.name||'slip.jpg'):'',slipPath:compressed.data?'order_slips/'+order.id:'',createdAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
         if(compressed.data){
           const slipRef=db.collection('order_slips').doc(order.id);
-          batch.set(slipRef,{orderId:order.id,imageData:compressed.data,mimeType:'image/jpeg',width:compressed.width,height:compressed.height,bytes:compressed.bytes,verified:!!verification,verifiedAmount:verification?.amount??null,transRef:verification?.transRef||'',createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+          batch.set(slipRef,{orderId:order.id,imageData:compressed.data,mimeType:'image/jpeg',width:compressed.width,height:compressed.height,bytes:compressed.bytes,verified:!!verification,verifiedAmount:verification?.amount??null,transRef:verification?.transRef||'',verificationMode:order.slipVerificationMode||selectedMode,fallbackReason:manualReason,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
         }
         await batch.commit();
         try{
@@ -178,7 +255,11 @@
         }
         try{localStorage.setItem('ymk_order_status_'+order.id,order.shopStatus)}catch(e){}
         st.className='verify-status ok';
-        st.textContent=(verification?'✓ ตรวจสลิปผ่านและส่งออเดอร์แล้ว: ':'✓ ส่งออเดอร์แล้ว: ')+order.id;
+        st.textContent=verification
+          ? '✓ ตรวจสลิปผ่านและส่งออเดอร์แล้ว: '+order.id
+          : slip
+            ? '✓ ส่งออเดอร์แล้ว • รอร้านตรวจสอบสลิป: '+order.id
+            : '✓ ส่งออเดอร์แล้ว: '+order.id;
         return true;
       }catch(e){
         console.error(e);st.className='verify-status';
