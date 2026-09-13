@@ -32,15 +32,14 @@
   }
   function addApprovedNote(orderId){
     const card=document.getElementById('ymkForceCard');if(!card)return;
+    const candidates=[...card.querySelectorAll('div,p,strong,b,h1,h2,h3,h4')].filter(el=>(el.textContent||'').includes('ร้านยืนยันสลิปแล้ว')).sort((a,b)=>(a.textContent||'').length-(b.textContent||'').length);
+    const heading=candidates[0];if(!heading)return;
+    let panel=heading;
+    while(panel.parentElement&&panel.parentElement!==card&&(panel.parentElement.textContent||'').includes('ร้านยืนยันสลิปแล้ว'))panel=panel.parentElement;
     let note=card.querySelector('#ymkApprovedOrderNote');
-    if(!note){
-      note=document.createElement('div');
-      note.id='ymkApprovedOrderNote';
-      note.style.cssText='margin-top:10px;text-align:center;font-size:13px;line-height:1.7;color:#9a526d;font-weight:700';
-      const heading=[...card.querySelectorAll('div,p,strong,b,h1,h2,h3,h4')].find(el=>(el.textContent||'').includes('ร้านยืนยันสลิปแล้ว'));
-      if(heading&&heading.parentNode)heading.parentNode.insertBefore(note,heading.nextSibling);else card.appendChild(note);
-    }
-    note.innerHTML='<div style="font-size:12px;font-weight:600;margin-bottom:2px">เลขออเดอร์</div><button type="button" id="ymkApprovedOrderId" style="border:0;background:transparent;padding:0;color:#9a526d;font:inherit;font-size:16px;font-weight:800;cursor:pointer">'+String(orderId||'')+'</button><div style="font-size:12px;font-weight:600;margin-top:5px">ออเดอร์เข้าสู่ระบบแล้ว • กรุณารอดำเนินการเติมเกม ♡</div>';
+    if(note&&note.parentElement!==panel){note.remove();note=null;}
+    if(!note){note=document.createElement('div');note.id='ymkApprovedOrderNote';note.style.cssText='display:block!important;margin-top:8px;text-align:center;font-size:13px;line-height:1.7;color:#9a526d;font-weight:700';panel.appendChild(note);}
+    note.innerHTML='<div style="display:block!important;font-size:12px;font-weight:600;margin-bottom:2px">เลขออเดอร์</div><button type="button" id="ymkApprovedOrderId" style="display:inline-block!important;border:0;background:transparent;padding:0;color:#9a526d;font:inherit;font-size:16px;font-weight:800;cursor:pointer">'+String(orderId||'')+'</button><div style="display:block!important;font-size:12px;font-weight:600;margin-top:5px">ออเดอร์เข้าสู่ระบบแล้ว • กรุณารอดำเนินการเติมเกม ♡</div>';
     const btn=note.querySelector('#ymkApprovedOrderId');if(btn&&!btn.dataset.copyBound){btn.dataset.copyBound='1';btn.addEventListener('click',async()=>{const id=String(orderId||'');if(!id)return;try{await navigator.clipboard.writeText(id);}catch(e){const ta=document.createElement('textarea');ta.value=id;ta.style.position='fixed';ta.style.left='-9999px';document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();}const old=btn.textContent;btn.textContent='คัดลอกแล้ว ✓';setTimeout(()=>btn.textContent=old,900);});}
   }
   function rewritePending(reviewId){const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let n;while((n=w.nextNode())){if(!n.nodeValue)continue;n.nodeValue=n.nodeValue.replace('✓ ส่งออเดอร์เรียบร้อยแล้ว ♡','✓ ส่งสลิปเรียบร้อยแล้ว • รอร้านตรวจสอบ ♡').replace('ส่งออเดอร์เรียบร้อยแล้ว ♡','ส่งสลิปเรียบร้อยแล้ว • รอร้านตรวจสอบ ♡').replace('กรุณาบันทึกเลขออเดอร์นี้ไว้สำหรับติดตามสถานะ','').replace('รบกวนส่งสลิปในแชท Messenger อีกครั้งด้วยนะคะ ♡','');}cleanPostOrderPanel();if(reviewId)document.querySelectorAll('button,a').forEach(el=>{if(/คัดลอกเลขออเดอร์/.test(el.textContent||''))el.style.display='none';});}
