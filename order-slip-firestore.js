@@ -6,7 +6,7 @@
   const EASYSLIP_WORKER_URL='https://yuimellkub-slip.yuimellkubtopup.workers.dev/';
   const MAX_SLIP_AGE_MS=30*60*1000;
   const FUTURE_TOLERANCE_MS=5*60*1000;
-  const SETTINGS_ID='__ymk_settings__';
+  const SETTINGS_ID='ymk_store_settings';
   const OLD_SLIP_COPY='ร้านจะตรวจสอบการชำระเงินภายหลัง ไม่มีการยืนยันว่าเงินเข้าอัตโนมัติ';
   const AUTO_SLIP_COPY='ระบบจะตรวจสอบสลิปอัตโนมัติก่อนส่งออเดอร์';
   const MANUAL_SLIP_COPY='ร้านจะตรวจสอบสลิปและการชำระเงินให้ภายหลัง';
