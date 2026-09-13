@@ -2,8 +2,8 @@
   'use strict';
 
   const MAX_SOURCE_BYTES=5*1024*1024;
-  const MAX_DATA_URL_BYTES=155000;
-  const MAX_IMAGES=5;
+  const MAX_IMAGES=30;
+  const TOTAL_DATA_BUDGET=820000;
 
   const style=document.createElement('style');
   style.textContent=`
@@ -20,7 +20,7 @@
   `;
   document.head.appendChild(style);
 
-  function compressImage(file){
+  function compressImage(file,targetBytes){
     return new Promise((resolve,reject)=>{
       if(!file)return reject(new Error('กรุณาเลือกรูปสลิป'));
       if(!String(file.type||'').startsWith('image/'))return reject(new Error('กรุณาเลือกรูปภาพ'));
@@ -31,15 +31,15 @@
       r.onload=()=>{img.src=String(r.result||'');};
       img.onload=()=>{
         try{
-          const maxSide=1200;
+          const maxSide=1100;
           const scale=Math.min(1,maxSide/Math.max(img.naturalWidth,img.naturalHeight));
           const w=Math.max(1,Math.round(img.naturalWidth*scale));
           const h=Math.max(1,Math.round(img.naturalHeight*scale));
           const c=document.createElement('canvas');c.width=w;c.height=h;
           const ctx=c.getContext('2d',{alpha:false});ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);ctx.drawImage(img,0,0,w,h);
-          let q=.76,data=c.toDataURL('image/jpeg',q);
-          while(data.length>MAX_DATA_URL_BYTES&&q>.30){q-=.07;data=c.toDataURL('image/jpeg',q);}
-          if(data.length>MAX_DATA_URL_BYTES)throw new Error('รูปยังมีขนาดใหญ่เกินไป กรุณาครอปหรือใช้ภาพที่เล็กลง');
+          let q=.74,data=c.toDataURL('image/jpeg',q);
+          while(data.length>targetBytes&&q>.20){q-=.06;data=c.toDataURL('image/jpeg',q);}
+          if(data.length>targetBytes)throw new Error('รูปยังมีขนาดใหญ่เกินไป กรุณาครอปหรือใช้ภาพที่เล็กลง');
           resolve(data);
         }catch(e){reject(e);}
       };
@@ -80,8 +80,8 @@
     }
     if(note){
       note.textContent=list.length
-        ? `แนบสลิปเติมเกมแล้ว ${list.length} รูป ✓ ลูกค้าจะเห็นทั้งหมดเมื่อเช็กสถานะออเดอร์สำเร็จ`
-        : `แนบได้สูงสุด ${MAX_IMAGES} รูป • ลูกค้าจะเห็นรูปทั้งหมดในหน้าตรวจสอบสถานะและกดบันทึกได้`;
+        ? `แนบสลิปเติมเกมแล้ว ${list.length} รูป ✓ ไม่จำเป็นต้องครบตามจำนวนแพ็ก`
+        : `แนบกี่รูปก็ได้ตามที่ร้านต้องการ • ไม่จำเป็นต้องครบตามจำนวนแพ็ก • สูงสุด ${MAX_IMAGES} รูปต่อครั้ง`;
     }
   }
 
@@ -101,7 +101,7 @@
           <button type="button" class="primary ymk-fulfillment-slip-upload">แนบ / เปลี่ยนสลิปเติมเกม</button>
           <button type="button" class="ymk-fulfillment-slip-remove">ลบสลิปเติมเกมทั้งหมด</button>
         </div>
-        <div class="ymk-fulfillment-slip-note">แนบได้สูงสุด ${MAX_IMAGES} รูป • ลูกค้าจะเห็นรูปทั้งหมดในหน้าตรวจสอบสถานะและกดบันทึกได้</div>
+        <div class="ymk-fulfillment-slip-note">แนบกี่รูปก็ได้ตามที่ร้านต้องการ • ไม่จำเป็นต้องครบตามจำนวนแพ็ก • สูงสุด ${MAX_IMAGES} รูปต่อครั้ง</div>
         <div class="ymk-fulfillment-slip-preview"></div>
       `;
       statusBox.after(panel);
@@ -112,15 +112,16 @@
       };
       input.onchange=async()=>{
         const files=[...(input.files||[])];if(!files.length)return;
-        if(files.length>MAX_IMAGES){alert(`แนบได้สูงสุด ${MAX_IMAGES} รูปต่อออเดอร์ค่ะ`);input.value='';return;}
+        if(files.length>MAX_IMAGES){alert(`แนบได้สูงสุด ${MAX_IMAGES} รูปต่อครั้งค่ะ`);input.value='';return;}
         if(!db||!auth?.currentUser){alert('กรุณาเข้าสู่ระบบร้านก่อนค่ะ');input.value='';return;}
         const btn=panel.querySelector('.ymk-fulfillment-slip-upload'),old=btn.textContent;
         btn.disabled=true;btn.textContent=`กำลังแนบ 0/${files.length}…`;
         try{
           const images=[];
+          const targetBytes=Math.max(24000,Math.min(120000,Math.floor(TOTAL_DATA_BUDGET/files.length)));
           for(let i=0;i<files.length;i++){
             btn.textContent=`กำลังแนบ ${i+1}/${files.length}…`;
-            images.push(await compressImage(files[i]));
+            images.push(await compressImage(files[i],targetBytes));
           }
           await db.collection('order_status').doc(card.dataset.id).set({
             fulfillmentSlipAttached:true,
