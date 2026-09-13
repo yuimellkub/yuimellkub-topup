@@ -6,6 +6,29 @@
   const EASYSLIP_WORKER_URL='https://yuimellkub-slip.yuimellkubtopup.workers.dev/';
   const MAX_SLIP_AGE_MS=30*60*1000;
   const FUTURE_TOLERANCE_MS=5*60*1000;
+  const OLD_SLIP_COPY='ร้านจะตรวจสอบการชำระเงินภายหลัง ไม่มีการยืนยันว่าเงินเข้าอัตโนมัติ';
+  const NEW_SLIP_COPY='ระบบจะตรวจสอบสลิปอัตโนมัติก่อนส่งออเดอร์';
+
+  function updateSlipCopy(root=document.body){
+    if(!root)return;
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+    let node;
+    while((node=walker.nextNode())){
+      if(node.nodeValue&&node.nodeValue.includes(OLD_SLIP_COPY)){
+        node.nodeValue=node.nodeValue.replace(OLD_SLIP_COPY,NEW_SLIP_COPY);
+      }
+    }
+  }
+
+  if(document.body){
+    updateSlipCopy();
+    new MutationObserver(()=>updateSlipCopy()).observe(document.body,{childList:true,subtree:true});
+  }else{
+    document.addEventListener('DOMContentLoaded',()=>{
+      updateSlipCopy();
+      new MutationObserver(()=>updateSlipCopy()).observe(document.body,{childList:true,subtree:true});
+    },{once:true});
+  }
 
   function parseMoney(value){
     const n=Number(String(value??'').replace(/[^0-9.-]/g,''));
