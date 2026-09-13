@@ -13,14 +13,26 @@
   function getLastOrderSafe(){try{return typeof lastOrder!=='undefined'&&lastOrder?lastOrder:{};}catch(e){return {};}}
   function getPaymentSafe(){try{return typeof getPaymentMethod==='function'?getPaymentMethod():'';}catch(e){return '';}}
 
-  function hideReferenceSummary(){
-    document.querySelectorAll('div,p,span,strong,b,h1,h2,h3,h4').forEach(el=>{
-      if(el.children.length)return;
-      const t=(el.textContent||'').trim();
-      if(!t)return;
-      if(t==='เลขอ้างอิงสลิป'||t==='เลขออเดอร์ของคุณ'||/^เลขออเดอร์:\s*(?:SLIP|YMK)[A-Z0-9-]+\s*•\s*เก็บเลขนี้ไว้สำหรับติดตามสถานะ$/.test(t)||t==='กรุณาบันทึกเลขออเดอร์นี้ไว้สำหรับติดตามสถานะ'){
-        el.style.display='none';
-      }
+  function cleanPostOrderPanel(){
+    const roots=[...document.querySelectorAll('#ymkForceCard,.done-card,.order-done,.modal-card,.modal-content')];
+    if(!roots.length)roots.push(document.body);
+    roots.forEach(root=>{
+      root.querySelectorAll('button,a').forEach(el=>{
+        const t=(el.textContent||'').trim();
+        if(/^(Messenger|LINE)$/i.test(t))el.style.display='none';
+      });
+      root.querySelectorAll('div,p,span,strong,b,h1,h2,h3,h4,small').forEach(el=>{
+        if(el.children.length)return;
+        const t=(el.textContent||'').trim();
+        if(!t)return;
+        if(
+          t==='เลขอ้างอิงสลิป'||
+          t==='เลขออเดอร์ของคุณ'||
+          /^เลขออเดอร์:\s*(?:SLIP|YMK)[A-Z0-9-]+(?:\s*•.*)?$/.test(t)||
+          /ยังไม่มีเลขออเดอร์\s*•\s*ร้านจะสร้างออเดอร์หลังยืนยันสลิปแล้ว/.test(t)||
+          t==='กรุณาบันทึกเลขออเดอร์นี้ไว้สำหรับติดตามสถานะ'
+        ) el.style.display='none';
+      });
     });
   }
 
@@ -31,7 +43,7 @@
       .replace('ส่งออเดอร์เรียบร้อยแล้ว ♡','ส่งสลิปเรียบร้อยแล้ว • รอร้านตรวจสอบ ♡')
       .replace('กรุณาบันทึกเลขออเดอร์นี้ไว้สำหรับติดตามสถานะ','ยังไม่มีเลขออเดอร์ • ร้านจะสร้างออเดอร์หลังยืนยันสลิปแล้ว')
       .replace('รบกวนส่งสลิปในแชท Messenger อีกครั้งด้วยนะคะ ♡','ร้านได้รับสลิปในระบบแล้ว ไม่ต้องส่งซ้ำค่ะ ♡');}
-    hideReferenceSummary();
+    cleanPostOrderPanel();
     if(reviewId){document.querySelectorAll('button,a').forEach(el=>{if(/คัดลอกเลขออเดอร์/.test(el.textContent||'')){el.style.display='none';}});}
   }
   function rewriteApproved(reviewId,orderId){
@@ -41,7 +53,7 @@
       .replace('✓ ส่งสลิปเรียบร้อยแล้ว • รอร้านตรวจสอบ ♡','✓ ร้านยืนยันสลิปแล้ว ♡')
       .replace('✓ ยืนยันสลิปแล้ว • สร้างออเดอร์เรียบร้อยแล้ว ♡','✓ ร้านยืนยันสลิปแล้ว ♡')
       .replace(reviewId,orderId);}
-    hideReferenceSummary();
+    cleanPostOrderPanel();
   }
   function show(kind,msg){const st=statusEl();if(!st)return;st.style.display='block';st.className=kind==='ok'?'verify-status ok':'verify-status';st.textContent=msg;}
 
@@ -56,7 +68,7 @@
       }
       if(d.status==='ยืนยันแล้ว'&&d.paymentStatus==='ชำระแล้ว'&&d.approvedOrderId){
         rewriteApproved(reviewId,String(d.approvedOrderId));show('ok','✓ ร้านยืนยันสลิปแล้ว • เลขออเดอร์ '+d.approvedOrderId);
-        setTimeout(hideReferenceSummary,80);setTimeout(hideReferenceSummary,300);
+        setTimeout(cleanPostOrderPanel,80);setTimeout(cleanPostOrderPanel,300);setTimeout(cleanPostOrderPanel,800);
         try{localStorage.setItem('ymk_order_status_'+d.approvedOrderId,'รอเติม')}catch(e){}
       }
     },e=>console.warn('manual review watch failed',e));
