@@ -5,9 +5,11 @@
   style.textContent=`
     .ymk-customer-fulfillment{margin-top:14px;padding:12px;border-radius:14px;background:#fff8fb;border:1px solid #f2ccdc;text-align:left}
     .ymk-customer-fulfillment-title{font-weight:900;color:#8f4f68;font-size:13px;margin-bottom:8px;text-align:center}
-    .ymk-customer-fulfillment img{display:block;width:100%;max-height:480px;object-fit:contain;border-radius:12px;border:1px solid #f2ccdc;background:#fff}
-    .ymk-customer-fulfillment-save{display:flex;align-items:center;justify-content:center;width:100%;min-height:44px;margin-top:10px;border-radius:12px;text-decoration:none;background:#e889ad;color:#fff;font-weight:850}
-    .ymk-customer-fulfillment-note{text-align:center;font-size:11px;color:#a16b80;line-height:1.5;margin-top:7px}
+    .ymk-customer-fulfillment-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+    .ymk-customer-fulfillment-item{padding:8px;border-radius:12px;background:#fff;border:1px solid #f4d6e2}
+    .ymk-customer-fulfillment img{display:block;width:100%;height:220px;object-fit:contain;border-radius:10px;background:#fff}
+    .ymk-customer-fulfillment-save{display:flex;align-items:center;justify-content:center;width:100%;min-height:40px;margin-top:8px;border-radius:10px;text-decoration:none;background:#e889ad;color:#fff;font-weight:850;font-size:12px}
+    .ymk-customer-fulfillment-note{text-align:center;font-size:11px;color:#a16b80;line-height:1.5;margin-top:8px}
   `;
   document.head.appendChild(style);
 
@@ -26,6 +28,13 @@
     document.querySelectorAll('.ymk-customer-fulfillment').forEach(el=>el.remove());
   }
 
+  function getImages(data){
+    if(Array.isArray(data.fulfillmentSlipDataList)&&data.fulfillmentSlipDataList.length){
+      return data.fulfillmentSlipDataList.filter(x=>typeof x==='string'&&x.startsWith('data:image/'));
+    }
+    return data.fulfillmentSlipData?[data.fulfillmentSlipData]:[];
+  }
+
   async function attachSlip(orderId,status){
     removeOld();
     if(String(status||'').trim()!=='สำเร็จ')return;
@@ -34,19 +43,25 @@
       const snap=await db.collection('order_status').doc(orderId).get();
       if(!snap.exists)return;
       const data=snap.data()||{};
-      const imageData=data.fulfillmentSlipData||'';
-      if(!imageData)return;
-      let card=document.getElementById('ymkForceCard');
+      const images=getImages(data);
+      if(!images.length)return;
+      const card=document.getElementById('ymkForceCard');
       if(!card)return;
       const close=card.querySelector('#ymkForceClose');
       const box=document.createElement('div');
       box.className='ymk-customer-fulfillment';
       const safeId=String(orderId||'order').replace(/[^A-Za-z0-9_-]/g,'');
-      box.innerHTML=`<div class="ymk-customer-fulfillment-title">สลิปการเติมเกม</div><img alt="สลิปการเติมเกม"><a class="ymk-customer-fulfillment-save" download="Yuimellkub-${safeId}-slip.jpg">บันทึกสลิป</a><div class="ymk-customer-fulfillment-note">กด “บันทึกสลิป” เพื่อเก็บรูปไว้ในเครื่องได้เลยค่ะ</div>`;
-      box.querySelector('img').src=imageData;
-      const save=box.querySelector('.ymk-customer-fulfillment-save');save.href=imageData;
+      box.innerHTML=`<div class="ymk-customer-fulfillment-title">สลิปการเติมเกม ${images.length>1?'('+images.length+' รูป)':''}</div><div class="ymk-customer-fulfillment-grid"></div><div class="ymk-customer-fulfillment-note">กด “บันทึกรูป” ใต้แต่ละรูปเพื่อเก็บไว้ในเครื่องได้เลยค่ะ</div>`;
+      const grid=box.querySelector('.ymk-customer-fulfillment-grid');
+      images.forEach((src,i)=>{
+        const item=document.createElement('div');
+        item.className='ymk-customer-fulfillment-item';
+        const img=document.createElement('img');img.alt='สลิปการเติมเกม '+(i+1);img.src=src;
+        const save=document.createElement('a');save.className='ymk-customer-fulfillment-save';save.textContent='บันทึกรูป '+(i+1);save.href=src;save.download=`Yuimellkub-${safeId}-slip-${i+1}.jpg`;
+        item.appendChild(img);item.appendChild(save);grid.appendChild(item);
+      });
       if(close)card.insertBefore(box,close);else card.appendChild(box);
-    }catch(e){console.warn('load fulfillment slip failed',e);}
+    }catch(e){console.warn('load fulfillment slips failed',e);}
   }
 
   function hook(){
