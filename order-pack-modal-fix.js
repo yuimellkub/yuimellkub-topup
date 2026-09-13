@@ -54,8 +54,10 @@
   function infoFromCard(card){
     const btn=card?.querySelector('.ready-stock-order-btn');
     if(!btn)return null;
-    const name=clean(btn.dataset.ymkBaseName||btn.dataset.readyName||'');
-    const cat=String(btn.dataset.readyCategory||card.dataset.readyCategory||card.dataset.category||'').toLowerCase().trim();
+    const panel=card.closest('[data-stock-panel]');
+    const visibleName=card.querySelector('.ymk-store-name,.ready-stock-topline h3,h3')?.textContent||'';
+    const name=clean(btn.dataset.ymkBaseName||btn.dataset.readyName||visibleName);
+    const cat=String(btn.dataset.readyCategory||card.dataset.readyCategory||card.dataset.category||panel?.dataset.stockPanel||'').toLowerCase().trim();
     const p=products.find(x=>clean(x.name)===name&&(String(x.category||'').toLowerCase()===cat||!cat))||products.find(x=>clean(x.name)===name)||null;
     return {name:(p&&p.name)||name,category:String((p&&p.category)||cat).toLowerCase().trim(),product:p,btn,card};
   }
@@ -104,7 +106,7 @@
     if(!isTarget(info))return null;
     const input=card?.querySelector('.ymk-qty-input');
     const qty=Math.max(1,Math.floor(Number(input?.value)||1));
-    const each=amountFromName(info.name);
+    const each=Number(info.btn.dataset.readyEchoes||info.product?.echoes)||amountFromName(info.name);
     if(!each)return null;
     const plan=planForTarget(each*qty);
     if(!plan)return null;
