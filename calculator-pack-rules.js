@@ -1,6 +1,6 @@
 (function(){
   // Yuimellkub calculator rules for normal Echoes + gacha calculators only.
-  // 0-607 / remainders use small packs first. Above that, 759 is the main pack.
+  // 0-604 / remainders use small packs first. From 605, 759 is the main pack.
   // Small-pack limits: 335 <= 1, 203 <= 2, 66 <= 2.
   // Display order: 759 -> 335 -> 203 -> 66.
   // Final price rounding: last digit 1-4 -> 5, 6-9 -> next 10; 0/5 stay unchanged.
@@ -44,12 +44,12 @@
     target=Math.max(0,Math.floor(Number(target)||0));
     if(target<=0)return {counts:[0,0,0,0],totalEchoes:0,totalTopup:0,cost:0,rawCost:0,extra:0,count:0};
     let a=0,b=0,c=0,d=0;
-    if(target<=607){
+    if(target<=604){
       const small=bestSmallPackFill(target);a=small.a;b=small.b;c=small.c;
     }else{
       d=Math.floor(target/759);
       const remainder=target-d*759;
-      if(remainder>607)d+=1;
+      if(remainder>604)d+=1;
       else if(remainder>0){const small=bestSmallPackFill(remainder);a=small.a;b=small.b;c=small.c;}
     }
     const totalEchoes=a*66+b*203+c*335+d*759;
