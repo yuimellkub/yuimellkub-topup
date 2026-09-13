@@ -23,11 +23,20 @@ function b64url(input){
 }
 
 function pemToArrayBuffer(pem){
-  const clean=String(pem||'').replace(/\\n/g,'\n')
-    .replace('-----BEGIN PRIVATE KEY-----','')
-    .replace('-----END PRIVATE KEY-----','')
-    .replace(/\s+/g,'');
-  const binary=atob(clean);
+  let value=String(pem||'').trim();
+  // Cloudflare secrets are sometimes pasted from JSON with quotes and literal \\n.
+  if((value.startsWith('"')&&value.endsWith('"'))||(value.startsWith("'")&&value.endsWith("'"))){
+    value=value.slice(1,-1);
+  }
+  value=value.replace(/\\n/g,'\n').replace(/\\r/g,'');
+  const match=value.match(/-----BEGIN PRIVATE KEY-----([\s\S]*?)-----END PRIVATE KEY-----/);
+  const clean=(match?match[1]:value)
+    .replace(/-----BEGIN PRIVATE KEY-----/g,'')
+    .replace(/-----END PRIVATE KEY-----/g,'')
+    .replace(/[^A-Za-z0-9+/=]/g,'');
+  if(!clean)throw new Error('FIREBASE_PRIVATE_KEY_EMPTY');
+  let binary;
+  try{binary=atob(clean);}catch(e){throw new Error('FIREBASE_PRIVATE_KEY_INVALID');}
   const bytes=new Uint8Array(binary.length);
   for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
   return bytes.buffer;
@@ -113,7 +122,6 @@ async function saveManualSlip(env,body){
   return {ok:true,status:200,reviewId};
 }
 
-function readStringField(doc,name){return doc?.fields?.[name]?.stringValue||'';}
 function readBoolField(doc,name){return doc?.fields?.[name]?.booleanValue;}
 function readStringArray(doc,name){
   return (doc?.fields?.[name]?.arrayValue?.values||[]).map(v=>v.stringValue).filter(Boolean);
