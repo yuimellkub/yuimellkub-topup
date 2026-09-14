@@ -1,9 +1,6 @@
 (function(){
   'use strict';
 
-  let lastMode='';
-  let lastOrderId='';
-
   function statusText(){
     const el=document.getElementById('adminSaveStatus');
     return el ? String(el.textContent||'').trim() : '';
@@ -26,14 +23,15 @@
 
   function isApproved(){
     const st=statusText();
-    return /^YMK\d{6}-\d{6}$/.test(realOrderId()) && /ส่งออเดอร์เข้าระบบแล้ว|ร้านยืนยันสลิปแล้ว|เลขออเดอร์/.test(st);
+    const id=realOrderId();
+    return /^YMK\d{6}-\d{6}$/.test(id) && /ส่งออเดอร์เข้าระบบแล้ว|ร้านยืนยันสลิปแล้ว|เลขออเดอร์/.test(st);
   }
 
   function candidateScore(el){
     const t=String(el.innerText||'');
     let score=0;
-    if(/ส่งออเดอร์เรียบร้อยแล้ว/.test(t))score+=4;
-    if(/เลขออเดอร์ของคุณ/.test(t))score+=3;
+    if(/ส่งออเดอร์เรียบร้อยแล้ว|ส่งสลิปเรียบร้อยแล้ว/.test(t))score+=4;
+    if(/เลขออเดอร์ของคุณ|กำลังรอร้านตรวจสอบสลิป/.test(t))score+=3;
     if(/รบกวนส่งสลิปในแชท\s*Messenger/.test(t))score+=6;
     const labels=[...el.querySelectorAll('button,a')].map(x=>String(x.textContent||'').trim());
     if(labels.some(x=>/^Messenger$/i.test(x)))score+=4;
@@ -42,6 +40,8 @@
   }
 
   function findLegacyPanel(){
+    const current=document.getElementById('ymkFinalOrderStatusCard');
+    if(current)return current;
     const nodes=[...document.querySelectorAll('div,section,article')]
       .filter(el=>candidateScore(el)>=7)
       .sort((a,b)=>{
@@ -74,8 +74,8 @@
 
   function approvedHtml(id){
     return '<div data-ymk-final-status="approved" data-order-id="'+id+'">'
-      +'<div style="font-size:20px;font-weight:900;line-height:1.45;color:#8f4f68">✓ ส่งออเดอร์เรียบร้อยแล้ว ♡</div>'
-      +'<div style="margin-top:4px;font-size:14px;font-weight:700;line-height:1.5;color:#9a687c">ออเดอร์ของคุณเข้าสู่ระบบแล้ว</div>'
+      +'<div style="font-size:20px;font-weight:900;line-height:1.45;color:#8f4f68">✓ ยืนยันสลิปเรียบร้อยแล้ว ♡</div>'
+      +'<div style="margin-top:4px;font-size:14px;font-weight:800;line-height:1.5;color:#9a526d">สร้างออเดอร์เข้าสู่ระบบเรียบร้อยแล้ว</div>'
       +'<div style="margin-top:13px;font-size:15px;font-weight:900;color:#8f4f68">เลขออเดอร์ของคุณ</div>'
       +'<div style="margin-top:5px;font-size:16px;font-weight:900;color:#8f4f68">'+id+'</div>'
       +'<div style="margin-top:10px;font-size:13px;font-weight:700;line-height:1.7;color:#9a687c">กรุณาเก็บเลขออเดอร์ไว้สำหรับติดตามสถานะ<br>และรอร้านดำเนินการเติมสักครู่นะคะ ♡</div>'
@@ -94,13 +94,10 @@
     const mode=approved?'approved':'pending';
     const id=approved?realOrderId():'';
     const current=panel.querySelector('[data-ymk-final-status]');
-    if(current && current.dataset.ymkFinalStatus===mode && (!approved || current.dataset.orderId===id)){
-      lastMode=mode;lastOrderId=id;return;
-    }
+    if(current && current.dataset.ymkFinalStatus===mode && (!approved || current.dataset.orderId===id))return;
 
     stylePanel(panel);
     panel.innerHTML=approved?approvedHtml(id):pendingHtml();
-    lastMode=mode;lastOrderId=id;
   }
 
   document.addEventListener('click',function(e){
@@ -116,7 +113,7 @@
     }catch(err){}
   });
 
-  new MutationObserver(function(){render();}).observe(document.body,{childList:true,subtree:true,characterData:true});
-  setInterval(render,250);
+  new MutationObserver(render).observe(document.body,{childList:true,subtree:true,characterData:true});
+  setInterval(render,200);
   render();
 })();
