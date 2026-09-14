@@ -28,15 +28,29 @@
   }
 
   function getLastOrderSafe(){try{return typeof lastOrder!=='undefined'&&lastOrder?lastOrder:{};}catch(e){return {};}}
-  function getCurrentOrderIdSafe(){try{return typeof currentOrderId!=='undefined'?String(currentOrderId||''):'';}catch(e){return '';}}
+  function getCurrentOrderIdSafe(){
+    try{
+      const lexical=typeof currentOrderId!=='undefined'?String(currentOrderId||''):'';
+      if(lexical)return lexical;
+    }catch(e){}
+    return String(window.currentOrderId||'');
+  }
   function getPaymentSafe(){try{return typeof getPaymentMethod==='function'?getPaymentMethod():'';}catch(e){return '';}}
 
   async function getRealAutoOrder(orderId){
+    const id=String(orderId||'');
+    if(!/^YMK\d{6}-\d{6}$/.test(id))return null;
+
+    /* Worker just created this verified order. Use the exact same order data even if public Firestore reads are blocked. */
     try{
-      if(!/^YMK\d{6}-\d{6}(?:-[A-Z0-9]+)?$/.test(String(orderId||'')))return null;
+      const local=window.__ymkLastVerifiedAutoOrder;
+      if(local&&String(local.id||'')===id&&local.orderReady===true&&local.slipVerificationMode==='auto')return local;
+    }catch(e){}
+
+    try{
       if(!window.firebase||!window.YUIMELLKUB_FIREBASE_CONFIG)return null;
       if(!firebase.apps.length)firebase.initializeApp(window.YUIMELLKUB_FIREBASE_CONFIG);
-      const snap=await firebase.firestore().collection('orders').doc(orderId).get();
+      const snap=await firebase.firestore().collection('orders').doc(id).get();
       if(!snap.exists)return null;
       const data=snap.data()||{};
       if(data.orderReady!==true)return null;
