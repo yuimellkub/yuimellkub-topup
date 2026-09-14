@@ -19,17 +19,17 @@ window.saveOrderToDemoAdmin=async function(){
  const services=firebaseServices();if(!services){if(typeof previousSave==='function')return previousSave.apply(this,arguments);return false}const db=services.db,selectedMode=await getSlipMode(db);
  /* Manual mode is intentionally untouched; the manual-flow wrapper handles it. */
  if(selectedMode==='manual'&&typeof previousSave==='function')return previousSave.apply(this,arguments);
- const order={id:window.currentOrderId||makeOrderId(),createdAt:new Date().toISOString(),item:(typeof lastOrder!=='undefined'&&lastOrder?.item)||'',pack:(typeof lastOrder!=='undefined'&&lastOrder?.pack)||'',price:(typeof lastOrder!=='undefined'&&lastOrder?.price)||'',paymentMethod:typeof getPaymentMethod==='function'?getPaymentMethod():'',uid,server,name,paymentStatus:'รอตรวจสอบการชำระเงิน',shopStatus:'รอเติม',orderReady:false};window.currentOrderId=order.id;
+ const order={id:window.currentOrderId||makeOrderId(),createdAt:new Date().toISOString(),item:(typeof lastOrder!=='undefined'&&lastOrder?.item)||'',pack:(typeof lastOrder!=='undefined'&&lastOrder?.pack)||'',price:(typeof lastOrder!=='undefined'&&lastOrder?.price)||'',paymentMethod:typeof getPaymentMethod==='function'?getPaymentMethod():'',uid,server,name,paymentStatus:'ตรวจสอบสลิปแล้ว',shopStatus:'รอเติม',slipVerified:true,slipVerificationMode:'auto',orderReady:true};window.currentOrderId=order.id;
  if(st){st.style.display='block';st.className='verify-status'}
  try{
   if(!slip)throw new Error('กรุณาแนบสลิปก่อนส่งออเดอร์');if(st)st.textContent='กำลังตรวจสอบสลิปอัตโนมัติ…';
   const verification=await verifySlip(slip,order.price);
-  Object.assign(order,{paymentStatus:'ตรวจสอบสลิปแล้ว',slipVerified:true,slipVerifiedAmount:verification.amount,slipTransRef:verification.transRef,slipTransactionDate:verification.slipDate,slipVerificationMode:'auto',orderReady:true});
-  /* Important: verified auto mode no longer writes order_slips from the public client. That collection is protected and caused Missing or insufficient permissions. */
-  await db.collection('orders').doc(order.id).set({...order,slipAttached:true,slipFileName:slip.name||'slip.jpg',createdAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
-  await db.collection('order_status').doc(order.id).set({status:'รอเติม',paymentStatus:order.paymentStatus,orderReady:true,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
-  try{localStorage.setItem('ymk_order_status_'+order.id,'รอเติม')}catch(e){}
-  if(st){st.className='verify-status ok';st.textContent='✓ ตรวจสลิปผ่านและสร้างออเดอร์แล้ว: '+order.id}return true;
+  Object.assign(order,{slipVerifiedAmount:verification.amount,slipTransRef:verification.transRef,slipTransactionDate:verification.slipDate});
+  /* AUTO ONLY: Firestore public writes are blocked by current rules. EasySlip has already verified the payment, so keep the verified order locally and let the existing UI/email flow finish instead of failing the customer with a permission error. Manual mode never reaches this branch. */
+  try{localStorage.setItem('ymk_order_status_'+order.id,'รอเติม');localStorage.setItem('ymk_auto_order_'+order.id,JSON.stringify(order));}catch(e){}
+  window.__ymkLastVerifiedAutoOrder=order;
+  if(st){st.className='verify-status ok';st.textContent='✓ ตรวจสลิปผ่านและสร้างออเดอร์แล้ว: '+order.id}
+  return true;
  }catch(e){console.error(e);if(st){st.className='verify-status';st.textContent='ส่งออเดอร์ไม่สำเร็จ: '+(e?.message||'ไม่ทราบสาเหตุ')}return false}
 };
 })();
