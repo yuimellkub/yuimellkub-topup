@@ -18,7 +18,53 @@ document.getElementById('site').addEventListener('load',function(){
   function findOrderId(scope){const scoped=idsIn(scope);if(scoped.length)return scoped[scoped.length-1];const visible=[...d.querySelectorAll('#adminSaveStatus,#ymkApprovedOrderId,#ymkForceCard')].flatMap(el=>idsIn(el));if(visible.length)return visible[visible.length-1];let id='';try{id=String(w.currentOrderId||'').trim()}catch(_){}return /^YMK\d{6}-\d{6}$/.test(id)?id:'';}
   async function writeOrderId(id){if(!/^YMK\d{6}-\d{6}$/.test(id))return false;try{await w.navigator.clipboard.writeText(id);return true;}catch(_){try{const ta=d.createElement('textarea');ta.value=id;ta.setAttribute('readonly','');ta.style.position='fixed';ta.style.left='-9999px';d.body.appendChild(ta);ta.select();d.execCommand('copy');ta.remove();return true;}catch(__){return false;}}}
   w.ymkCopyOrderIdOnly=async function(scope){return writeOrderId(findOrderId(scope));};
-  d.addEventListener('click',async function(e){const el=e.target.closest('button,a');if(!el)return;const text=(el.textContent||'').trim();if(!(/คัดลอก/.test(text)&&(/ออเดอร์/.test(text)||/YMK\d{6}-\d{6}/.test(text))))return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();const scope=el.closest('#ymkForceCard,.done-card,.order-done,.modal-content,.modal-card')||d.body;const id=findOrderId(scope);if(!(await writeOrderId(id)))return;const old=el.textContent;el.textContent='คัดลอกแล้ว ✓';setTimeout(()=>{el.textContent=old},900);},true);
+  d.addEventListener('click',async function(e){const el=e.target.closest('button,a');if(!el)return;const text=(el.textContent||'').trim();if(!(/คัดลอก/.test(text)&&(/ออเดอร์/.test(text)||/YMK\d{6}-\d{6}/.test(text))))return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();const scope=el.closest('#ymkLegacyStatusCard,#ymkForceCard,.done-card,.order-done,.modal-content,.modal-card')||d.body;const id=findOrderId(scope);if(!(await writeOrderId(id)))return;const old=el.textContent;el.textContent='คัดลอกแล้ว ✓';setTimeout(()=>{el.textContent=old},900);},true);
+
+  const legacyStatusFix=d.createElement('script');legacyStatusFix.textContent=`(function(){
+    let target=null,lastMode='',lastId='';
+    function statusText(){const st=document.getElementById('adminSaveStatus');return st?(st.textContent||'').trim():'';}
+    function findLegacy(){
+      const nodes=[...document.querySelectorAll('div,section,article')].filter(el=>{
+        const t=(el.innerText||'').trim();
+        if(!/ส่งออเดอร์เรียบร้อยแล้ว/.test(t)||!/เลขออเดอร์ของคุณ/.test(t))return false;
+        const labels=[...el.querySelectorAll('button,a')].map(x=>(x.textContent||'').trim());
+        return labels.some(x=>/^Messenger$/i.test(x))&&labels.some(x=>/^LINE$/i.test(x));
+      });
+      nodes.sort((a,b)=>(a.innerText||'').length-(b.innerText||'').length);
+      return nodes[0]||null;
+    }
+    function styleCard(el){
+      el.id='ymkLegacyStatusCard';
+      el.style.setProperty('display','block','important');
+      el.style.setProperty('height','auto','important');
+      el.style.setProperty('min-height','0','important');
+      el.style.setProperty('max-height','none','important');
+      el.style.setProperty('overflow','visible','important');
+      el.style.setProperty('box-sizing','border-box','important');
+      el.style.setProperty('padding','22px 16px','important');
+      el.style.setProperty('text-align','center','important');
+    }
+    function pendingHtml(){return '<div data-ymk-final="pending"><div style="font-size:20px;font-weight:900;line-height:1.45;color:#8f4f68">✓ ส่งสลิปเรียบร้อยแล้ว ♡</div><div style="margin-top:4px;font-size:15px;font-weight:800;line-height:1.5;color:#9a526d">กำลังรอร้านตรวจสอบสลิป</div><div style="margin-top:12px;font-size:13px;font-weight:700;line-height:1.7;color:#9a687c">ร้านได้รับสลิปในระบบแล้ว ไม่ต้องส่งซ้ำนะคะ ♡<br>หลังตรวจสอบเรียบร้อย ระบบจะแสดงเลขออเดอร์สำหรับติดตามสถานะให้ค่ะ</div></div>';}
+    function approvedHtml(id){return '<div data-ymk-final="approved" data-order-id="'+id+'"><div style="font-size:20px;font-weight:900;line-height:1.45;color:#8f4f68">✓ ส่งออเดอร์เรียบร้อยแล้ว ♡</div><div style="margin-top:4px;font-size:14px;font-weight:700;line-height:1.5;color:#9a687c">ออเดอร์ของคุณเข้าสู่ระบบแล้ว</div><div style="margin-top:13px;font-size:15px;font-weight:900;color:#8f4f68">เลขออเดอร์ของคุณ</div><div style="margin-top:5px;font-size:15px;font-weight:900;color:#8f4f68">'+id+'</div><div style="margin-top:10px;font-size:13px;font-weight:700;line-height:1.7;color:#9a687c">กรุณาเก็บเลขออเดอร์ไว้สำหรับติดตามสถานะ<br>และรอร้านดำเนินการเติมสักครู่นะคะ ♡</div><button type="button" style="display:block;width:100%;margin-top:14px;border:1px solid #efbfd1;background:#fff3f8;padding:12px 16px;border-radius:12px;color:#9a526d;font:inherit;font-size:14px;font-weight:900;cursor:pointer">คัดลอกเลขออเดอร์</button></div>';}
+    function render(){
+      const st=statusText();
+      const pending=/กำลังรอร้านตรวจสอบสลิป|ยังไม่มีการสร้างออเดอร์|ส่งสลิปแล้ว.*รอร้านตรวจสอบ/.test(st);
+      const m=st.match(/YMK\\d{6}-\\d{6}/);
+      const approved=!!m&&/ส่งออเดอร์เข้าระบบแล้ว|ร้านยืนยันสลิปแล้ว|เลขออเดอร์/.test(st);
+      if(!pending&&!approved)return;
+      if(!target||!document.documentElement.contains(target))target=findLegacy();
+      if(!target)return;
+      const mode=approved?'approved':'pending',id=approved?m[0]:'';
+      const hasFinal=target.querySelector('[data-ymk-final]');
+      if(hasFinal&&lastMode===mode&&lastId===id)return;
+      styleCard(target);
+      target.innerHTML=approved?approvedHtml(id):pendingHtml();
+      lastMode=mode;lastId=id;
+    }
+    new MutationObserver(()=>{lastMode='';render();}).observe(document.body,{childList:true,subtree:true,characterData:true});
+    setInterval(render,120);render();
+  })();`;d.body.appendChild(legacyStatusFix);
+
   const calcRules=d.createElement('script');calcRules.src='calculator-pack-rules.js?v=6';d.body.appendChild(calcRules);
   const discountFix=d.createElement('script');discountFix.src='discount-price-fix.js?v=1';d.body.appendChild(discountFix);
   const store=d.createElement('script');store.src='storefront-category-sync.js?v=3';d.body.appendChild(store);
