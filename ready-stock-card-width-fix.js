@@ -38,12 +38,15 @@
         grid.style.setProperty('grid-template-columns','repeat(3,minmax(0,1fr))','important');
         grid.style.setProperty('width','100%','important');
         grid.style.setProperty('max-width','100%','important');
+        grid.style.setProperty('gap','12px','important');
+        grid.style.setProperty('padding-right','12px','important');
       }else{
         grid.style.setProperty('grid-template-columns','repeat(3,300px)','important');
         grid.style.removeProperty('width');
         grid.style.removeProperty('max-width');
+        grid.style.setProperty('gap','16px','important');
+        grid.style.removeProperty('padding-right');
       }
-      grid.style.setProperty('gap','16px','important');
       grid.style.setProperty('overflow','hidden','important');
       grid.style.setProperty('box-sizing','border-box','important');
     });
