@@ -36,16 +36,32 @@
     document.querySelectorAll('.ready-stock-grid').forEach(grid=>{
       if(tablet){
         grid.style.setProperty('grid-template-columns','repeat(3,minmax(0,1fr))','important');
-        grid.style.setProperty('width','100%','important');
-        grid.style.setProperty('max-width','100%','important');
         grid.style.setProperty('gap','12px','important');
-        grid.style.setProperty('padding-right','12px','important');
+        grid.style.setProperty('padding','0','important');
+
+        if(window.innerWidth >= 900){
+          const gridWidth=Math.min(1080,window.innerWidth-140);
+          const parentRect=(grid.parentElement||document.body).getBoundingClientRect();
+          const desiredLeft=(window.innerWidth-gridWidth)/2;
+          const marginLeft=desiredLeft-parentRect.left;
+          grid.style.setProperty('width',gridWidth+'px','important');
+          grid.style.setProperty('max-width',gridWidth+'px','important');
+          grid.style.setProperty('margin-left',marginLeft+'px','important');
+          grid.style.setProperty('margin-right','0','important');
+        }else{
+          grid.style.setProperty('width','100%','important');
+          grid.style.setProperty('max-width','100%','important');
+          grid.style.setProperty('margin-left','0','important');
+          grid.style.setProperty('margin-right','0','important');
+        }
       }else{
         grid.style.setProperty('grid-template-columns','repeat(3,300px)','important');
         grid.style.removeProperty('width');
         grid.style.removeProperty('max-width');
         grid.style.setProperty('gap','16px','important');
-        grid.style.removeProperty('padding-right');
+        grid.style.removeProperty('padding');
+        grid.style.removeProperty('margin-left');
+        grid.style.removeProperty('margin-right');
       }
       grid.style.setProperty('overflow','hidden','important');
       grid.style.setProperty('box-sizing','border-box','important');
