@@ -1,0 +1,18 @@
+(function(){
+  const SEND_PRICES={
+    skins:{3888:1435,3288:1205,3268:1200,2888:1060,2818:1035,2688:985,2618:960,2308:850,2226:820,2158:800,1968:715,1963:725,1888:700,1788:660,1733:640,1688:625,1588:590,1176:445,1138:430,938:350,288:115},
+    accessories:{2488:910,1888:700,1508:560,1068:405,788:295,628:240,258:100,228:95,208:85,198:80},
+    pets:{1408:500,888:325,788:295,710:270,500:195,488:185,388:150,288:115,158:70},
+    room:{4888:1790,3912:1430,3688:1375,3288:1210,968:360}
+  };
+  function clean(v){return String(v||'').replace(/\s*[×xX]\s*\d+\s*$/,'').trim();}
+  function amount(name){const a=[...clean(name).matchAll(/\d[\d,]*/g)];return a.length?Number(a[a.length-1][0].replace(/,/g,''))||0:0;}
+  function cat(btn){const raw=String(btn.dataset.readyCategory||btn.closest('.ready-stock-card')?.dataset.readyCategory||btn.closest('[data-stock-panel]')?.dataset.stockPanel||'').toLowerCase();if(/access|ประดับ/.test(raw))return'accessories';if(/pet|สัตว์/.test(raw))return'pets';if(/room|house|home|ห้อง/.test(raw))return'room';if(/skin|สกิน/.test(raw))return'skins';return'';}
+  function sendPrice(btn){const c=cat(btn),a=amount(btn.dataset.ymkBaseName||btn.dataset.readyName);return c&&SEND_PRICES[c]?SEND_PRICES[c][a]||0:0;}
+  function finish(btn,price){const card=btn.closest('.ready-stock-card'),input=card?.querySelector('.ymk-qty-input'),q=Math.max(1,Math.floor(Number(input?.value)||1)),base=btn.dataset.ymkBaseName||clean(btn.dataset.readyName||'สินค้า'),total=price*q;btn.dataset.readyPrice=String(total);btn.dataset.readyName=(q>1?base+' × '+q:base)+' • แบบส่ง';btn.dataset.ymkConfirming='1';try{window.YMK_ORDER_MODE='send';window.YMK_PENDING_SEND_ORDER={mode:'send',base,quantity:q,unitPrice:price,total};}catch(_){}btn.click();setTimeout(()=>{btn.dataset.readyPrice=String(btn.dataset.ymkUnitPrice||0);btn.dataset.readyName=base;delete btn.dataset.ymkConfirming;},0);}
+  function ensure(card){const btn=card.querySelector('.ready-stock-order-btn'),wrap=card.querySelector('.ymk-qty-wrap');if(!btn||!wrap||wrap.querySelector('.ymk-send-order'))return;const price=sendPrice(btn);if(!price)return;const send=document.createElement('button');send.type='button';send.className='ymk-send-order';send.innerHTML='<span>📦 แบบส่ง</span><strong>'+price.toLocaleString('th-TH')+' บาท</strong>';send.style.cssText='display:flex!important;align-items:center!important;justify-content:space-between!important;width:170px!important;min-width:170px!important;height:46px!important;margin:7px 0 0!important;padding:0 16px!important;border:1px solid #e7a9c0!important;border-radius:999px!important;background:#fff7fa!important;color:#c55f89!important;font:inherit!important;font-weight:850!important;cursor:pointer!important;box-sizing:border-box!important';send.onclick=e=>{e.preventDefault();e.stopPropagation();finish(btn,price)};wrap.appendChild(send);}
+  function scan(){document.querySelectorAll('.ready-stock-card').forEach(ensure)}
+  const css=document.createElement('style');css.textContent='.ymk-send-order strong{font-size:12px;font-weight:900}.ymk-send-order:active{transform:scale(.98)}';document.head.appendChild(css);
+  const obs=new MutationObserver(scan);if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{scan();obs.observe(document.body,{childList:true,subtree:true})});else{scan();obs.observe(document.body,{childList:true,subtree:true})}
+  window.YMK_SEND_PRICE_MAP=SEND_PRICES;
+})();

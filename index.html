@@ -23,7 +23,7 @@ document.getElementById('site').addEventListener('load',function(){
   const discountFix=d.createElement('script');discountFix.src='discount-price-fix.js?v=1';d.body.appendChild(discountFix);
   const store=d.createElement('script');store.src='storefront-category-sync.js?v=3';d.body.appendChild(store);
   const widthFix=d.createElement('script');widthFix.src='ready-stock-card-width-fix.js?v=4';d.body.appendChild(widthFix);
-  const quantity=d.createElement('script');quantity.src='ready-stock-quantity.js?v=8';d.body.appendChild(quantity);
+  const quantity=d.createElement('script');quantity.src='ready-stock-quantity.js?v=8';quantity.onload=()=>{const sendMode=d.createElement('script');sendMode.src='ready-stock-send-mode.js?v=1';sendMode.onload=()=>{const sendNext=d.createElement('script');sendNext.src='ready-stock-send-next.js?v=1';d.body.appendChild(sendNext)};d.body.appendChild(sendMode)};d.body.appendChild(quantity);
   const pack=d.createElement('script');pack.src='order-button-pack-patch.js?v=5';d.body.appendChild(pack);
   const forcePack=d.createElement('script');forcePack.src='order-pack-modal-fix.js?v=9';d.body.appendChild(forcePack);
   const hours=d.createElement('script');hours.src='store-hours-notice.js?v=1';d.body.appendChild(hours);
