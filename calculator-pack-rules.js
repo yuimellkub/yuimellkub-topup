@@ -72,7 +72,7 @@
     currentOrderId=null;
     const target=Math.max(0,Math.floor(Number(document.getElementById('target').value)||0));if(!target)return;
     const best=findBest(target),detail=formatLargestFirst(best);
-    lastOrder={item:target.toLocaleString()+' กระดุม',pack:detail,price:best.cost.toLocaleString()+' บาท'};
+    lastOrder={item:best.totalEchoes.toLocaleString()+' กระดุม',pack:detail,price:best.cost.toLocaleString()+' บาท'};
     openDonePopup([['ต้องการ',target.toLocaleString()+' กระดุม'],['ได้ทั้งหมด',best.totalEchoes.toLocaleString()+' กระดุม'],['แพ็ก',detail],['ยอดรวม',best.cost.toLocaleString()+' บาท','done-price']]);
   };
 
