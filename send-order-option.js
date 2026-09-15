@@ -8,22 +8,17 @@
     if(!card||card.querySelector('.ymk-send-choice'))return;
     const normal=card.querySelector('.ready-stock-order-btn');
     if(!normal||!allowed(normal)||normal.disabled)return;
-    const n=amount(normal.dataset.readyName||'');
-    const price=PRICES[n];
-    if(!price)return;
-    const b=document.createElement('button');
-    b.type='button';b.className='ymk-send-choice';b.textContent='📦 แบบส่ง · '+price.toLocaleString('th-TH')+' บาท';
-    b.style.cssText='width:100%;min-height:40px;margin-top:9px;border:1px solid #e7a6bf;border-radius:999px;background:#fff7fa;color:#c85f88;font:inherit;font-size:13px;font-weight:850;cursor:pointer;box-sizing:border-box';
-    const bottom=card.querySelector('.ymk-store-bottom');
-    if(bottom)bottom.insertAdjacentElement('afterend',b);else card.appendChild(b);
-    b.addEventListener('click',function(e){
-      e.preventDefault();e.stopPropagation();
-      const base=clean(normal.dataset.ymkBaseName||normal.dataset.readyName||'สินค้า');
-      window.YMK_SEND_SELECTION={mode:'send',name:base,category:normal.dataset.readyCategory||card.dataset.readyCategory||card.dataset.category||'',buttons:n,price:price};
-      const ev=new CustomEvent('ymk-send-order-selected',{detail:window.YMK_SEND_SELECTION});document.dispatchEvent(ev);
-      const old=b.textContent;b.textContent='เลือกแบบส่งแล้ว ✓';b.disabled=true;
-      setTimeout(()=>{b.disabled=false;b.textContent=old;},900);
-    });
+    const n=amount(normal.dataset.readyName||''),price=PRICES[n];if(!price)return;
+    const bottom=card.querySelector('.ymk-store-bottom');if(!bottom)return;
+    bottom.style.setProperty('display','grid','important');
+    bottom.style.setProperty('grid-template-columns','minmax(0,1fr) 112px 112px','important');
+    bottom.style.setProperty('align-items','center','important');
+    bottom.style.setProperty('gap','8px','important');
+    normal.style.setProperty('width','112px','important');normal.style.setProperty('min-width','112px','important');normal.style.setProperty('padding','0 10px','important');
+    const b=document.createElement('button');b.type='button';b.className='ymk-send-choice';b.textContent='📦 แบบส่ง';
+    b.style.cssText='width:112px;min-width:112px;height:44px;border:1px solid #e7a6bf;border-radius:999px;background:#fff7fa;color:#c85f88;font:inherit;font-size:13px;font-weight:850;white-space:nowrap;cursor:pointer;box-sizing:border-box';
+    bottom.appendChild(b);
+    b.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();const base=clean(normal.dataset.ymkBaseName||normal.dataset.readyName||'สินค้า');window.YMK_SEND_SELECTION={mode:'send',name:base,category:normal.dataset.readyCategory||card.dataset.readyCategory||card.dataset.category||'',buttons:n,price};document.dispatchEvent(new CustomEvent('ymk-send-order-selected',{detail:window.YMK_SEND_SELECTION}));const old=b.textContent;b.textContent='เลือกแล้ว ✓';b.disabled=true;setTimeout(()=>{b.disabled=false;b.textContent=old;},900);});
   }
   function scan(){document.querySelectorAll('.ready-stock-card').forEach(add);}
   document.addEventListener('ymk-storefront-products-rendered',()=>setTimeout(scan,0));
