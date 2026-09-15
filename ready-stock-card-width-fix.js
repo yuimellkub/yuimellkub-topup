@@ -1,13 +1,21 @@
 (function(){
-  function isTablet(){
-    return window.matchMedia('(pointer: coarse)').matches && window.innerWidth >= 700 && window.innerWidth <= 1400;
+  function deviceMode(){
+    const w=window.innerWidth;
+    const coarse=window.matchMedia('(pointer: coarse)').matches;
+    if(coarse && w < 700)return 'mobile';
+    if(coarse && w >= 700 && w <= 1400)return 'tablet';
+    return 'desktop';
   }
   function apply(){
     const cards=[...document.querySelectorAll('.ready-stock-card')];
     if(!cards.length)return;
-    const tablet=isTablet();
+    const mode=deviceMode();
     cards.forEach(card=>{
-      if(tablet){
+      if(mode==='mobile'){
+        card.style.setProperty('min-width','0','important');
+        card.style.setProperty('width','100%','important');
+        card.style.setProperty('max-width','100%','important');
+      }else if(mode==='tablet'){
         card.style.setProperty('min-width','0','important');
         card.style.setProperty('width','100%','important');
         card.style.setProperty('max-width','100%','important');
@@ -20,25 +28,33 @@
       card.style.setProperty('overflow','hidden','important');
       const wrap=card.querySelector('.ymk-qty-wrap');
       if(wrap){
-        wrap.style.setProperty('width','170px','important');
-        wrap.style.setProperty('min-width','170px','important');
+        const controlWidth=mode==='mobile'?'min(170px,100%)':'170px';
+        wrap.style.setProperty('width',controlWidth,'important');
+        wrap.style.setProperty('min-width',mode==='mobile'?'0':'170px','important');
         wrap.style.setProperty('max-width','170px','important');
-        wrap.style.setProperty('flex','0 0 170px','important');
+        wrap.style.setProperty('flex',mode==='mobile'?'0 1 170px':'0 0 170px','important');
       }
       const confirm=card.querySelector('.ymk-confirm-order');
       if(confirm){
-        confirm.style.setProperty('width','170px','important');
-        confirm.style.setProperty('min-width','170px','important');
+        confirm.style.setProperty('width',mode==='mobile'?'min(170px,100%)':'170px','important');
+        confirm.style.setProperty('min-width',mode==='mobile'?'0':'170px','important');
         confirm.style.setProperty('max-width','170px','important');
         confirm.style.setProperty('box-sizing','border-box','important');
       }
     });
     document.querySelectorAll('.ready-stock-grid').forEach(grid=>{
-      if(tablet){
+      if(mode==='mobile'){
+        grid.style.setProperty('grid-template-columns','minmax(0,1fr)','important');
+        grid.style.setProperty('width','100%','important');
+        grid.style.setProperty('max-width','100%','important');
+        grid.style.setProperty('gap','12px','important');
+        grid.style.setProperty('padding','0','important');
+        grid.style.setProperty('margin-left','0','important');
+        grid.style.setProperty('margin-right','0','important');
+      }else if(mode==='tablet'){
         grid.style.setProperty('grid-template-columns','repeat(3,minmax(0,1fr))','important');
         grid.style.setProperty('gap','12px','important');
         grid.style.setProperty('padding','0','important');
-
         if(window.innerWidth >= 900){
           const gridWidth=Math.min(1080,window.innerWidth-140);
           const parentRect=(grid.parentElement||document.body).getBoundingClientRect();
