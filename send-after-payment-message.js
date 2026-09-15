@@ -10,13 +10,12 @@
   function patch(){
     if(!isSend())return;
     const card=successCard();if(!card)return;
-    const old=card.querySelector('#ymkSendAfterPaymentNotice');if(old)old.remove();
-    const copy=[...card.querySelectorAll('button,a')].find(el=>/คัดลอกเลขออเดอร์/.test(el.textContent||''));
-    const normal=[...card.querySelectorAll('p,div,span')].find(el=>!el.children.length&&/และรอร้านดำเนินการเติมสักครู่นะคะ/.test(el.textContent||''));
-    const n=notice();
-    if(normal){normal.replaceWith(n);return;}
-    if(copy){copy.insertAdjacentElement('beforebegin',n);return;}
-    card.appendChild(n);
+    const normal=[...card.querySelectorAll('p,div,span')].find(el=>!el.children.length&&/กรุณาเก็บเลขออเดอร์ไว้สำหรับติดตามสถานะ/.test(el.textContent||''));
+    if(normal)normal.textContent='กรุณาเก็บเลขออเดอร์ไว้สำหรับติดตามสถานะนะคะ ♡';
+    const wait=[...card.querySelectorAll('p,div,span')].find(el=>!el.children.length&&/และรอร้านดำเนินการเติมสักครู่นะคะ/.test(el.textContent||''));
+    if(wait)wait.remove();
+    let n=card.querySelector('#ymkSendAfterPaymentNotice');
+    if(!n){n=notice();const copy=[...card.querySelectorAll('button,a')].find(el=>/คัดลอกเลขออเดอร์/.test(el.textContent||''));if(copy)copy.insertAdjacentElement('beforebegin',n);else card.appendChild(n);}
   }
   let busy=false;function schedule(){if(busy)return;busy=true;setTimeout(()=>{busy=false;patch();},30);}
   patch();new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true});
