@@ -9,7 +9,14 @@
   function sendActive(){return window.YMK_SEND_ORDER_META?.mode==='send';}
   function applySendOrder(meta){if(!sendActive()||!meta)return;try{if(typeof lastOrder!=='undefined'&&lastOrder){lastOrder.item=meta.q>1?meta.base+' × '+meta.q:meta.base;lastOrder.pack='แบบส่ง';lastOrder.packPlan='แบบส่ง';lastOrder.quantity=meta.q;lastOrder.price=meta.total;lastOrder.orderMode='send';}}catch(e){}
     const item='รายการ: '+(meta.q>1?meta.base+' × '+meta.q:meta.base),pack='แพ็ก: แบบส่ง',total='ยอดรวม: '+meta.total.toLocaleString('th-TH')+' บาท';
-    document.querySelectorAll('textarea').forEach(el=>{let v=el.value||'';if(!/รายการ:|แพ็ก:|ยอดรวม:/.test(v))return;v=/รายการ:\s*[^\n\r]*/.test(v)?v.replace(/รายการ:\s*[^\n\r]*/,item):v;v=/แพ็ก(?:ที่เติม)?:\s*[^\n\r]*/.test(v)?v.replace(/แพ็ก(?:ที่เติม)?:\s*[^\n\r]*/,pack):v.replace(/(รายการ:[^\n\r]*[\n\r]+)/,'$1'+pack+'\n');v=/ยอดรวม:\s*[^\n\r]*/.test(v)?v.replace(/ยอดรวม:\s*[^\n\r]*/,total):v;el.value=v;el.dispatchEvent(new Event('input',{bubbles:true}));});
+    document.querySelectorAll('textarea').forEach(el=>{let v=el.value||'';if(!/รายการ:|แพ็ก:|ยอดรวม:/.test(v))return;v=/รายการ:\s*[^\n\r]*/.test(v)?v.replace(/รายการ:\s*[^\n\r]*/,item):v;v=/แพ็ก(?:ที่เติม)?:\s*[^\n\r]*/.test(v)?v.replace(/แพ็ก(?:ที่เติม)?:\s*[^\n\r]*/,pack):v.replace(/(รายการ:[^\n\r]*[\n\r]+)/,'$1'+pack+'\n');v=/ยอดรวม:\s*[^\n\r]*/.test(v)?v.replace(/ยอดรวม:\s*[^\n\r]*/,total):v;el.value=v;el.dispatchEvent(new Event('input',{bubbles:true}));});document.querySelectorAll('div,p,span').forEach(el=>{
+  if(el.children.length)return;
+  const text=(el.textContent||'').trim();
+  if(/^แพ็ก:\s*พร้อมเติมทันที$/.test(text)){
+    el.textContent='แพ็ก: แบบส่ง';
+  }
+});
+                              
   }
   function patchSend(meta){[0,20,50,100,180,300,500,800,1200,1800,2600,4000,6000,9000].forEach(ms=>setTimeout(()=>applySendOrder(meta),ms));}
   function confirm(card,normal,input){const s=settings(normal);if(!s)return;const q=Math.max(1,Math.min(99,Math.floor(Number(input.value)||1))),base=clean(normal.dataset.ymkBaseName||normal.dataset.readyName||'สินค้า'),total=s.price*q,oldPrice=normal.dataset.readyPrice,oldName=normal.dataset.readyName,meta={mode:'send',q,base,unit:s.price,total};window.YMK_SEND_SELECTION={mode:'send',name:base,category:normal.dataset.readyCategory||'',price:s.price,quantity:q,total};window.YMK_PENDING_ORDER_META={q,base,p:{send:true,total,unit:s.price},orderMode:'send'};window.YMK_SEND_ORDER_META=meta;window.YMK_FORCED_PACK_META=null;normal.dataset.readyPrice=String(total);normal.dataset.readyName=q>1?base+' × '+q:base;normal.dataset.ymkConfirming='1';normal.dataset.ymkSendConfirming='1';normal.click();applySendOrder(meta);patchSend(meta);setTimeout(()=>{normal.dataset.readyPrice=oldPrice||'';normal.dataset.readyName=oldName||base;delete normal.dataset.ymkConfirming;delete normal.dataset.ymkSendConfirming;restore(card);},3000);}
