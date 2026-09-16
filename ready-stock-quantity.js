@@ -4,7 +4,7 @@
   function price759(q){return q>=30?283:q>=20?285:q>=10?287:q>0?290:0;}
   function num(v){const n=Number(String(v??'').replace(/[^0-9.]/g,''));return Number.isFinite(n)?n:0;}
   function clean(v){return String(v||'').replace(/\s*[×xX]\s*\d+\s*$/,'').trim();}
-  function buttons(name){const t=clean(name),a=[...t.matchAll(/\d[\d,]*/g)];return a.length?Number(a[a.length-1][0].replace(/,/g,''))||0:0;}
+  function buttons(name){const t=clean(name),m=t.match(/(\d[\d,]*)\s*(?:กระดุม|ปุ่ม|buttons?)/i);return m?Number(m[1].replace(/,/g,''))||0:0;}
   function product(btn){const n=clean(btn.dataset.readyName||''),c=String(btn.dataset.readyCategory||'echoes');return products.find(p=>String(p.name||'').trim()===n&&String(p.category||'echoes')===c)||products.find(p=>String(p.name||'').trim()===n)||null;}
   function categoryOf(btn,p){const card=btn.closest('.ready-stock-card'),panel=card?.closest('[data-stock-panel]');return String((p&&p.category)||btn.dataset.readyCategory||card?.dataset.readyCategory||card?.dataset.category||panel?.dataset.stockPanel||'').toLowerCase().trim();}
   function autoCategory(btn,p){const cat=categoryOf(btn,p),label=String((p&&p.categoryLabel)||'').trim();if(cat==='echoes')return false;if(['skins','skin','accessories','accessory','pets','pet','room','rooms','house','houses','home','furniture'].includes(cat))return true;return /สกิน|ประดับ|สัตว์เลี้ยง|ห้อง/.test(label);}
