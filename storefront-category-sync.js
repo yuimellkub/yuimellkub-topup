@@ -14,6 +14,7 @@
   function injectStyle(){if(document.getElementById('ymkStoreSyncStyle'))return;const s=document.createElement('style');s.id='ymkStoreSyncStyle';s.textContent=`
     .ready-stock-tabs{align-items:center!important}
     .ready-stock-tab{display:inline-flex!important;align-items:center!important;justify-content:center!important;box-sizing:border-box!important;vertical-align:middle!important;margin-top:0!important;margin-bottom:0!important;line-height:1.2!important}
+    @media(min-width:981px){.ready-stock-tabs{display:flex!important;flex-wrap:wrap!important;overflow:visible!important;width:100%!important;max-width:100%!important;gap:10px!important}.ready-stock-tab{flex:0 0 auto!important}}
     .ready-stock-grid{display:grid!important;grid-template-columns:repeat(3,300px)!important;gap:16px!important;align-items:stretch!important}
     .ready-stock-card{width:300px!important;min-width:300px!important;max-width:300px!important;min-height:390px!important;padding:15px!important;border:1px solid #f2ccdc!important;border-radius:19px!important;background:#fff!important;box-sizing:border-box!important;display:flex!important;flex-direction:column!important;overflow:hidden!important;box-shadow:0 10px 26px rgba(190,105,145,.08)!important}
     .ymk-store-image{height:190px!important;width:100%!important;border-radius:16px!important;background:#fff8fb!important;display:flex!important;align-items:center!important;justify-content:center!important;overflow:hidden!important;margin-bottom:11px!important}
