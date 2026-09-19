@@ -9,10 +9,14 @@
   async function sendOrderEmail(payload){
     payload=Object.assign({},payload);
     if(payload.price!=null)payload.price=String(payload.price).replace(/\s*บาท\s*$/,'').trim();
-    if(payload.status==='มีสลิปใหม่ • รอร้านตรวจสอบ'){
+    if(payload.notification_type==='manual_review'){
       payload.email_title='มีสลิปใหม่รอตรวจสอบ';
       payload.subject='🎀 มีสลิปใหม่รอตรวจสอบ #'+String(payload.order_id||'');
       payload.title='มีสลิปใหม่รอตรวจสอบ';
+    }else{
+      payload.email_title='มีออเดอร์ใหม่';
+      payload.subject='🎀 มีออเดอร์ใหม่ #'+String(payload.order_id||'');
+      payload.title='มีออเดอร์ใหม่';
     }
     if(!cfgReady()){
       console.warn('EmailJS config is incomplete');
