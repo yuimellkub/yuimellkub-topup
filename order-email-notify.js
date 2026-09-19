@@ -27,6 +27,8 @@
     }catch(e){console.warn('Yuimellkub order email failed',e);return false;}
   }
 
+  window.ymkSendOrderEmail=sendOrderEmail;
+
   function getLastOrderSafe(){try{return typeof lastOrder!=='undefined'&&lastOrder?lastOrder:{};}catch(e){return {};}}
   function getCurrentOrderIdSafe(){
     try{
