@@ -10,6 +10,14 @@
 <iframe id="site" src="index.html.html" title="Yuimellkub Top-up"></iframe>
 <script>
 (function(){
+  const track=(new URL(location.href).searchParams.get('track')||'').trim();
+  if(/^SLIP\d{6}-\d{6}-[A-Z0-9]{3,8}$/i.test(track)){
+    location.replace(new URL('track.html?track='+encodeURIComponent(track),location.href).href);
+  }
+})();
+</script>
+<script>
+(function(){
   const p=new URLSearchParams(location.search), track=(p.get('track')||'').trim();
   if(!track)return;
   // Tracking links should open the dedicated status page, not the storefront iframe.
