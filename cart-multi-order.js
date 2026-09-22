@@ -86,7 +86,7 @@ function checkout(){
  const missing=cart.find(x=>!String(x.uid||'').trim());if(missing){alert('กรุณากรอก ID / UID ให้ครบทุกรายการค่ะ');return}
  const total=cart.reduce((n,x)=>n+num(x.total),0), packs=packTotals();
  const groups={};cart.forEach(x=>{const k=x.uid+'|'+x.server;(groups[k]||(groups[k]=[])).push(x)});
- const groupText=Object.entries(groups).map(([k,items])=>{const [uid,server]=k.split('|');return 'ID '+uid+' ('+server+'): '+items.map(x=>x.name+' ×'+x.qty+(x.pack?' ['+x.pack+']':'')).join(', ')}).join(' ; ');
+ const groupText=Object.entries(groups).map(([k,items])=>{const [uid,server]=k.split('|');return 'ID '+uid+' ('+server+')\n'+items.map(x=>'• '+x.name+' ×'+x.qty+(x.pack?'\n  แพ็ก: '+x.pack:'')).join('\n')}).join('\n\n');
  const summary=groupText;
  const first=cart[0],card=[...document.querySelectorAll('.ready-stock-card')].find(c=>clean(c.querySelector('.ready-stock-order-btn')?.dataset.ymkBaseName||c.querySelector('.ready-stock-order-btn')?.dataset.readyName)===first.name)||document.querySelector('.ready-stock-card');
  const btn=card?.querySelector('.ready-stock-order-btn');if(!btn){alert('ไม่พบปุ่มสั่งซื้อ กรุณารีเฟรชหน้าแล้วลองใหม่');return}
