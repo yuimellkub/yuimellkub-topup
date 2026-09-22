@@ -32,7 +32,7 @@ document.getElementById('site').addEventListener('load',function(){
   const paymentFormat=d.createElement('script');paymentFormat.src='payment-display-format.js?v=1';d.body.appendChild(paymentFormat);
   const hours=d.createElement('script');hours.src='store-hours-notice.js?v=1';d.body.appendChild(hours);
   const contactText=d.createElement('script');contactText.src='contact-bar-text-fix.js?v=1';d.body.appendChild(contactText);
-  const slipStore=d.createElement('script');slipStore.src='order-slip-firestore.js?v=8';slipStore.onload=()=>{const manualFlow=d.createElement('script');manualFlow.src='order-slip-manual-flow-fix.js?v=27';manualFlow.onload=()=>{const statusUi=d.createElement('script');statusUi.src='order-status-ui-fix.js?v=9';d.body.appendChild(statusUi)};d.body.appendChild(manualFlow)};d.body.appendChild(slipStore);
+  const slipStore=d.createElement('script');slipStore.src='order-slip-firestore.js?v=8';slipStore.onload=()=>{const manualFlow=d.createElement('script');manualFlow.src='order-slip-manual-flow-fix.js?v=27';manualFlow.onload=()=>{const statusUi=d.createElement('script');statusUi.src='order-status-ui-fix.js?v=10';d.body.appendChild(statusUi)};d.body.appendChild(manualFlow)};d.body.appendChild(slipStore);
   const fulfillment=d.createElement('script');fulfillment.src='order-fulfillment-slip.js?v=6';d.body.appendChild(fulfillment);
   const slipReview=d.createElement('script');slipReview.src='order-slip-review-status.js?v=1';d.body.appendChild(slipReview);
   const cfg=d.createElement('script');cfg.src='emailjs-config.js?v=1';cfg.onload=()=>{const mail=d.createElement('script');mail.src='order-email-notify.js?v=5';d.body.appendChild(mail)};d.body.appendChild(cfg);
