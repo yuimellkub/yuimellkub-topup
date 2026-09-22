@@ -102,8 +102,8 @@ function patchOrder(){
  }catch(_){}
  const uid=document.getElementById('orderUid');if(uid){uid.value=c.firstUid;uid.readOnly=true}
  const sv=document.getElementById('orderServer');if(sv)sv.value=c.firstServer;
- const patchText=()=>{document.querySelectorAll('textarea,input').forEach(el=>{if(el===uid)return;let v=String(el.value||'');if(/รายการ:|ยอดรวม:|แพ็ก:/.test(v)){v=v.replace(/รายการ:[^\r\n]*/,'รายการ: '+c.summary);if(c.packs)v=v.replace(/แพ็ก:[^\r\n]*/,'แพ็ก: '+c.packs);else v=v.replace(/^\s*แพ็ก:[^\r\n]*(?:\r?\n)?/gm,'');v=v.replace(/ยอดรวม:\s*[\d,.]+\s*(?:บาท)?/,'ยอดรวม: '+c.total.toLocaleString('th-TH')+' บาท');el.value=v}})};
- patchText();[50,150,300,600,1000].forEach(ms=>setTimeout(()=>{patchText();document.querySelectorAll('textarea,input').forEach(el=>{if(el===uid)return;const v=String(el.value||'');if(v.includes('แพ็ก:'))el.value=v.replace(/^\s*แพ็ก:[^\r\n]*(?:\r?\n)?/gm,'')})},ms));
+ const patchText=()=>{document.querySelectorAll('textarea,input').forEach(el=>{if(el===uid)return;const v=String(el.value||'');if(!(/YUIMELLKUB TOP-UP|ขอสั่งเติม Identity V|รายการ:/.test(v)))return;const pay=(v.match(/ช่องทางชำระเงิน:\s*([^\r\n]+)/)||[])[1]||'QR พร้อมเพย์';const msg='♡ YUIMELLKUB TOP-UP ♡\nขอสั่งเติม Identity V\n\nรายการ:\n'+c.summary+'\n\nยอดรวม: '+c.total.toLocaleString('th-TH')+' บาท\nช่องทางชำระเงิน: '+pay+'\nUID: '+c.firstUid+'\nServer: '+c.firstServer+'\n\nส่งจากเว็บ Yuimellkub Top-up';if(el.value!==msg)el.value=msg})};
+ patchText();[50,150,300,600,1000].forEach(ms=>setTimeout(patchText,ms));
 }
 document.addEventListener('click',e=>{const b=e.target.closest('.ymk-cart-plus');if(!b)return;const card=b.closest('.ready-stock-card');if(!card)return;e.preventDefault();e.stopPropagation();add(card)},true);
 document.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;if(/ส่งออเดอร์|ตรวจสลิป|ส่งสลิป/.test(t.textContent||''))patchOrder()},true);
