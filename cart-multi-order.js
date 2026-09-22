@@ -105,8 +105,6 @@ function patchOrder(){
  const sv=document.getElementById('orderServer');if(sv)sv.value=c.firstServer;
  const hideCartCustomerFields=()=>{
    [uid,sv].forEach(el=>{if(!el)return;const row=el.closest('.field,.form-group,.input-group,label')||el.parentElement;if(row)row.style.display='none'});
-   const name=document.getElementById('orderName')||document.querySelector('[name="orderName"],[name="customerName"]');
-   if(name){const row=name.closest('.field,.form-group,.input-group,label')||name.parentElement;if(row)row.style.display='none'}
  };
  hideCartCustomerFields();
  const makeMsg=v=>{const pay=(String(v||'').match(/ช่องทางชำระเงิน:\s*([^\r\n]+)/)||[])[1]||'QR พร้อมเพย์';return '♡ YUIMELLKUB TOP-UP ♡\nขอสั่งเติม Identity V\n\nรายการ:\n'+c.summary+'\n\nยอดรวม: '+c.total.toLocaleString('th-TH')+' บาท\nช่องทางชำระเงิน: '+pay+'\n\nส่งจากเว็บ Yuimellkub Top-up'};
