@@ -43,7 +43,7 @@ function style(){
  .ymkCartTotal{display:flex;justify-content:space-between;font-size:18px;font-weight:900;margin:16px 0}
  #ymkCartCheckout{width:100%;height:50px;border:0;border-radius:999px;background:#df7ca4;color:#fff;font:inherit;font-weight:900;cursor:pointer}
  #ymkCartCheckout:disabled{opacity:.5}.ymkCartEmpty{text-align:center;padding:30px 10px;color:#a57a8a}
- .ymk-cart-plus{border:0;border-radius:10px;background:#fff0f6;color:#c95f8b;font:inherit;font-weight:900;cursor:pointer;padding:8px 11px;margin-right:6px;box-shadow:inset 0 0 0 1px #efc8d7}.ymk-cart-plus:hover{background:#ffe5ef}.ymk-added{animation:ymkpop .28s ease}@keyframes ymkpop{50%{transform:scale(1.06)}}
+ .ymk-cart-plus{border:0;border-radius:50%;background:#fff0f6;color:#c95f8b;font:inherit;font-weight:900;cursor:pointer;width:34px;height:34px;padding:0;margin-right:6px;display:inline-flex;align-items:center;justify-content:center;line-height:1;box-shadow:inset 0 0 0 1px #efc8d7}.ymk-cart-plus:hover{background:#ffe5ef}.ymk-added{animation:ymkpop .28s ease}@keyframes ymkpop{50%{transform:scale(1.06)}}
  @media(max-width:560px){#ymkCartFab{right:14px;bottom:165px;padding:10px 13px}.ymkCartFields{grid-template-columns:1fr}.ymkCartRow{align-items:flex-start}}
  `;document.head.appendChild(s);
 }
@@ -107,7 +107,7 @@ function patchOrder(){
 }
 document.addEventListener('click',e=>{const b=e.target.closest('.ymk-cart-plus');if(!b)return;const card=b.closest('.ready-stock-card');if(!card)return;e.preventDefault();e.stopPropagation();add(card)},true);
 document.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;if(/ส่งออเดอร์|ตรวจสลิป|ส่งสลิป/.test(t.textContent||''))patchOrder()},true);
-function injectCartButtons(){document.querySelectorAll('.ready-stock-card').forEach(card=>{if(card.querySelector('.ymk-cart-plus'))return;const buy=card.querySelector('.ready-stock-order-btn');if(!buy)return;const plus=document.createElement('button');plus.type='button';plus.className='ymk-cart-plus';plus.textContent='🛒 +';buy.parentNode.insertBefore(plus,buy)})}
+function injectCartButtons(){document.querySelectorAll('.ready-stock-card').forEach(card=>{if(card.querySelector('.ymk-cart-plus'))return;const buy=card.querySelector('.ready-stock-order-btn');if(!buy)return;const plus=document.createElement('button');plus.type='button';plus.className='ymk-cart-plus';plus.textContent='🛒';buy.parentNode.insertBefore(plus,buy)})}
 const mo=new MutationObserver(()=>{if(window.YMK_CART_ACTIVE)patchOrder();injectCartButtons()});
 function init(){style();shell();load();renderBadge();injectCartButtons();mo.observe(document.body,{childList:true,subtree:true})}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
