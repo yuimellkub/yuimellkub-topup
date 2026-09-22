@@ -32,7 +32,7 @@ function style(){
  #ymkCartFab{position:fixed;right:18px;bottom:155px;z-index:999990;border:0;border-radius:999px;background:#df7ca4;color:#fff;padding:11px 14px;font:inherit;font-weight:900;box-shadow:0 8px 28px #b45f8040;cursor:pointer;display:flex;align-items:center;gap:5px}
  #ymkCartFab b{background:#fff;color:#d76f99;border-radius:999px;padding:2px 7px;margin:0}
  #ymkCartShade{display:none;position:fixed;inset:0;z-index:999995;background:#5e394b55;backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);padding:18px;overflow:auto}
- #ymkCartBox{position:absolute;right:0;top:0;bottom:0;width:min(430px,92vw);margin:0;background:#fff;padding:20px;box-sizing:border-box;box-shadow:-18px 0 55px #5e394b38;color:#71465a;overflow-y:auto;border-radius:22px 0 0 22px}
+ #ymkCartBox{position:fixed!important;right:0!important;left:auto!important;top:0!important;bottom:0!important;width:min(430px,92vw)!important;max-width:none!important;height:100vh!important;margin:0!important;transform:none!important;background:#fff!important;padding:20px!important;box-sizing:border-box!important;box-shadow:-18px 0 55px #5e394b38!important;color:#71465a;overflow-y:auto!important;border-radius:22px 0 0 22px!important}
  .ymkCartHead{display:flex;align-items:center;justify-content:space-between;gap:10px}.ymkCartHead h2{margin:0;color:#c95f8b}
  .ymkCartClose,.ymkCartRemove{border:0;background:#fff0f6;color:#a45e79;border-radius:10px;padding:8px 10px;font-weight:900;cursor:pointer}
  .ymkCartItem{border:1px solid #f0ccda;background:#fff9fb;border-radius:16px;padding:13px;margin-top:10px}
