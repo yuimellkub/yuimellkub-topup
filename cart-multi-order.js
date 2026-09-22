@@ -97,6 +97,7 @@ function checkout(){
 }
 function patchOrder(){
  const c=window.YMK_CART_ACTIVE;if(!c)return;
+ window.YMK_SEND_ORDER_META=null;window.YMK_SEND_SELECTION=null;window.YMK_PENDING_ORDER_META=null;
  try{
    if(typeof lastOrder!=='undefined'&&lastOrder){lastOrder.item=c.summary;lastOrder.productName='ตะกร้าสินค้า';lastOrder.pack=c.packs;lastOrder.packPlan=c.packs;lastOrder.price=c.total;lastOrder.cartItems=c.items;lastOrder.cartOrder=true;lastOrder.quantity=c.items.reduce((n,x)=>n+x.qty,0)}
  }catch(_){}
