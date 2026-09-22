@@ -122,14 +122,14 @@ function patchOrder(){
      el.textContent=t.replace(/\n?UID:\s*[^\r\n]*/g,'').replace(/\n?Server:\s*[^\r\n]*/g,'').replace(/\n{3,}/g,'\n\n');
    });
  };
- patchText();removeLegacyTail();[50,150,300,600,1000,1500,2500,4000].forEach(ms=>setTimeout(()=>{patchText();removeLegacyTail()},ms));
+ patchText();removeLegacyTail();[80,250,600,1200].forEach(ms=>setTimeout(()=>{patchText();removeLegacyTail()},ms));
  if(uid&&!uid.dataset.ymkCartMsg){uid.dataset.ymkCartMsg='1';['input','change','blur'].forEach(ev=>uid.addEventListener(ev,()=>setTimeout(()=>{patchText();removeLegacyTail()},0)))}
  if(sv&&!sv.dataset.ymkCartMsg){sv.dataset.ymkCartMsg='1';['input','change','blur'].forEach(ev=>sv.addEventListener(ev,()=>setTimeout(()=>{patchText();removeLegacyTail()},0)))}
 }
 document.addEventListener('click',e=>{const b=e.target.closest('.ymk-cart-plus');if(!b)return;const card=b.closest('.ready-stock-card');if(!card)return;e.preventDefault();e.stopPropagation();add(card)},true);
 document.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;if(/ส่งออเดอร์|ตรวจสลิป|ส่งสลิป/.test(t.textContent||''))patchOrder()},true);
 function injectCartButtons(){document.querySelectorAll('.ready-stock-card').forEach(card=>{if(card.querySelector('.ymk-cart-plus'))return;const buy=card.querySelector('.ready-stock-order-btn');if(!buy)return;const plus=document.createElement('button');plus.type='button';plus.className='ymk-cart-plus';plus.textContent='🛒';buy.parentNode.insertBefore(plus,buy)})}
-const mo=new MutationObserver(()=>{if(window.YMK_CART_ACTIVE)patchOrder();injectCartButtons()});
+const mo=new MutationObserver(()=>{injectCartButtons()});
 function init(){style();shell();load();renderBadge();injectCartButtons();mo.observe(document.body,{childList:true,subtree:true})}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 window.YMK_CART={open,clear(){cart=[];save();render()},items:()=>cart.slice()};
