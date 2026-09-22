@@ -103,6 +103,12 @@ function patchOrder(){
  }catch(_){}
  const uid=document.getElementById('orderUid');if(uid){uid.value=c.firstUid;uid.readOnly=true}
  const sv=document.getElementById('orderServer');if(sv)sv.value=c.firstServer;
+ const hideCartCustomerFields=()=>{
+   [uid,sv].forEach(el=>{if(!el)return;const row=el.closest('.field,.form-group,.input-group,label')||el.parentElement;if(row)row.style.display='none'});
+   const name=document.getElementById('orderName')||document.querySelector('[name="orderName"],[name="customerName"]');
+   if(name){const row=name.closest('.field,.form-group,.input-group,label')||name.parentElement;if(row)row.style.display='none'}
+ };
+ hideCartCustomerFields();
  const makeMsg=v=>{const pay=(String(v||'').match(/ช่องทางชำระเงิน:\s*([^\r\n]+)/)||[])[1]||'QR พร้อมเพย์';return '♡ YUIMELLKUB TOP-UP ♡\nขอสั่งเติม Identity V\n\nรายการ:\n'+c.summary+'\n\nยอดรวม: '+c.total.toLocaleString('th-TH')+' บาท\nช่องทางชำระเงิน: '+pay+'\n\nส่งจากเว็บ Yuimellkub Top-up'};
  const patchText=()=>{
    document.querySelectorAll('textarea,input').forEach(el=>{if(el===uid)return;const v=String(el.value||'');if(!(/YUIMELLKUB TOP-UP|ขอสั่งเติม Identity V|รายการ:/.test(v)))return;const msg=makeMsg(v);if(el.value!==msg)el.value=msg});
@@ -122,7 +128,7 @@ function patchOrder(){
      el.textContent=t.replace(/\n?UID:\s*[^\r\n]*/g,'').replace(/\n?Server:\s*[^\r\n]*/g,'').replace(/\n{3,}/g,'\n\n');
    });
  };
- patchText();removeLegacyTail();[80,250,600,1200].forEach(ms=>setTimeout(()=>{patchText();removeLegacyTail()},ms));
+ patchText();removeLegacyTail();hideCartCustomerFields();[80,250,600,1200].forEach(ms=>setTimeout(()=>{patchText();removeLegacyTail();hideCartCustomerFields()},ms));
  if(uid&&!uid.dataset.ymkCartMsg){uid.dataset.ymkCartMsg='1';['input','change','blur'].forEach(ev=>uid.addEventListener(ev,()=>setTimeout(()=>{patchText();removeLegacyTail()},0)))}
  if(sv&&!sv.dataset.ymkCartMsg){sv.dataset.ymkCartMsg='1';['input','change','blur'].forEach(ev=>sv.addEventListener(ev,()=>setTimeout(()=>{patchText();removeLegacyTail()},0)))}
 }
