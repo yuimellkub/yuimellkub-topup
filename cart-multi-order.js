@@ -86,7 +86,7 @@ function checkout(){
  const missing=cart.find(x=>!String(x.uid||'').trim());if(missing){alert('กรุณากรอก ID / UID ให้ครบทุกรายการค่ะ');return}
  const total=cart.reduce((n,x)=>n+num(x.total),0), packs='';
  const groups={};cart.forEach(x=>{const k=x.uid+'|'+x.server;(groups[k]||(groups[k]=[])).push(x)});
- const groupText=Object.entries(groups).map(([k,items])=>{const [uid,server]=k.split('|');return 'ID '+uid+' ('+server+')\n'+items.map(x=>'• '+x.name+' ×'+x.qty+(x.pack?'\n  แพ็ก: '+x.pack:'')).join('\n')}).join('\n\n');
+ const groupText=Object.entries(groups).map(([k,items])=>{const [uid,server]=k.split('|');return 'ID '+uid+' ('+server+')\n'+items.map(x=>'• '+x.name+' ×'+x.qty+(x.pack?'\n  ใช้แพ็ก: '+x.pack:'')).join('\n')}).join('\n\n');
  const summary=groupText;
  const first=cart[0],card=[...document.querySelectorAll('.ready-stock-card')].find(c=>clean(c.querySelector('.ready-stock-order-btn')?.dataset.ymkBaseName||c.querySelector('.ready-stock-order-btn')?.dataset.readyName)===first.name)||document.querySelector('.ready-stock-card');
  const btn=card?.querySelector('.ready-stock-order-btn');if(!btn){alert('ไม่พบปุ่มสั่งซื้อ กรุณารีเฟรชหน้าแล้วลองใหม่');return}
@@ -102,7 +102,7 @@ function patchOrder(){
  }catch(_){}
  const uid=document.getElementById('orderUid');if(uid){uid.value=c.firstUid;uid.readOnly=true}
  const sv=document.getElementById('orderServer');if(sv)sv.value=c.firstServer;
- const patchText=()=>{document.querySelectorAll('textarea,input').forEach(el=>{if(el===uid)return;let v=String(el.value||'');if(/รายการ:|ยอดรวม:|แพ็ก:/.test(v)){v=v.replace(/รายการ:[^\r\n]*/,'รายการ: '+c.summary);if(c.packs)v=v.replace(/แพ็ก:[^\r\n]*/,'แพ็ก: '+c.packs);else v=v.replace(/^แพ็ก:[^\r\n]*(?:\r?\n)?/gm,'');v=v.replace(/ยอดรวม:\s*[\d,.]+\s*(?:บาท)?/,'ยอดรวม: '+c.total.toLocaleString('th-TH')+' บาท');el.value=v}})};
+ const patchText=()=>{document.querySelectorAll('textarea,input').forEach(el=>{if(el===uid)return;let v=String(el.value||'');if(/รายการ:|ยอดรวม:|แพ็ก:/.test(v)){v=v.replace(/รายการ:[^\r\n]*/,'รายการ: '+c.summary);if(c.packs)v=v.replace(/แพ็ก:[^\r\n]*/,'แพ็ก: '+c.packs);else v=v.replace(/^\s*แพ็ก:[^\r\n]*(?:\r?\n)?/gm,'');v=v.replace(/ยอดรวม:\s*[\d,.]+\s*(?:บาท)?/,'ยอดรวม: '+c.total.toLocaleString('th-TH')+' บาท');el.value=v}})};
  patchText();setTimeout(patchText,200);
 }
 document.addEventListener('click',e=>{const b=e.target.closest('.ymk-cart-plus');if(!b)return;const card=b.closest('.ready-stock-card');if(!card)return;e.preventDefault();e.stopPropagation();add(card)},true);
