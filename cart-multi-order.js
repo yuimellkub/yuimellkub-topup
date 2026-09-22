@@ -84,7 +84,7 @@ function syncInputs(){
 function checkout(){
  syncInputs();if(!cart.length)return;
  const missing=cart.find(x=>!String(x.uid||'').trim());if(missing){alert('กรุณากรอก ID / UID ให้ครบทุกรายการค่ะ');return}
- const total=cart.reduce((n,x)=>n+num(x.total),0), uniqueIds=[...new Set(cart.map(x=>String(x.uid||'').trim()+'|'+x.server))], packs=uniqueIds.length===1?packTotals():'';
+ const total=cart.reduce((n,x)=>n+num(x.total),0), packs='';
  const groups={};cart.forEach(x=>{const k=x.uid+'|'+x.server;(groups[k]||(groups[k]=[])).push(x)});
  const groupText=Object.entries(groups).map(([k,items])=>{const [uid,server]=k.split('|');return 'ID '+uid+' ('+server+')\n'+items.map(x=>'• '+x.name+' ×'+x.qty+(x.pack?'\n  แพ็ก: '+x.pack:'')).join('\n')}).join('\n\n');
  const summary=groupText;
