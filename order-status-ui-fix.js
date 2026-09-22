@@ -1,9 +1,10 @@
 (function(){
   'use strict';
   function statusText(){const el=document.getElementById('adminSaveStatus');return el?String(el.textContent||'').trim():'';}
-  function realOrderId(){const st=statusText(),m=st.match(/YMK\d{6}-\d{6}/);if(m)return m[0];try{const id=String(window.currentOrderId||'').trim();if(/^YMK\d{6}-\d{6}$/.test(id))return id;}catch(e){}return '';}
-  function isPending(){return /กำลังรอร้านตรวจสอบสลิป|ยังไม่มีการสร้างออเดอร์|ส่งสลิปแล้ว.*รอร้านตรวจสอบ|กำลังส่งสลิปให้ร้านตรวจสอบ/.test(statusText());}
-  function isApproved(){const st=statusText(),id=realOrderId();return /^YMK\d{6}-\d{6}$/.test(id)&&/ส่งออเดอร์เข้าระบบแล้ว|ร้านยืนยันสลิปแล้ว|เลขออเดอร์/.test(st);}
+  function realOrderId(){const st=statusText();try{const id=String(window.currentOrderId||'').trim();if(/^YMK\d{6}-\d{6}$/.test(id))return id;}catch(e){}const m=st.match(/YMK\d{6}-\d{6}/);return m?m[0]:'';}
+  function activeManualReview(){try{const id=String(localStorage.getItem('ymk_active_manual_review')||'').trim();return /^SLIP\d{6}-\d{6}-[A-Z0-9]{3,8}$/i.test(id)?id:'';}catch(e){return '';}}
+  function isPending(){return !!activeManualReview()||/กำลังรอร้านตรวจสอบสลิป|ยังไม่มีการสร้างออเดอร์|ส่งสลิปแล้ว.*รอร้านตรวจสอบ|กำลังส่งสลิปให้ร้านตรวจสอบ/.test(statusText());}
+  function isApproved(){if(activeManualReview())return false;const st=statusText(),id=realOrderId();return /^YMK\d{6}-\d{6}$/.test(id)&&/ส่งออเดอร์เข้าระบบแล้ว|ร้านยืนยันสลิปแล้ว|เลขออเดอร์/.test(st);}
   function currentOrderIsSend(){try{const o=typeof lastOrder!=='undefined'&&lastOrder?lastOrder:null;return !!(o&&(o.orderMode==='send'||String(o.pack||'').trim()==='แบบส่ง'));}catch(e){return false;}}
   function candidateScore(el){const t=String(el.innerText||'');let score=0;if(/ส่งออเดอร์เรียบร้อยแล้ว|ส่งสลิปเรียบร้อยแล้ว/.test(t))score+=4;if(/เลขออเดอร์ของคุณ|กำลังรอร้านตรวจสอบสลิป/.test(t))score+=3;if(/รบกวนส่งสลิปในแชท\s*Messenger/.test(t))score+=6;const labels=[...el.querySelectorAll('button,a')].map(x=>String(x.textContent||'').trim());if(labels.some(x=>/^Messenger$/i.test(x)))score+=4;if(labels.some(x=>/^LINE$/i.test(x)))score+=4;return score;}
   function findLegacyPanel(){const current=document.getElementById('ymkFinalOrderStatusCard');if(current)return current;const nodes=[...document.querySelectorAll('div,section,article')].filter(el=>candidateScore(el)>=7).sort((a,b)=>candidateScore(b)-candidateScore(a)||String(a.innerText||'').length-String(b.innerText||'').length);return nodes[0]||document.getElementById('ymkForceCard')||null;}
