@@ -11,10 +11,9 @@
 <script>
 (function(){
   const p=new URLSearchParams(location.search), track=(p.get('track')||'').trim();
-  if(track){
-    const frame=document.getElementById('site');
-    frame.src='index.html.html?track='+encodeURIComponent(track);
-  }
+  if(!track)return;
+  // Tracking links should open the dedicated status page, not the storefront iframe.
+  location.replace('track.html?track='+encodeURIComponent(track));
 })();
 </script>
 <script>
