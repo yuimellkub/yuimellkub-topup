@@ -87,7 +87,7 @@ function checkout(){
  const total=cart.reduce((n,x)=>n+num(x.total),0), packs=packTotals();
  const groups={};cart.forEach(x=>{const k=x.uid+'|'+x.server;(groups[k]||(groups[k]=[])).push(x)});
  const groupText=Object.entries(groups).map(([k,items])=>{const [uid,server]=k.split('|');return 'ID '+uid+' ('+server+'): '+items.map(x=>x.name+' ×'+x.qty+(x.pack?' ['+x.pack+']':'')).join(', ')}).join(' ; ');
- const summary='ตะกร้า '+cart.reduce((n,x)=>n+x.qty,0)+' รายการ | '+groupText;
+ const summary=groupText;
  const first=cart[0],card=[...document.querySelectorAll('.ready-stock-card')].find(c=>clean(c.querySelector('.ready-stock-order-btn')?.dataset.ymkBaseName||c.querySelector('.ready-stock-order-btn')?.dataset.readyName)===first.name)||document.querySelector('.ready-stock-card');
  const btn=card?.querySelector('.ready-stock-order-btn');if(!btn){alert('ไม่พบปุ่มสั่งซื้อ กรุณารีเฟรชหน้าแล้วลองใหม่');return}
  window.YMK_CART_ACTIVE={items:JSON.parse(JSON.stringify(cart)),summary,total,packs,firstUid:first.uid,firstServer:first.server};
