@@ -43,7 +43,7 @@ function style(){
  .ymkCartTotal{display:flex;justify-content:space-between;font-size:18px;font-weight:900;margin:16px 0}
  #ymkCartCheckout{width:100%;height:50px;border:0;border-radius:999px;background:#df7ca4;color:#fff;font:inherit;font-weight:900;cursor:pointer}
  #ymkCartCheckout:disabled{opacity:.5}.ymkCartEmpty{text-align:center;padding:30px 10px;color:#a57a8a}
- .ymk-added{animation:ymkpop .28s ease}@keyframes ymkpop{50%{transform:scale(1.06)}}
+ .ymk-cart-plus{border:0;border-radius:10px;background:#fff0f6;color:#c95f8b;font:inherit;font-weight:900;cursor:pointer;padding:8px 11px;margin-right:6px;box-shadow:inset 0 0 0 1px #efc8d7}.ymk-cart-plus:hover{background:#ffe5ef}.ymk-added{animation:ymkpop .28s ease}@keyframes ymkpop{50%{transform:scale(1.06)}}
  @media(max-width:560px){#ymkCartFab{right:14px;bottom:165px;padding:10px 13px}.ymkCartFields{grid-template-columns:1fr}.ymkCartRow{align-items:flex-start}}
  `;document.head.appendChild(s);
 }
@@ -105,10 +105,11 @@ function patchOrder(){
  const patchText=()=>{document.querySelectorAll('textarea,input').forEach(el=>{if(el===uid)return;let v=String(el.value||'');if(/รายการ:|ยอดรวม:|แพ็ก:/.test(v)){v=v.replace(/รายการ:[^\r\n]*/,'รายการ: '+c.summary).replace(/แพ็ก:[^\r\n]*/,'แพ็ก: '+c.packs).replace(/ยอดรวม:\s*[\d,.]+\s*(?:บาท)?/,'ยอดรวม: '+c.total.toLocaleString('th-TH')+' บาท');el.value=v}})};
  patchText();setTimeout(patchText,200);
 }
-document.addEventListener('click',e=>{const b=e.target.closest('.ymk-confirm-order');if(!b)return;const card=b.closest('.ready-stock-card');if(!card)return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();add(card)},true);
+document.addEventListener('click',e=>{const b=e.target.closest('.ymk-cart-plus');if(!b)return;const card=b.closest('.ready-stock-card');if(!card)return;e.preventDefault();e.stopPropagation();add(card)},true);
 document.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;if(/ส่งออเดอร์|ตรวจสลิป|ส่งสลิป/.test(t.textContent||''))patchOrder()},true);
-const mo=new MutationObserver(()=>{if(window.YMK_CART_ACTIVE)patchOrder();document.querySelectorAll('.ymk-confirm-order').forEach(b=>{if(!b.dataset.ymkCartLabel){b.dataset.ymkCartLabel='1';b.textContent='เพิ่มลงตะกร้า'}})});
-function init(){style();shell();load();renderBadge();mo.observe(document.body,{childList:true,subtree:true});document.querySelectorAll('.ymk-confirm-order').forEach(b=>b.textContent='เพิ่มลงตะกร้า')}
+function injectCartButtons(){document.querySelectorAll('.ready-stock-card').forEach(card=>{if(card.querySelector('.ymk-cart-plus'))return;const buy=card.querySelector('.ready-stock-order-btn');if(!buy)return;const plus=document.createElement('button');plus.type='button';plus.className='ymk-cart-plus';plus.textContent='🛒 +';buy.parentNode.insertBefore(plus,buy)})}
+const mo=new MutationObserver(()=>{if(window.YMK_CART_ACTIVE)patchOrder();injectCartButtons()});
+function init(){style();shell();load();renderBadge();injectCartButtons();mo.observe(document.body,{childList:true,subtree:true})}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 window.YMK_CART={open,clear(){cart=[];save();render()},items:()=>cart.slice()};
 })();
