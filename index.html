@@ -21,7 +21,7 @@ document.getElementById('site').addEventListener('load',function(){
   d.addEventListener('click',async function(e){const el=e.target.closest('button,a');if(!el)return;const text=(el.textContent||'').trim();if(!(/คัดลอก/.test(text)&&(/ออเดอร์/.test(text)||/YMK\d{6}-\d{6}/.test(text))))return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();const scope=el.closest('#ymkFinalOrderStatusCard,#ymkForceCard,.done-card,.order-done,.modal-content,.modal-card')||d.body;const id=findOrderId(scope);if(!(await writeOrderId(id)))return;const old=el.textContent;el.textContent='คัดลอกแล้ว ✓';setTimeout(()=>{el.textContent=old},900);},true);
   const calcRules=d.createElement('script');calcRules.src='calculator-pack-rules.js?v=7';d.body.appendChild(calcRules);
   const discountFix=d.createElement('script');discountFix.src='discount-price-fix.js?v=1';d.body.appendChild(discountFix);
-  const store=d.createElement('script');store.src='storefront-category-sync.js?v=6';d.body.appendChild(store);
+  const store=d.createElement('script');store.src='storefront-category-sync.js?v=7';d.body.appendChild(store);
   const widthFix=d.createElement('script');widthFix.src='ready-stock-card-width-fix.js?v=5';d.body.appendChild(widthFix);
   const sendOption=d.createElement('script');sendOption.src='send-order-option.js?v=21';d.body.appendChild(sendOption);
   const sendAfter=d.createElement('script');sendAfter.src='send-after-payment-message.js?v=4';d.body.appendChild(sendAfter);
