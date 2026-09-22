@@ -109,11 +109,18 @@ function patchOrder(){
    document.querySelectorAll('div,p,pre,span').forEach(el=>{if(el.children.length)return;const t=String(el.textContent||'');if(!(/YUIMELLKUB TOP-UP/.test(t)&&/ขอสั่งเติม Identity V/.test(t)))return;el.textContent=makeMsg(t)});
  };
  const removeLegacyTail=()=>{
-   const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let n;
-   while((n=walker.nextNode())){
-     const t=n.nodeValue||'';
-     if(/^\s*UID:\s*(?:\[กรุณากรอก UID\]|[^\r\n]*)\s*$/.test(t)||/^\s*Server:\s*(?:Asia|NA-EU)?\s*$/.test(t))n.nodeValue='';
-   }
+   document.querySelectorAll('textarea,input').forEach(el=>{
+     if(el===uid)return;
+     const v=String(el.value||'');
+     if(!/YUIMELLKUB TOP-UP|ขอสั่งเติม Identity V|รายการ:/.test(v))return;
+     el.value=v.replace(/\n?UID:\s*[^\r\n]*/g,'').replace(/\n?Server:\s*[^\r\n]*/g,'').replace(/\n{3,}/g,'\n\n');
+   });
+   document.querySelectorAll('div,p,pre,span').forEach(el=>{
+     if(el.children.length)return;
+     const t=String(el.textContent||'');
+     if(!/YUIMELLKUB TOP-UP|ขอสั่งเติม Identity V|รายการ:/.test(t))return;
+     el.textContent=t.replace(/\n?UID:\s*[^\r\n]*/g,'').replace(/\n?Server:\s*[^\r\n]*/g,'').replace(/\n{3,}/g,'\n\n');
+   });
  };
  patchText();removeLegacyTail();[50,150,300,600,1000,1500,2500,4000].forEach(ms=>setTimeout(()=>{patchText();removeLegacyTail()},ms));
  if(uid&&!uid.dataset.ymkCartMsg){uid.dataset.ymkCartMsg='1';['input','change','blur'].forEach(ev=>uid.addEventListener(ev,()=>setTimeout(()=>{patchText();removeLegacyTail()},0)))}
