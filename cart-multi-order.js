@@ -117,13 +117,13 @@ function patchOrder(){
      if(el===uid)return;
      const v=String(el.value||'');
      if(!/YUIMELLKUB TOP-UP|ขอสั่งเติม Identity V|รายการ:/.test(v))return;
-     el.value=v.replace(/\n?UID:\s*[^\r\n]*/g,'').replace(/\n?Server:\s*[^\r\n]*/g,'').replace(/\n{3,}/g,'\n\n');
+     el.value=v.replace(/\n?แพ็ก:\s*[^\r\n]*/g,'').replace(/\n?UID:\s*[^\r\n]*/g,'').replace(/\n?Server:\s*[^\r\n]*/g,'').replace(/\n{3,}/g,'\n\n');
    });
    document.querySelectorAll('div,p,pre,span').forEach(el=>{
      if(el.children.length)return;
      const t=String(el.textContent||'');
      if(!/YUIMELLKUB TOP-UP|ขอสั่งเติม Identity V|รายการ:/.test(t))return;
-     el.textContent=t.replace(/\n?UID:\s*[^\r\n]*/g,'').replace(/\n?Server:\s*[^\r\n]*/g,'').replace(/\n{3,}/g,'\n\n');
+     el.textContent=t.replace(/\n?แพ็ก:\s*[^\r\n]*/g,'').replace(/\n?UID:\s*[^\r\n]*/g,'').replace(/\n?Server:\s*[^\r\n]*/g,'').replace(/\n{3,}/g,'\n\n');
    });
  };
  patchText();removeLegacyTail();hideCartCustomerFields();[80,250,600,1200].forEach(ms=>setTimeout(()=>{patchText();removeLegacyTail();hideCartCustomerFields()},ms));
