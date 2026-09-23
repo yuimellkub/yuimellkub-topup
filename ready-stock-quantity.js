@@ -28,7 +28,7 @@
     const q=Math.max(1,Math.min(maxFor(btn),Math.floor(Number(input.value)||1)));
     input.value=q;
     const unit=number(btn.dataset.ymkUnitPrice||btn.dataset.readyPrice);
-    if(total)total.textContent='ยอดรวม '+(unit*q).toLocaleString('th-TH')+' บาท';
+    if(total)total.textContent=q>1?'รวม '+(unit*q).toLocaleString('th-TH')+' บาท':'';
   }
   function confirm(card){
     const btn=card.querySelector('.ready-stock-order-btn'),input=card.querySelector('.ymk-instant-input');
@@ -59,17 +59,16 @@
     btn.dataset.ymkBaseName=clean(btn.dataset.readyName||'สินค้า');
     const picker=document.createElement('div');
     picker.className='ymk-instant-qty';
-    picker.style.cssText='display:none;box-sizing:border-box;position:relative;z-index:3';
-    picker.innerHTML='<div class="ymk-instant-row"><span>จำนวน</span><button type="button" class="ymk-instant-minus">−</button><input class="ymk-instant-input" type="text" inputmode="numeric" value="1"><button type="button" class="ymk-instant-plus">+</button></div><div class="ymk-instant-total"></div><button type="button" class="ymk-instant-confirm">ยืนยันสั่งซื้อ</button>';
+    picker.style.cssText='display:none;grid-column:2/4;grid-row:1;width:216px;max-width:100%;margin:0 0 0 auto;box-sizing:border-box;position:relative;z-index:2';
+    picker.innerHTML='<div class="ymk-instant-row"><span>จำนวน</span><button type="button" class="ymk-instant-minus">−</button><input class="ymk-instant-input" type="text" inputmode="numeric" value="1"><button type="button" class="ymk-instant-plus">+</button></div><button type="button" class="ymk-instant-confirm">ยืนยันสั่งซื้อ</button><div class="ymk-instant-total"></div>';
     bottom.appendChild(picker);
-    const row=picker.querySelector('.ymk-instant-row'),input=picker.querySelector('.ymk-instant-input'),label=row.querySelector('span');
-    row.style.setProperty('display','flex','important');row.style.setProperty('align-items','center','important');row.style.setProperty('justify-content','flex-end','important');row.style.setProperty('gap','7px','important');row.style.setProperty('width','100%','important');row.style.setProperty('white-space','nowrap','important');row.style.setProperty('margin','0 0 6px','important');
-    label.style.setProperty('font-size','12px','important');label.style.setProperty('font-weight','800','important');label.style.setProperty('color','#8f5d71','important');label.style.setProperty('width','auto','important');label.style.setProperty('min-width','0','important');label.style.setProperty('flex','0 0 auto','important');
-    picker.querySelectorAll('.ymk-instant-minus,.ymk-instant-plus').forEach(x=>{x.style.setProperty('width','32px','important');x.style.setProperty('min-width','32px','important');x.style.setProperty('max-width','32px','important');x.style.setProperty('height','32px','important');x.style.setProperty('min-height','32px','important');x.style.setProperty('padding','0','important');x.style.setProperty('margin','0','important');x.style.setProperty('flex','0 0 32px','important');x.style.setProperty('border','0','important');x.style.setProperty('border-radius','50%','important');x.style.setProperty('background','#e27ca5','important');x.style.setProperty('color','#fff','important');x.style.setProperty('font-size','18px','important');x.style.setProperty('font-weight','900','important');x.style.setProperty('line-height','32px','important');x.style.setProperty('text-align','center','important');x.style.setProperty('box-sizing','border-box','important');});
-    input.style.setProperty('width','44px','important');input.style.setProperty('min-width','44px','important');input.style.setProperty('max-width','44px','important');input.style.setProperty('height','32px','important');input.style.setProperty('padding','0','important');input.style.setProperty('margin','0','important');input.style.setProperty('flex','0 0 44px','important');input.style.setProperty('border','1px solid #e7a6bf','important');input.style.setProperty('border-radius','12px','important');input.style.setProperty('background','#fff','important');input.style.setProperty('text-align','center','important');input.style.setProperty('color','#70495a','important');input.style.setProperty('font-size','15px','important');input.style.setProperty('box-sizing','border-box','important');
-    const total=picker.querySelector('.ymk-instant-total'),confirmBtn=picker.querySelector('.ymk-instant-confirm');
-    total.style.setProperty('font-size','11px','important');total.style.setProperty('font-weight','800','important');total.style.setProperty('color','#c85f88','important');total.style.setProperty('margin-top','4px','important');total.style.setProperty('text-align','right','important');
-    confirmBtn.style.setProperty('display','block','important');confirmBtn.style.setProperty('width','100%','important');confirmBtn.style.setProperty('min-width','0','important');confirmBtn.style.setProperty('max-width','100%','important');confirmBtn.style.setProperty('height','42px','important');confirmBtn.style.setProperty('margin','0','important');confirmBtn.style.setProperty('padding','0','important');confirmBtn.style.setProperty('border','0','important');confirmBtn.style.setProperty('border-radius','999px','important');confirmBtn.style.setProperty('background','#e27ca5','important');confirmBtn.style.setProperty('color','#fff','important');confirmBtn.style.setProperty('font-weight','850','important');confirmBtn.style.setProperty('box-sizing','border-box','important');
+    const row=picker.querySelector('.ymk-instant-row'),input=picker.querySelector('.ymk-instant-input'),minus=picker.querySelector('.ymk-instant-minus'),plus=picker.querySelector('.ymk-instant-plus'),confirmBtn=picker.querySelector('.ymk-instant-confirm'),total=picker.querySelector('.ymk-instant-total');
+    row.style.cssText='display:flex;align-items:center;justify-content:flex-end;gap:7px;width:100%;white-space:nowrap;margin-bottom:6px';
+    row.querySelector('span').style.cssText='font-size:12px;font-weight:800;color:#8f5d71';
+    [minus,plus].forEach(x=>x.style.cssText='width:32px;min-width:32px;height:32px;padding:0;flex:0 0 32px;border:0;border-radius:50%;background:#e27ca5;color:#fff;font:inherit;font-size:18px;line-height:32px;font-weight:900;text-align:center;cursor:pointer;box-sizing:border-box');
+    input.style.cssText='width:44px;min-width:44px;height:32px;padding:0;flex:0 0 44px;box-sizing:border-box;border:1px solid #e7a6bf;border-radius:12px;background:#fff;text-align:center;color:#70495a;font:inherit;font-size:15px';
+    confirmBtn.style.cssText='display:block;width:100%;height:42px;margin:0;padding:0;border:0;border-radius:999px;background:#e27ca5;color:#fff;font:inherit;font-weight:850;cursor:pointer;box-sizing:border-box';
+    total.style.cssText='font-size:11px;font-weight:800;color:#c85f88;margin-top:4px;text-align:right';
     picker.querySelector('.ymk-instant-minus').onclick=()=>{input.value=Math.max(1,(Number(input.value)||1)-1);update(card);};
     picker.querySelector('.ymk-instant-plus').onclick=()=>{input.value=Math.min(maxFor(btn),(Number(input.value)||1)+1);update(card);};
     input.oninput=()=>update(card);
@@ -88,18 +87,19 @@
     bottom.style.setProperty('display','grid','important');
     bottom.style.setProperty('align-items','center','important');
     bottom.style.setProperty('gap','8px','important');
+    bottom.style.setProperty('padding-top','12px','important');
     bottom.style.setProperty('overflow','visible','important');
     if(mobile){
-      bottom.style.setProperty('grid-template-columns','1fr','important');
+      bottom.style.setProperty('grid-template-columns','minmax(0,1fr) minmax(0,1fr)','important');
       bottom.style.setProperty('grid-template-rows','auto auto','important');
-      if(price){price.style.setProperty('grid-column','1','important');price.style.setProperty('grid-row','1','important');price.style.setProperty('width','100%','important');}
-      picker.style.setProperty('grid-column','1','important');picker.style.setProperty('grid-row','2','important');picker.style.setProperty('width','100%','important');picker.style.setProperty('max-width','100%','important');picker.style.setProperty('margin','0','important');
+      if(price){price.style.setProperty('grid-column','1 / -1','important');price.style.setProperty('grid-row','1','important');price.style.setProperty('min-width','0','important');price.style.setProperty('white-space','nowrap','important');price.style.setProperty('margin','0 0 2px','important');price.style.setProperty('padding','0','important');}
+      picker.style.setProperty('grid-column','1 / -1','important');picker.style.setProperty('grid-row','2','important');picker.style.setProperty('width','100%','important');picker.style.setProperty('max-width','100%','important');picker.style.setProperty('margin','0','important');
       const row=picker.querySelector('.ymk-instant-row');if(row)row.style.setProperty('justify-content','center','important');
     }else{
-      bottom.style.setProperty('grid-template-columns','minmax(0,1fr) 216px','important');
+      bottom.style.setProperty('grid-template-columns','minmax(0,1fr) 104px 104px','important');
       bottom.style.setProperty('grid-template-rows','auto','important');
-      if(price){price.style.setProperty('grid-column','1','important');price.style.setProperty('grid-row','1','important');price.style.setProperty('min-width','0','important');price.style.setProperty('white-space','nowrap','important');}
-      picker.style.setProperty('grid-column','2','important');picker.style.setProperty('grid-row','1','important');picker.style.setProperty('width','216px','important');picker.style.setProperty('min-width','216px','important');picker.style.setProperty('max-width','216px','important');picker.style.setProperty('margin','0','important');
+      if(price){price.style.setProperty('grid-column','1','important');price.style.setProperty('grid-row','1','important');price.style.setProperty('min-width','0','important');price.style.setProperty('white-space','nowrap','important');price.style.setProperty('margin','0','important');price.style.setProperty('padding','0','important');}
+      picker.style.setProperty('grid-column','2 / 4','important');picker.style.setProperty('grid-row','1','important');picker.style.setProperty('width','216px','important');picker.style.setProperty('max-width','100%','important');picker.style.setProperty('margin','0 0 0 auto','important');
       const row=picker.querySelector('.ymk-instant-row');if(row)row.style.setProperty('justify-content','flex-end','important');
     }
     picker.style.setProperty('display','block','important');
