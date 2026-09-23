@@ -25,7 +25,7 @@
     const btn=card.querySelector('.ready-stock-order-btn'),picker=card.querySelector('.ymk-instant-qty');
     const input=picker?.querySelector('.ymk-instant-input'),total=picker?.querySelector('.ymk-instant-total');
     if(!btn||!input)return;
-    const q=Math.max(1,Math.min(maxFor(btn),Math.floor(Number(input.value)||1));
+    const q=Math.max(1,Math.min(maxFor(btn),Math.floor(Number(input.value)||1)));
     input.value=q;
     const unit=number(btn.dataset.ymkUnitPrice||btn.dataset.readyPrice);
     if(total)total.textContent='ยอดรวม '+(unit*q).toLocaleString('th-TH')+' บาท';
@@ -33,7 +33,7 @@
   function confirm(card){
     const btn=card.querySelector('.ready-stock-order-btn'),input=card.querySelector('.ymk-instant-input');
     if(!btn||!input)return;
-    const q=Math.max(1,Math.min(maxFor(btn),Math.floor(Number(input.value)||1));
+    const q=Math.max(1,Math.min(maxFor(btn),Math.floor(Number(input.value)||1)));
     const base=btn.dataset.ymkBaseName||clean(btn.dataset.readyName||'สินค้า');
     const unit=number(btn.dataset.ymkUnitPrice||btn.dataset.readyPrice),total=unit*q;
     window.YMK_SEND_SELECTION=null;window.YMK_SEND_ORDER_META=null;
