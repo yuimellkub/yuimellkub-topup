@@ -20,8 +20,12 @@
       const order=snap.data()||{};
       if(order.orderReady!==true||order.paymentStatus!=='ชำระแล้ว'||order.slipVerificationMode!=='manual-approved')return false;
       if(order.emailNotifiedAt)return true;
+      const rawPrice=String(order.price||data.price||'').trim();
+      const priceText=rawPrice.replace(/\s*บาท\s*$/,'').trim();
+      const subject=`🎀 มีออเดอร์ใหม่ #${orderId} | ${priceText||'-'} บาท`;
       const payload={
-        order_id:orderId,item:order.item||data.item||'',pack:order.pack||data.pack||'',price:order.price||data.price||'',
+        subject:subject,email_subject:subject,title:subject,
+        order_id:orderId,item:order.item||data.item||'',pack:order.pack||data.pack||'',price:rawPrice,
         uid:order.uid||data.uid||'',server:order.server||data.server||'Asia',name:order.name||data.name||'-',
         payment_method:order.paymentMethod||data.paymentMethod||'',status:'ชำระแล้ว • รอเติม',
         created_at:new Date().toLocaleString('th-TH'),admin_url:'https://yuimellkub.github.io/yuimellkub-topup/admin.html'
