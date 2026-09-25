@@ -77,9 +77,9 @@
           return result;
         }
         await sendOrderEmail({
-          subject:`🎀 ออเดอร์ใหม่ #${orderId} | ${real.price||before.price||'-'} บาท`,
-          email_subject:`🎀 ออเดอร์ใหม่ #${orderId} | ${real.price||before.price||'-'} บาท`,
-          title:`🎀 ออเดอร์ใหม่ #${orderId} | ${real.price||before.price||'-'} บาท`,
+          subject:`🎀 มีออเดอร์ใหม่ #${orderId} | ${real.price||before.price||'-'} บาท`,
+          email_subject:`🎀 มีออเดอร์ใหม่ #${orderId} | ${real.price||before.price||'-'} บาท`,
+          title:`🎀 มีออเดอร์ใหม่ #${orderId} | ${real.price||before.price||'-'} บาท`,
           order_id:orderId,
           item:real.item||before.item||'',
           pack:real.pack||before.pack||'',
