@@ -15,10 +15,14 @@
     const c=window.YUIMELLKUB_EMAILJS||{};
     if(!(c.publicKey&&c.serviceId&&c.templateId)){console.warn('EmailJS config is incomplete in admin');return false;}
     try{
-      const orderRef=db.collection('orders').doc(orderId),snap=await orderRef.get();
-      if(!snap.exists)return false;
-      const order=snap.data()||{};
-      if(order.orderReady!==true||order.paymentStatus!=='ชำระแล้ว'||order.slipVerificationMode!=='manual-approved')return false;
+      const orderRef=db.collection('orders').doc(orderId);
+      let order={};
+      try{
+        const snap=await orderRef.get();
+        if(snap.exists)order=snap.data()||{};
+      }catch(e){console.warn('approved order email read skipped',e);}
+      /* The order has just been committed by approve(). Do not block the email on a
+         second Firestore read, which can lag/fail under client rules. */
       if(order.emailNotifiedAt)return true;
       const rawPrice=String(order.price||data.price||'').trim();
       const priceText=rawPrice.replace(/\s*บาท\s*$/,'').trim();
@@ -32,7 +36,7 @@
       };
       const r=await fetch('https://api.emailjs.com/api/v1.0/email/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({service_id:c.serviceId,template_id:c.templateId,user_id:c.publicKey,template_params:payload})});
       const text=await r.text();if(!r.ok)throw new Error((text||'EmailJS error')+' ('+r.status+')');
-      await orderRef.set({emailNotifiedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+      try{await orderRef.set({emailNotifiedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});}catch(e){console.warn('email notified marker failed',e);}
       console.log('approved order email sent',orderId);return true;
     }catch(e){console.warn('approved order email failed',e);return false;}
   }
