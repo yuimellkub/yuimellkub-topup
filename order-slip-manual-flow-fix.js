@@ -47,7 +47,7 @@
       try{if(localStorage.getItem(key)==='1')return true;}catch(e){}
       const rawPrice=String(draft.price||'').trim();
       const priceText=rawPrice.replace(/\s*บาท\s*$/,'').trim();
-      const subject=`🔔 รอตรวจสลิป #${reviewId} | ${priceText||'-'} บาท`;
+      const subject=`🔔 มีสลิปรอตรวจสอบ #${reviewId} | ${priceText||'-'} บาท`;
       const payload={
         subject:subject,
         email_subject:subject,
