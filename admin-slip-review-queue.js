@@ -59,7 +59,7 @@
       const img=card.querySelector('.reviewSlip img'),box=card.querySelector('.reviewSlip');
       card.querySelector('.reviewView').onclick=()=>{if(box.classList.contains('show')){box.classList.remove('show');card.querySelector('.reviewView').textContent='ดูสลิป';return;}img.src=d.imageData||'';box.classList.add('show');card.querySelector('.reviewView').textContent='ซ่อนสลิป';};
       card.querySelector('.reviewDownload').onclick=()=>{const a=document.createElement('a');a.href=d.imageData||'';a.download='slip-'+id+'.jpg';a.click();};
-      card.querySelector('.manualSlipApprove').onclick=async e=>{if(!confirm('ตรวจสอบแล้วว่าเงินเข้าจริงและยอดถูกต้อง ใช่ไหมคะ?'))return;const b=e.currentTarget;b.disabled=true;b.textContent='กำลังสร้างออเดอร์…';try{const result=await approve(id,d);alert('ยืนยันแล้วค่ะ • สร้างออเดอร์ '+result.orderId+' แล้ว');}catch(err){alert('ยืนยันไม่สำเร็จ: '+err.message);b.disabled=false;b.textContent='✓ ยืนยันการชำระเงิน';}};
+      card.querySelector('.manualSlipApprove').onclick=async e=>{if(!confirm('ตรวจสอบแล้วว่าเงินเข้าจริงและยอดถูกต้อง ใช่ไหมคะ?'))return;const b=e.currentTarget;b.disabled=true;b.textContent='กำลังสร้างออเดอร์…';try{const result=await approve(id,d);alert('ยืนยันแล้วค่ะ • สร้างออเดอร์ '+result.orderId+' แล้ว'+(result.emailOk?'':'\nอีเมลแจ้งเตือนไม่สำเร็จ แต่ออเดอร์สร้างเรียบร้อยแล้ว'));}catch(err){alert('ยืนยันไม่สำเร็จ: '+err.message);b.disabled=false;b.textContent='✓ ยืนยันการชำระเงิน';}};
       card.querySelector('.manualSlipReject').onclick=async e=>{if(!confirm('ยืนยันว่าไม่ผ่านการตรวจสอบสลิปใช่ไหมคะ?'))return;const b=e.currentTarget;b.disabled=true;try{await reject(id);}catch(err){alert('บันทึกผลไม่สำเร็จ: '+err.message);b.disabled=false;}};
     });initial=false;
   }
