@@ -46,9 +46,9 @@
       const key='ymk_manual_review_email_sent_'+reviewId;
       try{if(localStorage.getItem(key)==='1')return true;}catch(e){}
       const payload={
-        subject:`🔔 รอตรวจสอบ #${reviewId} | ${draft.price||'-'} บาท`,
-        email_subject:`🔔 รอตรวจสอบ #${reviewId} | ${draft.price||'-'} บาท`,
-        title:`🔔 รอตรวจสอบ #${reviewId} | ${draft.price||'-'} บาท`,
+        subject:`🔔 รอตรวจสลิป #${reviewId} | ${draft.price||'-'} บาท`,
+        email_subject:`🔔 รอตรวจสลิป #${reviewId} | ${draft.price||'-'} บาท`,
+        title:`🔔 รอตรวจสลิป #${reviewId} | ${draft.price||'-'} บาท`,
         order_id:reviewId,
         item:draft.item||'',
         pack:draft.pack||'',
