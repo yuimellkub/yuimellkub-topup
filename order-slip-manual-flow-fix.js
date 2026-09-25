@@ -45,10 +45,13 @@
       if(!cfg.publicKey||!cfg.serviceId||!cfg.templateId){console.warn('manual review email skipped: EmailJS config incomplete');return false;}
       const key='ymk_manual_review_email_sent_'+reviewId;
       try{if(localStorage.getItem(key)==='1')return true;}catch(e){}
+      const rawPrice=String(draft.price||'').trim();
+      const priceText=rawPrice.replace(/\s*บาท\s*$/,'').trim();
+      const subject=`🔔 รอตรวจสลิป #${reviewId} | ${priceText||'-'} บาท`;
       const payload={
-        subject:`🔔 รอตรวจสลิป #${reviewId} | ${draft.price||'-'} บาท`,
-        email_subject:`🔔 รอตรวจสลิป #${reviewId} | ${draft.price||'-'} บาท`,
-        title:`🔔 รอตรวจสลิป #${reviewId} | ${draft.price||'-'} บาท`,
+        subject:subject,
+        email_subject:subject,
+        title:subject,
         order_id:reviewId,
         item:draft.item||'',
         pack:draft.pack||'',
