@@ -41,7 +41,7 @@
   function looksManual(){const t=document.body?.innerText||'';return /ส่งสลิปให้ร้านตรวจสอบ|ร้านจะตรวจสอบสลิปก่อน|รอร้านตรวจสอบ/.test(t);}
   async function sendDiscordNotice(kind,id,draft){
     try{
-      const url='';
+      const url='https://yuimellkub-slip.yuimellkubtopup.workers.dev/discord-notify';
       const isOrder=kind==='order';
       const title=isOrder?'🎀 มีออเดอร์ใหม่':'🔔 มีสลิปรอตรวจสอบ';
       const fields=[
