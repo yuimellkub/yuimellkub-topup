@@ -34,7 +34,7 @@
         payment_method:order.paymentMethod||data.paymentMethod||'',status:'ชำระแล้ว • รอเติม',
         created_at:new Date().toLocaleString('th-TH'),admin_url:'https://yuimellkub.github.io/yuimellkub-topup/admin.html'
       };
-      const r=await fetch('https://api.emailjs.com/api/v1.0/email/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({service_id:c.serviceId,template_id:c.templateId,user_id:c.publicKey,accessToken:c.publicKey,template_params:payload})});
+      const r=await fetch('https://api.emailjs.com/api/v1.0/email/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({service_id:c.serviceId,template_id:c.templateId,user_id:c.publicKey,template_params:payload})});
       const text=await r.text();if(!r.ok)throw new Error((text||'EmailJS error')+' ('+r.status+')');
       try{await orderRef.set({emailNotifiedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});}catch(e){console.warn('email notified marker failed',e);}
       console.log('approved order email sent',orderId);return true;
