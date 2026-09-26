@@ -13,7 +13,7 @@
 
   async function sendApprovedOrderDiscord(orderId,data){
     try{
-      const url='';
+      const url='https://yuimellkub-slip.yuimellkubtopup.workers.dev/discord-notify';
       const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({allowed_mentions:{parse:[]},embeds:[{title:'🎀 NEW ORDER • มีออเดอร์ใหม่',description:'ชำระแล้ว • รอดำเนินการ ♡',color:15107242,fields:[{name:'เลขออเดอร์',value:String(orderId||'-'),inline:false},{name:'สินค้า',value:String(data.item||'-'),inline:true},{name:'แพ็ก',value:String(data.pack||'-'),inline:true},{name:'ยอดชำระ',value:String(data.price||'-'),inline:true},{name:'UID',value:String(data.uid||'-'),inline:true},{name:'Server',value:String(data.server||'Asia'),inline:true}],timestamp:new Date().toISOString(),footer:{text:'Yuimellkub Top-up ♡'}}]})});
       if(!r.ok)throw new Error('Discord '+r.status);
       return true;
