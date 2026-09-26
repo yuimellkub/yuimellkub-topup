@@ -52,7 +52,7 @@
         {name:'UID',value:String(draft.uid||'-'),inline:true},
         {name:'Server',value:String(draft.server||'Asia'),inline:true}
       ];
-      const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({content:'<@643368306170134538>',allowed_mentions:{parse:[],users:['643368306170134538']},embeds:[{title:isOrder?'🎀 NEW ORDER • มีออเดอร์ใหม่':'🔔 SLIP REVIEW • สลิปรอตรวจสอบ',description:isOrder?'ชำระแล้ว • รอดำเนินการ ♡':'มีสลิปใหม่เข้ามา กรุณาตรวจสอบ ♡',color:isOrder?15107242:16762880,fields,timestamp:new Date().toISOString(),footer:{text:'Yuimellkub Top-up ♡'}}]})});
+      const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({allowed_mentions:{parse:[]},embeds:[{title:isOrder?'🎀 NEW ORDER • มีออเดอร์ใหม่':'🔔 SLIP REVIEW • สลิปรอตรวจสอบ',description:isOrder?'ชำระแล้ว • รอดำเนินการ ♡':'มีสลิปใหม่เข้ามา กรุณาตรวจสอบ ♡',color:isOrder?15107242:16762880,fields,timestamp:new Date().toISOString(),footer:{text:'Yuimellkub Top-up ♡'}}]})});
       if(!r.ok)throw new Error('Discord '+r.status);
       return true;
     }catch(e){console.warn('Discord order notice failed',e);return false;}
