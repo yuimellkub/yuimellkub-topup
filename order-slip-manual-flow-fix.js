@@ -41,7 +41,7 @@
   function looksManual(){const t=document.body?.innerText||'';return /ส่งสลิปให้ร้านตรวจสอบ|ร้านจะตรวจสอบสลิปก่อน|รอร้านตรวจสอบ/.test(t);}
   async function sendDiscordNotice(kind,id,draft){
     try{
-      const url='https://discordapp.com/api/webhooks/1553342049728602144/inLrGUzgyKrMFEi2WaohxdJYl65H6ITbmTvs8_yxl1d5rW9aRXth0Lb9-_ehLe5_LW2h';
+      const url='';
       const isOrder=kind==='order';
       const title=isOrder?'🎀 มีออเดอร์ใหม่':'🔔 มีสลิปรอตรวจสอบ';
       const fields=[
