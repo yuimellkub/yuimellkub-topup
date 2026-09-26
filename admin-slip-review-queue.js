@@ -11,6 +11,15 @@
   function ensureRoot(){let root=document.getElementById('ymkSlipReviewQueue');if(root)return root;const orders=document.getElementById('orders');if(!orders)return null;root=document.createElement('section');root.id='ymkSlipReviewQueue';root.className='reviewQueueWrap';root.innerHTML='<div class="reviewQueueTitle">♡ สลิปรอร้านตรวจสอบ</div><div class="reviewQueueGrid"></div>';orders.parentNode.insertBefore(root,orders);return root;}
   function notifyPending(d,id){try{if(!('Notification'in window)||Notification.permission!=='granted')return;const n=new Notification('Yuimellkub • มีสลิปรอตรวจสอบ 🔔',{body:(d.item||'รายการใหม่')+(d.price?' • '+d.price:'')+'\n'+id,tag:'review-'+id});n.onclick=()=>{window.focus();n.close();};}catch(e){}}
 
+  async function sendApprovedOrderDiscord(orderId,data){
+    try{
+      const url='https://discordapp.com/api/webhooks/1553342049728602144/inLrGUzgyKrMFEi2WaohxdJYl65H6ITbmTvs8_yxl1d5rW9aRXth0Lb9-_ehLe5_LW2h';
+      const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:'Yuimellkub Orders',allowed_mentions:{parse:[]},embeds:[{title:'🎀 มีออเดอร์ใหม่',description:'ชำระแล้ว • รอเติม',fields:[{name:'เลขออเดอร์',value:String(orderId||'-'),inline:false},{name:'รายการ',value:String(data.item||'-'),inline:true},{name:'แพ็ก',value:String(data.pack||'-'),inline:true},{name:'ยอด',value:String(data.price||'-'),inline:true},{name:'UID',value:String(data.uid||'-'),inline:true},{name:'Server',value:String(data.server||'Asia'),inline:true}],timestamp:new Date().toISOString()}]})});
+      if(!r.ok)throw new Error('Discord '+r.status);
+      return true;
+    }catch(e){console.warn('Discord approved order notice failed',e);return false;}
+  }
+
   async function sendApprovedOrderEmail(orderId,data){
     const c=window.YUIMELLKUB_EMAILJS||{};
     if(!(c.publicKey&&c.serviceId&&c.templateId)){console.warn('EmailJS config is incomplete in admin');return false;}
@@ -49,7 +58,7 @@
     batch.set(db.collection('order_status').doc(id),{status:'ยืนยันแล้ว',paymentStatus:'ชำระแล้ว',orderReady:true,approvedOrderId:orderId,updatedAt:now},{merge:true});
     batch.set(db.collection('order_slips').doc(id),{reviewPending:false,reviewDecision:'approved',approvedOrderId:orderId,reviewedAt:now},{merge:true});
     await batch.commit();
-    const emailOk=await sendApprovedOrderEmail(orderId,data);
+    const emailOk=await sendApprovedOrderDiscord(orderId,data);
     return {orderId,emailOk};
   }
   async function reject(id){const now=firebase.firestore.FieldValue.serverTimestamp(),batch=db.batch();batch.set(db.collection('order_status').doc(id),{status:'สลิปไม่ผ่าน',paymentStatus:'สลิปไม่ผ่าน',orderReady:false,slipReviewMessage:'ตรวจสอบสลิปไม่สำเร็จ กรุณาแนบสลิปที่ถูกต้องแล้วส่งใหม่อีกครั้ง',updatedAt:now},{merge:true});batch.set(db.collection('order_slips').doc(id),{reviewPending:false,reviewDecision:'rejected',reviewedAt:now},{merge:true});await batch.commit();}
