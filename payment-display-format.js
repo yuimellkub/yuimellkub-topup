@@ -7,6 +7,7 @@
         window.YMK_SEND_ORDER_META?.total,
         window.YMK_SEND_ORDER_META?.price,
         window.YMK_SEND_SELECTION?.total,
+        window.YMK_PENDING_ORDER_META?.p?.total,
         window.YMK_PENDING_ORDER_META?.total,
         window.YMK_PENDING_ORDER_META?.price,
         typeof lastOrder!=='undefined'&&lastOrder?lastOrder.price:null
@@ -33,8 +34,8 @@
   }
   function fix(){
     const node=amountNode();if(!node)return;
-    let n=Number(String(node.textContent||'').replace(/[^0-9.-]/g,''));
-    if(!Number.isFinite(n)||n<=0)n=currentPrice();
+    const active=currentPrice();
+    let n=active||Number(String(node.textContent||'').replace(/[^0-9.-]/g,''));
     if(!n)return;
     const text=format(n);if(node.textContent!==text)node.textContent=text;
   }
