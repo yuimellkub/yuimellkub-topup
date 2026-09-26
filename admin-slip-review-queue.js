@@ -14,7 +14,7 @@
   async function sendApprovedOrderDiscord(orderId,data){
     try{
       const url='https://discordapp.com/api/webhooks/1553342049728602144/inLrGUzgyKrMFEi2WaohxdJYl65H6ITbmTvs8_yxl1d5rW9aRXth0Lb9-_ehLe5_LW2h';
-      const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({allowed_mentions:{parse:[]},embeds:[{title:'🎀 NEW ORDER • มีออเดอร์ใหม่',description:'ชำระแล้ว • รอดำเนินการ ♡',color:15107242,fields:[{name:'เลขออเดอร์',value:String(orderId||'-'),inline:false},{name:'สินค้า',value:String(data.item||'-'),inline:true},{name:'แพ็ก',value:String(data.pack||'-'),inline:true},{name:'ยอดชำระ',value:String(data.price||'-'),inline:true},{name:'UID',value:String(data.uid||'-'),inline:true},{name:'Server',value:String(data.server||'Asia'),inline:true}],timestamp:new Date().toISOString(),footer:{text:'Yuimellkub Top-up ♡'}}]})});
+      const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({content:'<@&1552923566809419786>',allowed_mentions:{parse:[],roles:['1552923566809419786']},embeds:[{title:'🎀 NEW ORDER • มีออเดอร์ใหม่',description:'ชำระแล้ว • รอดำเนินการ ♡',color:15107242,fields:[{name:'เลขออเดอร์',value:String(orderId||'-'),inline:false},{name:'สินค้า',value:String(data.item||'-'),inline:true},{name:'แพ็ก',value:String(data.pack||'-'),inline:true},{name:'ยอดชำระ',value:String(data.price||'-'),inline:true},{name:'UID',value:String(data.uid||'-'),inline:true},{name:'Server',value:String(data.server||'Asia'),inline:true}],timestamp:new Date().toISOString(),footer:{text:'Yuimellkub Top-up ♡'}}]})});
       if(!r.ok)throw new Error('Discord '+r.status);
       return true;
     }catch(e){console.warn('Discord approved order notice failed',e);return false;}
