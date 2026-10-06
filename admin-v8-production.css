@@ -1,0 +1,8 @@
+/* v8 visual layer over the original production admin. No data or handlers are replaced. */
+.wrap{max-width:1180px!important;padding:22px 18px 64px!important}
+.head{background:#fff;border:1px solid #f2ccdc;border-radius:20px;padding:16px 18px;box-shadow:0 8px 24px rgba(190,105,145,.06)}
+.title{font-size:24px!important}.notice,.card,.productEdit,#ymkSalesSummary{border-radius:18px!important}
+.actions .btn{border-radius:12px!important}
+#orders{gap:12px!important}.card{box-shadow:0 7px 22px rgba(190,105,145,.06)!important}
+.productAdmin{background:#fff;border:1px solid #f2ccdc;border-radius:20px;padding:16px}
+@media(max-width:700px){.wrap{padding:14px 10px 50px!important}.head{padding:14px}.actions{width:100%}.actions .btn{flex:1 1 auto}}
