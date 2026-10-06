@@ -1,21 +1,401 @@
 (function(){
-  const clean=v=>String(v||'').replace(/\s*[×xX]\s*\d+\s*$/,'').trim();
-  function settings(btn){const card=btn.closest('.ready-stock-card'),enabled=btn.dataset.sendEnabled??card?.dataset.sendEnabled,price=Number(btn.dataset.sendPrice||card?.dataset.sendPrice||0);return enabled==='1'&&price>0?{price}:null;}
-  function parts(card){const bottom=card?.querySelector('.ymk-store-bottom'),price=bottom?.querySelector('.ready-stock-price,.ymk-store-price,[class*="price"]');return{bottom,price};}
-  function clearSendMode(){window.YMK_SEND_SELECTION=null;window.YMK_PENDING_ORDER_META=null;window.YMK_SEND_ORDER_META=null;}
-  function layout(card){const {bottom,price}=parts(card),normal=card?.querySelector('.ready-stock-order-btn'),send=card?.querySelector('.ymk-send-choice');if(!bottom)return;const mobile=window.matchMedia('(max-width:699px)').matches;if(mobile){bottom.style.setProperty('display','grid','important');bottom.style.setProperty('grid-template-columns','minmax(0,1fr) minmax(0,1fr)','important');bottom.style.setProperty('grid-template-rows','auto auto','important');bottom.style.setProperty('align-items','center','important');bottom.style.setProperty('gap','8px','important');bottom.style.setProperty('padding-top','12px','important');bottom.style.setProperty('overflow','visible','important');if(price){price.style.setProperty('grid-column','1 / -1','important');price.style.setProperty('grid-row','1','important');price.style.setProperty('min-width','0','important');price.style.setProperty('white-space','nowrap','important');price.style.setProperty('margin','0 0 2px','important');price.style.setProperty('padding','0','important');}if(normal){normal.style.setProperty('grid-column','1','important');normal.style.setProperty('grid-row','2','important');normal.style.setProperty('width','100%','important');normal.style.setProperty('min-width','0','important');normal.style.setProperty('height','44px','important');normal.style.setProperty('margin','0','important');}if(send){send.style.setProperty('grid-column','2','important');send.style.setProperty('grid-row','2','important');send.style.setProperty('width','100%','important');send.style.setProperty('min-width','0','important');send.style.setProperty('height','44px','important');send.style.setProperty('margin','0','important');}return;}bottom.style.setProperty('display','grid','important');bottom.style.setProperty('grid-template-columns','minmax(0,1fr) 104px 104px','important');bottom.style.setProperty('grid-template-rows','auto','important');bottom.style.setProperty('align-items','center','important');bottom.style.setProperty('gap','8px','important');bottom.style.setProperty('padding-top','12px','important');bottom.style.setProperty('overflow','visible','important');if(price){price.style.setProperty('grid-column','1','important');price.style.setProperty('grid-row','1','important');price.style.setProperty('min-width','0','important');price.style.setProperty('white-space','nowrap','important');price.style.setProperty('margin','0','important');price.style.setProperty('padding','0','important');}if(normal){normal.style.setProperty('grid-column','2','important');normal.style.setProperty('grid-row','1','important');normal.style.setProperty('width','104px','important');normal.style.setProperty('min-width','0','important');normal.style.setProperty('height','44px','important');normal.style.setProperty('margin','0','important');}if(send){send.style.setProperty('grid-column','3','important');send.style.setProperty('grid-row','1','important');send.style.setProperty('width','104px','important');send.style.setProperty('min-width','0','important');send.style.setProperty('height','44px','important');send.style.setProperty('margin','0','important');}}
-  function restoreSend(card){const sw=card.querySelector('.ymk-send-qty'),send=card.querySelector('.ymk-send-choice'),normal=card.querySelector('.ready-stock-order-btn');if(sw)sw.style.display='none';if(send)send.style.display='';if(normal)normal.style.display='';layout(card);}
-  function closeSendOthers(except){document.querySelectorAll('.ready-stock-card').forEach(c=>{if(c!==except)restoreSend(c);});}
-  function sendActive(){return window.YMK_SEND_ORDER_META?.mode==='send';}
-  function patchText(meta){if(!sendActive()||!meta)return;const item='รายการ: '+(meta.q>1?meta.base+' × '+meta.q:meta.base),pack='แพ็ก: แบบส่ง',total='ยอดรวม: '+Number(meta.total||0).toLocaleString('th-TH')+' บาท';document.querySelectorAll('textarea').forEach(el=>{let v=el.value||'';if(!/รายการ:|แพ็ก:|ยอดรวม:/.test(v))return;v=v.replace(/รายการ:\s*[^\n\r]*/,item).replace(/แพ็ก(?:ที่เติม)?:\s*[^\n\r]*/,pack).replace(/ยอดรวม:\s*[^\n\r]*/,total);if(el.value!==v){el.value=v;el.dispatchEvent(new Event('input',{bubbles:true}));}});const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let n;while((n=walker.nextNode())){let t=n.nodeValue||'',x=t;if(/แพ็ก:\s*พร้อมเติมทันที/.test(x))x=x.replace(/แพ็ก:\s*พร้อมเติมทันที/g,pack);if(/ยอดรวม:\s*[\d,]+(?:\.\d+)?(?:\s*บาท)?/.test(x))x=x.replace(/ยอดรวม:\s*[\d,]+(?:\.\d+)?(?:\s*บาท)?/g,total);if(x!==t)n.nodeValue=x;}}
-  function applySendOrder(meta){if(!sendActive()||!meta)return;try{if(typeof lastOrder!=='undefined'&&lastOrder){lastOrder.item=meta.q>1?meta.base+' × '+meta.q:meta.base;lastOrder.pack='แบบส่ง';lastOrder.packPlan='แบบส่ง';lastOrder.quantity=meta.q;lastOrder.price=meta.total;lastOrder.orderMode='send';}}catch(e){}patchText(meta);}
-  function patchSend(meta){[0,20,50,100,180,300,500,800,1200,1800,2600,4000,6000,9000].forEach(ms=>setTimeout(()=>applySendOrder(meta),ms));}
-  function confirm(card,normal,input){const s=settings(normal);if(!s)return;const q=Math.max(1,Math.min(99,Math.floor(Number(input.value)||1))),base=clean(normal.dataset.ymkBaseName||normal.dataset.readyName||'สินค้า'),total=s.price*q,oldPrice=normal.dataset.readyPrice,oldName=normal.dataset.readyName,meta={mode:'send',q,base,unit:s.price,total};window.YMK_SEND_SELECTION={mode:'send',name:base,category:normal.dataset.readyCategory||'',price:s.price,quantity:q,total};window.YMK_PENDING_ORDER_META={q,base,p:{send:true,total,unit:s.price},orderMode:'send'};window.YMK_SEND_ORDER_META=meta;window.YMK_FORCED_PACK_META=null;normal.dataset.readyPrice=String(total);normal.dataset.readyName=q>1?base+' × '+q:base;normal.dataset.ymkConfirming='1';normal.dataset.ymkSendConfirming='1';normal.click();applySendOrder(meta);patchSend(meta);setTimeout(()=>{normal.dataset.readyPrice=oldPrice||'';normal.dataset.readyName=oldName||base;delete normal.dataset.ymkConfirming;delete normal.dataset.ymkSendConfirming;restoreSend(card);},3000);}
-  function add(card){if(!card||card.querySelector('.ymk-send-choice'))return;const normal=card.querySelector('.ready-stock-order-btn');if(!normal||normal.disabled||!settings(normal))return;const {bottom}=parts(card);if(!bottom)return;const send=document.createElement('button');send.type='button';send.className='ymk-send-choice';send.textContent='📦 แบบส่ง';send.style.cssText='height:44px;margin:0;border:1px solid #e7a6bf;border-radius:999px;background:#fff7fa;color:#c85f88;font:inherit;font-size:12px;font-weight:850;white-space:nowrap;cursor:pointer;box-sizing:border-box';bottom.appendChild(send);const wrap=document.createElement('div');wrap.className='ymk-send-qty';wrap.style.cssText='display:none;grid-column:2/4;grid-row:1;width:216px;max-width:100%;margin:0 0 0 auto;box-sizing:border-box;position:relative;z-index:2';wrap.innerHTML='<div class="ymk-send-qty-row"><span>จำนวน</span><button type="button" class="ymk-send-minus">−</button><input class="ymk-send-input" type="text" inputmode="numeric" value="1"><button type="button" class="ymk-send-plus">+</button></div><button type="button" class="ymk-send-confirm">ยืนยันแบบส่ง</button><div class="ymk-send-total"></div>';bottom.appendChild(wrap);layout(card);const row=wrap.querySelector('.ymk-send-qty-row'),input=wrap.querySelector('.ymk-send-input'),minus=wrap.querySelector('.ymk-send-minus'),plus=wrap.querySelector('.ymk-send-plus'),ok=wrap.querySelector('.ymk-send-confirm'),totalEl=wrap.querySelector('.ymk-send-total');row.style.cssText='display:flex;align-items:center;justify-content:flex-end;gap:7px;width:100%;white-space:nowrap;margin-bottom:6px';row.querySelector('span').style.cssText='font-size:12px;font-weight:800;color:#8f5d71';[minus,plus].forEach(x=>x.style.cssText='width:32px;min-width:32px;height:32px;padding:0;flex:0 0 32px;border:0;border-radius:50%;background:#e27ca5;color:#fff;font:inherit;font-size:18px;line-height:32px;font-weight:900;text-align:center;cursor:pointer;box-sizing:border-box');input.style.cssText='width:44px;min-width:44px;height:32px;padding:0;flex:0 0 44px;box-sizing:border-box;border:1px solid #e7a6bf;border-radius:12px;background:#fff;text-align:center;color:#70495a;font:inherit;font-size:15px';ok.style.cssText='display:block;width:100%;height:42px;margin:0;padding:0;border:0;border-radius:999px;background:#e27ca5;color:#fff;font:inherit;font-weight:850;cursor:pointer;box-sizing:border-box';totalEl.style.cssText='font-size:11px;font-weight:800;color:#c85f88;margin-top:4px;text-align:right';const update=()=>{const q=Math.max(1,Math.min(99,Math.floor(Number(input.value)||1)));input.value=q;const s=settings(normal);totalEl.textContent=q>1&&s?'รวม '+(s.price*q).toLocaleString('th-TH')+' บาท':'';};minus.onclick=()=>{input.value=Math.max(1,(Number(input.value)||1)-1);update();};plus.onclick=()=>{input.value=Math.min(99,(Number(input.value)||1)+1);update();};input.oninput=update;ok.onclick=()=>confirm(card,normal,input);send.onclick=e=>{e.preventDefault();e.stopPropagation();clearSendMode();closeSendOthers(card);const q=card.querySelector('.ymk-qty-wrap');if(q)q.style.setProperty('display','none','important');normal.dataset.ymkQtyOpen='0';normal.style.setProperty('display','none','important');send.style.setProperty('display','none','important');wrap.style.setProperty('display','block','important');if(window.matchMedia('(max-width:699px)').matches){wrap.style.setProperty('grid-column','1 / -1','important');wrap.style.setProperty('grid-row','2','important');wrap.style.setProperty('width','100%','important');wrap.style.setProperty('max-width','100%','important');wrap.style.setProperty('margin','0','important');row.style.setProperty('justify-content','center','important');}update();};}
-  function sync(){document.querySelectorAll('.ready-stock-card').forEach(card=>{const normalQty=card.querySelector('.ymk-qty-wrap'),instantQty=card.querySelector('.ymk-instant-qty'),sendBtn=card.querySelector('.ymk-send-choice'),sendQty=card.querySelector('.ymk-send-qty'),normal=card.querySelector('.ready-stock-order-btn');if(!sendBtn)return;const normalOpen=!!normalQty&&getComputedStyle(normalQty).display!=='none',instantOpen=!!instantQty&&getComputedStyle(instantQty).display!=='none',sendOpen=!!sendQty&&getComputedStyle(sendQty).display!=='none';if(instantOpen){if(normal)normal.style.setProperty('display','none','important');sendBtn.style.setProperty('display','none','important');return;}if(sendOpen){if(normal)normal.style.setProperty('display','none','important');sendBtn.style.setProperty('display','none','important');}else if(normalOpen){sendBtn.style.setProperty('display','none','important');}else{sendBtn.style.removeProperty('display');}layout(card);});}
-  function scan(){document.querySelectorAll('.ready-stock-card').forEach(add);sync();}
-  document.addEventListener('click',e=>{const normal=e.target.closest('.ready-stock-order-btn');if(normal&&normal.dataset.ymkSendConfirming!=='1'){clearSendMode();document.querySelectorAll('.ymk-send-qty').forEach(w=>w.style.display='none');setTimeout(sync,0);}if(sendActive())setTimeout(()=>applySendOrder(window.YMK_SEND_ORDER_META),0);},true);
-  document.addEventListener('input',()=>{if(sendActive())applySendOrder(window.YMK_SEND_ORDER_META);},true);document.addEventListener('change',()=>{if(sendActive())applySendOrder(window.YMK_SEND_ORDER_META);},true);
-  new MutationObserver(()=>{if(sendActive())patchText(window.YMK_SEND_ORDER_META);sync();}).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['style','class']});
-  document.addEventListener('ymk-storefront-products-rendered',()=>setTimeout(scan,0));if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',scan);else scan();
+
+  function enabled(btn){
+    return (
+      btn &&
+      btn.dataset.sendEnabled === '1' &&
+      Number(btn.dataset.sendPrice || 0) > 0
+    );
+  }
+
+  function add(card){
+
+    if(
+      !card ||
+      card.querySelector('.ymk-send-choice')
+    ){
+      return;
+    }
+
+    const normal =
+      card.querySelector('.ready-stock-order-btn');
+
+    const bottom =
+      card.querySelector('.ymk-store-bottom');
+
+    if(
+      !normal ||
+      !bottom ||
+      normal.disabled ||
+      !enabled(normal)
+    ){
+      return;
+    }
+
+    const send =
+      document.createElement('button');
+
+    send.type = 'button';
+    send.className = 'ymk-send-choice';
+    send.textContent = '📦 แบบส่ง';
+
+    send.style.cssText = `
+      height:44px;
+      border:1px solid #e7a6bf;
+      border-radius:999px;
+      background:#fff7fa;
+      color:#c85f88;
+      font:inherit;
+      font-size:12px;
+      font-weight:850;
+      white-space:nowrap;
+      cursor:pointer;
+      box-sizing:border-box;
+    `;
+
+    bottom.appendChild(send);
+
+    send.addEventListener('click', e => {
+
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+
+      if(
+        typeof window.YMK_OPEN_READY_ORDER ===
+        'function'
+      ){
+        window.YMK_OPEN_READY_ORDER(
+          card,
+          'send'
+        );
+      }
+
+    }, true);
+
+    layout(card);
+  }
+
+  function layout(card){
+
+    const bottom =
+      card.querySelector('.ymk-store-bottom');
+
+    const price =
+      bottom?.querySelector(
+        '.ready-stock-price,.ymk-store-price'
+      );
+
+    const normal =
+      card.querySelector('.ready-stock-order-btn');
+
+    const send =
+      card.querySelector('.ymk-send-choice');
+
+    if(
+      !bottom ||
+      !normal ||
+      !send
+    ){
+      return;
+    }
+
+    bottom.style.setProperty(
+      'display',
+      'grid',
+      'important'
+    );
+
+    bottom.style.setProperty(
+      'gap',
+      '8px',
+      'important'
+    );
+
+    bottom.style.setProperty(
+      'align-items',
+      'center',
+      'important'
+    );
+
+    if(
+      window.matchMedia(
+        '(max-width:699px)'
+      ).matches
+    ){
+
+      bottom.style.setProperty(
+        'grid-template-columns',
+        '1fr 1fr',
+        'important'
+      );
+
+      if(price){
+        price.style.setProperty(
+          'grid-column',
+          '1 / -1',
+          'important'
+        );
+      }
+
+      normal.style.setProperty(
+        'width',
+        '100%',
+        'important'
+      );
+
+      send.style.setProperty(
+        'width',
+        '100%',
+        'important'
+      );
+
+    }else{
+
+      bottom.style.setProperty(
+        'grid-template-columns',
+        'minmax(0,1fr) 104px 104px',
+        'important'
+      );
+
+      normal.style.setProperty(
+        'width',
+        '104px',
+        'important'
+      );
+
+      send.style.setProperty(
+        'width',
+        '104px',
+        'important'
+      );
+    }
+  }
+
+  function scan(){
+
+    document
+      .querySelectorAll('.ready-stock-card')
+      .forEach(add);
+  }
+
+  /*
+    แบบส่งใช้ระบบออเดอร์เดียวกัน
+    แต่เปลี่ยนข้อมูลรายการ
+  */
+
+  function patchSendOrder(){
+
+    const meta =
+      window.YMK_SEND_ORDER_META;
+
+    if(
+      !meta ||
+      meta.mode !== 'send'
+    ){
+      return;
+    }
+
+    try{
+
+      if(
+        typeof lastOrder !== 'undefined' &&
+        lastOrder
+      ){
+
+        lastOrder.item =
+          meta.q > 1
+            ? meta.base + ' × ' + meta.q
+            : meta.base;
+
+        lastOrder.pack = 'แบบส่ง';
+        lastOrder.packPlan = 'แบบส่ง';
+        lastOrder.quantity = meta.q;
+        lastOrder.price = meta.total;
+        lastOrder.orderMode = 'send';
+      }
+
+    }catch(e){}
+
+    document
+      .querySelectorAll('textarea')
+      .forEach(el => {
+
+        let v = el.value || '';
+
+        if(
+          !/รายการ:|แพ็ก:|ยอดรวม:/.test(v)
+        ){
+          return;
+        }
+
+        v = v
+          .replace(
+            /รายการ:\s*[^\n\r]*/,
+            'รายการ: ' +
+            (
+              meta.q > 1
+                ? meta.base + ' × ' + meta.q
+                : meta.base
+            )
+          )
+          .replace(
+            /แพ็ก(?:ที่เติม)?:\s*[^\n\r]*/,
+            'แพ็ก: แบบส่ง'
+          )
+          .replace(
+            /ยอดรวม:\s*[^\n\r]*/,
+            'ยอดรวม: ' +
+            Number(meta.total || 0)
+              .toLocaleString('th-TH') +
+            ' บาท'
+          );
+
+        if(el.value !== v){
+          el.value = v;
+
+          el.dispatchEvent(
+            new Event('input',{
+              bubbles:true
+            })
+          );
+        }
+      });
+  }
+
+  /*
+    หลังออเดอร์แบบส่งสำเร็จ
+    เพิ่มข้อความให้ลูกค้าทักเพจ
+  */
+
+  function patchSuccess(){
+
+    const meta =
+      window.YMK_SEND_ORDER_META;
+
+    if(
+      !meta ||
+      meta.mode !== 'send'
+    ){
+      return;
+    }
+
+    const walker =
+      document.createTreeWalker(
+        document.body,
+        NodeFilter.SHOW_TEXT
+      );
+
+    let node;
+    let successFound = false;
+
+    while(
+      (node = walker.nextNode())
+    ){
+
+      const t =
+        String(node.nodeValue || '');
+
+      if(
+        /สร้างออเดอร์เข้าสู่ระบบเรียบร้อยแล้ว|ยืนยันสลิปเรียบร้อยแล้ว|สั่งซื้อสำเร็จ|ออเดอร์สำเร็จ/.test(t)
+      ){
+        successFound = true;
+
+        const box =
+          node.parentElement?.closest(
+            '.modal,.popup,[class*="modal"],[class*="popup"],[class*="success"]'
+          ) ||
+          node.parentElement?.parentElement;
+
+        if(
+          box &&
+          !box.querySelector(
+            '.ymk-send-contact-note'
+          )
+        ){
+
+          const note =
+            document.createElement('div');
+
+          note.className =
+            'ymk-send-contact-note';
+
+          note.textContent =
+            'รบกวนลูกค้าทักเพจเข้ามาเพื่อดำเนินการแบบส่งนะคะ ♡';
+
+          note.style.cssText = `
+            margin:12px 0 4px;
+            padding:11px 13px;
+            border-radius:14px;
+            background:rgba(226,124,165,.10);
+            color:#c85f88;
+            font-size:12px;
+            font-weight:800;
+            text-align:center;
+          `;
+
+          box.appendChild(note);
+        }
+      }
+    }
+
+    if(successFound){
+      patchSendOrder();
+    }
+  }
+
+  document.addEventListener(
+    'ymk-storefront-products-rendered',
+    () => setTimeout(scan,0)
+  );
+
+  document.addEventListener(
+    'click',
+    () => {
+      setTimeout(patchSendOrder,0);
+      setTimeout(patchSendOrder,100);
+      setTimeout(patchSendOrder,300);
+    },
+    true
+  );
+
+  const observer =
+    new MutationObserver(() => {
+
+      scan();
+
+      if(
+        window.YMK_SEND_ORDER_META?.mode ===
+        'send'
+      ){
+        patchSendOrder();
+        patchSuccess();
+      }
+
+    });
+
+  function boot(){
+
+    scan();
+
+    observer.observe(
+      document.body,
+      {
+        childList:true,
+        subtree:true
+      }
+    );
+  }
+
+  if(
+    document.readyState === 'loading'
+  ){
+    document.addEventListener(
+      'DOMContentLoaded',
+      boot
+    );
+  }else{
+    boot();
+  }
+
 })();
