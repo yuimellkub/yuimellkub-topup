@@ -1,8 +1,10 @@
 (function () {
-  const CACHE = 'ymk_production_products_cache_v4';
+  'use strict';
+
+  const CACHE = 'ymk_production_products_cache_v5';
 
   let items = [];
-  let active = 'all';
+  let active = 'echoes';
 
   const clean = v => String(v || '').trim();
 
@@ -14,24 +16,6 @@
       '"': '&quot;',
       "'": '&#39;'
     }[c]));
-
-  const CATEGORY_ORDER = [
-    'echoes',
-    'skins',
-    'accessory',
-    'skinpack',
-    'pets',
-    'room'
-  ];
-
-  const CATEGORY_LABEL = {
-    echoes: 'เติมกระดุม',
-    skins: 'เติมสกิน',
-    accessory: 'เติมประดับ',
-    skinpack: 'แพ็กสกิน',
-    pets: 'สัตว์เลี้ยง',
-    room: 'ห้อง'
-  };
 
   function key(p) {
     const c = clean(p.category).toLowerCase();
@@ -56,18 +40,21 @@
       l === 'เติมประดับ'
     ) return 'accessory';
 
-    if (l === 'แพ็กสกิน' || c === 'skinpack') return 'skinpack';
+    if (
+      c === 'skinpack' ||
+      l === 'แพ็กสกิน'
+    ) return 'skinpack';
 
     if (
-      l === 'สัตว์เลี้ยง' ||
       c === 'pets' ||
-      c === 'pet'
+      c === 'pet' ||
+      l === 'สัตว์เลี้ยง'
     ) return 'pets';
 
     if (
-      l === 'ห้อง' ||
       c === 'room' ||
-      c === 'rooms'
+      c === 'rooms' ||
+      l === 'ห้อง'
     ) return 'room';
 
     return c || l || 'other';
@@ -103,8 +90,6 @@
         class="product ready-stock-card ymk-production-card"
         data-product-id="${esc(p.id)}"
         data-ready-category="${esc(p.category || '')}"
-        data-send-enabled="${send ? '1' : '0'}"
-        data-send-price="${send ? Number(p.sendPrice || 0) : 0}"
       >
 
         ${
@@ -168,166 +153,144 @@
     `;
   }
 
-  function pane(name) {
-    return document.querySelector(
-      `.realProductPane[data-product-pane="${name}"]`
-    );
-  }
+  function normalizeCategory(raw) {
+    raw = clean(raw).toLowerCase();
 
-  function targetPane() {
-    if (active === 'all') {
-      return pane('echoes') ||
-        document.querySelector('.realProductPane');
+    if (!raw || raw === 'all') {
+      return 'echoes';
     }
 
-    return pane(active) ||
-      pane(
-        active === 'accessory'
-          ? 'accessories'
-          : active
+    if (raw === 'accessories') {
+      return 'accessory';
+    }
+
+    if (raw === 'skin') {
+      return 'skins';
+    }
+
+    if (raw === 'pet') {
+      return 'pets';
+    }
+
+    if (raw === 'rooms') {
+      return 'room';
+    }
+
+    return raw;
+  }
+
+  function pane(name) {
+    return (
+      document.querySelector(
+        `.realProductPane[data-product-pane="${name}"]`
       ) ||
-      pane('echoes') ||
-      document.querySelector('.realProductPane');
+      (
+        name === 'accessory'
+          ? document.querySelector(
+              '.realProductPane[data-product-pane="accessories"]'
+            )
+          : null
+      )
+    );
   }
 
   function visibleProducts() {
     return items
-      .filter(p => p.visible !== false)
-      .sort((a, b) => {
-        const ka = key(a);
-        const kb = key(b);
+      .filter(p =>
+        p.visible !== false &&
+        key(p) === active
+      )
+      .sort((a, b) =>
+        Number(a.categoryOrder || 999) -
+          Number(b.categoryOrder || 999) ||
+        Number(a.order || 0) -
+          Number(b.order || 0)
+      );
+  }
 
-        const ca = CATEGORY_ORDER.indexOf(ka);
-        const cb = CATEGORY_ORDER.indexOf(kb);
+  function removeAllCategory() {
+    document
+      .querySelectorAll(
+        '.catbar [data-maincat="all"]'
+      )
+      .forEach(el => el.remove());
 
-        const oa = ca === -1 ? 999 : ca;
-        const ob = cb === -1 ? 999 : cb;
-
-        return (
-          oa - ob ||
-          Number(a.categoryOrder || 999) -
-            Number(b.categoryOrder || 999) ||
-          Number(a.order || 0) -
-            Number(b.order || 0)
+    document
+      .querySelectorAll(
+        '.catbar [data-maincat]'
+      )
+      .forEach(el => {
+        el.classList.toggle(
+          'on',
+          normalizeCategory(el.dataset.maincat) === active
         );
       });
   }
 
-  function allHTML(rows) {
-    const known = [
-      ...CATEGORY_ORDER,
-      ...Array.from(
-        new Set(rows.map(key))
-      ).filter(k => !CATEGORY_ORDER.includes(k))
-    ];
-
-    return known.map(cat => {
-      const products = rows.filter(p => key(p) === cat);
-
-      if (!products.length) return '';
-
-      const label =
-        CATEGORY_LABEL[cat] ||
-        clean(products[0]?.categoryLabel) ||
-        cat;
-
-      return `
-        <section class="ymk-product-category-section">
-
-          <div class="ymk-product-category-title">
-            <b>${esc(label)}</b>
-            <span>${products.length} รายการ</span>
-          </div>
-
-          <div class="products">
-            ${products.map(card).join('')}
-          </div>
-
-        </section>
-      `;
-    }).join('');
-  }
-
-  function categoryHTML(rows) {
-    if (!rows.length) {
-      return `
-        <div class="categoryPlaceholder">
-          <b>♡ ยังไม่มีสินค้า</b>
-        </div>
-      `;
-    }
-
-    return `
-      <div class="products">
-        ${rows.map(card).join('')}
-      </div>
-    `;
-  }
-
   function render() {
-    const p = targetPane();
+    removeAllCategory();
+
+    const p =
+      pane(active) ||
+      pane('echoes') ||
+      document.querySelector(
+        '.realProductPane[data-product-pane]'
+      );
 
     if (!p) return;
 
     document
-      .querySelectorAll('.realProductPane[data-product-pane]')
-      .forEach(x => {
-        x.classList.toggle('on', x === p);
+      .querySelectorAll(
+        '.realProductPane[data-product-pane]'
+      )
+      .forEach(el => {
+        el.classList.toggle('on', el === p);
       });
 
-    const all = visibleProducts();
+    const rows = visibleProducts();
 
-    const rows =
-      active === 'all'
-        ? all
-        : all.filter(x => key(x) === active);
-
-    p.innerHTML =
-      active === 'all'
-        ? allHTML(rows)
-        : categoryHTML(rows);
+    p.innerHTML = rows.length
+      ? `
+        <div class="products">
+          ${rows.map(card).join('')}
+        </div>
+      `
+      : `
+        <div class="categoryPlaceholder">
+          <b>♡ ยังไม่มีสินค้า</b>
+        </div>
+      `;
 
     document.dispatchEvent(
-      new CustomEvent('ymk-storefront-products-rendered', {
-        detail: {
-          count: rows.length,
-          category: active
+      new CustomEvent(
+        'ymk-storefront-products-rendered',
+        {
+          detail: {
+            category: active,
+            count: rows.length
+          }
         }
-      })
+      )
     );
   }
 
   function style() {
-    if (document.getElementById('ymkProductionV13')) return;
+    if (
+      document.getElementById(
+        'ymkProductionV14'
+      )
+    ) {
+      return;
+    }
 
-    const s = document.createElement('style');
+    const s =
+      document.createElement('style');
 
-    s.id = 'ymkProductionV13';
+    s.id = 'ymkProductionV14';
 
     s.textContent = `
-      .ymk-product-category-section{
-        margin:0 0 24px;
-      }
-
-      .ymk-product-category-title{
-        display:flex;
-        align-items:center;
-        justify-content:space-between;
-        gap:12px;
-        margin:0 0 10px;
-      }
-
-      .ymk-product-category-title b{
-        font-size:16px;
-      }
-
-      .ymk-product-category-title span{
-        font-size:11px;
-        opacity:.65;
-      }
-
       .ymk-production-card{
-        animation:ymkProdIn .28s ease both;
+        animation:ymkProdIn .25s ease both;
       }
 
       .ymk-production-image{
@@ -339,19 +302,18 @@
       }
 
       .ymk-production-image img{
+        display:block!important;
         width:66px!important;
         height:66px!important;
         max-width:66px!important;
         max-height:66px!important;
         object-fit:contain!important;
-        display:block!important;
       }
 
       .ymk-store-desc{
+        margin-top:4px;
         font-size:11px;
         opacity:.65;
-        margin-top:4px;
-        min-height:0;
       }
 
       .ymk-store-bottom{
@@ -366,7 +328,7 @@
       @keyframes ymkProdIn{
         from{
           opacity:0;
-          transform:translateY(7px);
+          transform:translateY(6px);
         }
         to{
           opacity:1;
@@ -378,39 +340,37 @@
     document.head.appendChild(s);
   }
 
-  function normalizeActive(raw) {
-    raw = clean(raw).toLowerCase();
-
-    if (!raw || raw === 'all') return 'all';
-
-    if (raw === 'accessories') return 'accessory';
-    if (raw === 'skin') return 'skins';
-    if (raw === 'pet') return 'pets';
-    if (raw === 'rooms') return 'room';
-
-    return raw;
-  }
-
   function bind() {
-    document.addEventListener('click', e => {
-      const b = e.target.closest(
-        '.catbar [data-maincat]'
-      );
+    document.addEventListener(
+      'click',
+      e => {
+        const b =
+          e.target.closest(
+            '.catbar [data-maincat]'
+          );
 
-      if (!b) return;
+        if (!b) return;
 
-      active = normalizeActive(
-        b.dataset.maincat
-      );
+        active =
+          normalizeCategory(
+            b.dataset.maincat
+          );
 
-      document
-        .querySelectorAll('.catbar [data-maincat]')
-        .forEach(x => {
-          x.classList.toggle('on', x === b);
-        });
+        document
+          .querySelectorAll(
+            '.catbar [data-maincat]'
+          )
+          .forEach(el => {
+            el.classList.toggle(
+              'on',
+              el === b
+            );
+          });
 
-      setTimeout(render, 0);
-    }, true);
+        setTimeout(render, 0);
+      },
+      true
+    );
   }
 
   function cached() {
@@ -419,9 +379,15 @@
         localStorage.getItem(CACHE) || '[]'
       );
 
-      if (Array.isArray(a) && a.length) {
+      if (
+        Array.isArray(a) &&
+        a.length
+      ) {
         items = a;
-        window.YMK_PRODUCTION_PRODUCTS = items;
+
+        window.YMK_PRODUCTION_PRODUCTS =
+          items;
+
         render();
       }
     } catch (e) {}
@@ -441,12 +407,14 @@
       .collection('products')
       .onSnapshot(
         snapshot => {
-          items = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          }));
+          items =
+            snapshot.docs.map(doc => ({
+              id: doc.id,
+              ...doc.data()
+            }));
 
-          window.YMK_PRODUCTION_PRODUCTS = items;
+          window.YMK_PRODUCTION_PRODUCTS =
+            items;
 
           try {
             localStorage.setItem(
@@ -469,15 +437,25 @@
 
   function boot() {
     style();
+
+    /*
+      ไม่มีหมวด "ทั้งหมด"
+      เปิดมาที่ เติมกระดุม ทันที
+    */
+    active = 'echoes';
+
+    removeAllCategory();
     bind();
     cached();
     connect();
 
-    setTimeout(render, 150);
-    setTimeout(render, 400);
+    setTimeout(render, 100);
+    setTimeout(render, 350);
   }
 
-  if (document.readyState === 'loading') {
+  if (
+    document.readyState === 'loading'
+  ) {
     document.addEventListener(
       'DOMContentLoaded',
       boot
@@ -485,4 +463,5 @@
   } else {
     boot();
   }
+
 })();
