@@ -15,7 +15,7 @@ function boot(){
     var cards=[].slice.call(box.querySelectorAll('.product'));
     rows.forEach(function(p,i){
      var card=cards[i];if(!card)return;
-     card.dataset.productId=p.id;card.dataset.category=cat;
+     card.dataset.productId=p.id;card.dataset.category=cat;card.classList.add('ready-stock-card');
      var gem=card.querySelector('.gem'),name=card.querySelector('b'),price=card.querySelector('.price'),btn=card.querySelector('button'); card.dataset.readyCategory=p.category||'echoes';
      if(gem){gem.innerHTML=p.image?'<img src="'+esc(p.image)+'" alt="'+esc(p.name||'สินค้า')+'">':'<span class="echoFallback">◉</span>';gem.classList.add('liveImage')}
      if(name)name.textContent=p.name||'สินค้า';if(price)price.textContent='฿'+Number(p.price||0).toLocaleString('th-TH');
@@ -24,7 +24,7 @@ function boot(){
     });
     cards.slice(rows.length).forEach(function(x){x.style.display='none'});
    }else{
-    box.innerHTML=rows.map(function(p){var disabled=p.status==='out'||p.status==='paused'||(!p.unlimitedStock&&p.stock!=null&&Number(p.stock)<=0);return '<div class="product" data-product-id="'+esc(p.id)+'"><div class="gem liveImage">'+(p.image?'<img src="'+esc(p.image)+'" alt="'+esc(p.name||'สินค้า')+'">':'<span class="echoFallback">◉</span>')+'</div><b>'+esc(p.name||'สินค้า')+'</b><div class="price">฿'+Number(p.price||0).toLocaleString('th-TH')+'</div><button '+(disabled?'disabled':'')+'>'+ (disabled?'หมดชั่วคราว':'สั่งซื้อ')+'</button></div>'}).join('');
+    box.innerHTML=rows.map(function(p){var disabled=p.status==='out'||p.status==='paused'||(!p.unlimitedStock&&p.stock!=null&&Number(p.stock)<=0);return '<div class="product ready-stock-card" data-product-id="'+esc(p.id)+'" data-ready-category="'+esc(p.category||cat)+'"><div class="gem liveImage">'+(p.image?'<img src="'+esc(p.image)+'" alt="'+esc(p.name||'สินค้า')+'">':'<span class="echoFallback">◉</span>')+'</div><b>'+esc(p.name||'สินค้า')+'</b><div class="price">฿'+Number(p.price||0).toLocaleString('th-TH')+'</div><button class="ready-stock-order-btn" data-ready-name="'+esc(p.name||'สินค้า')+'" data-ready-price="'+Number(p.price||0)+'" data-ready-category="'+esc(p.category||cat)+'" data-send-enabled="'+(p.sendEnabled===true?'1':'0')+'" data-send-price="'+Number(p.sendPrice||0)+'" '+(disabled?'disabled':'')+'>'+ (disabled?(p.status==='paused'?'ปิดชั่วคราว':'หมดชั่วคราว'):'สั่งซื้อ')+'</button></div>'}).join('');
    }
   });
   document.querySelectorAll('.gem.liveImage').forEach(function(g){g.style.height='54px';g.style.display='flex';g.style.alignItems='center';g.style.justifyContent='center';var im=g.querySelector('img');if(im){im.style.maxWidth='54px';im.style.maxHeight='54px';im.style.objectFit='contain'}});
