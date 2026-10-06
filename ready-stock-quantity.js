@@ -1,575 +1,346 @@
 (function(){
+  'use strict';
 
-  let products = [];
-  let current = null;
+  let proxyCard = null;
+  let proxyButton = null;
 
   const clean = v =>
     String(v || '')
       .replace(/\s*[×xX]\s*\d+\s*$/,'')
       .trim();
 
-  const number = v => {
+  const num = v => {
     const n = Number(
-      String(v ?? '').replace(/[^0-9.]/g,'')
+      String(v ?? '')
+        .replace(/,/g,'')
+        .replace(/[^0-9.]/g,'')
     );
+
     return Number.isFinite(n) ? n : 0;
   };
 
-  function productFor(btn){
-    const id = btn.dataset.productId;
+  /*
+    Preview v65 ผูก Flow จริงไว้กับปุ่มสินค้าเดิม
+    เราเก็บปุ่มหนึ่งตัวไว้เป็นสะพาน
+    แล้วใช้ Flow เดิมของ Preview 100%
+  */
+  function captureNativeButton(){
 
-    if(id){
-      const byId = products.find(p => p.id === id);
-      if(byId) return byId;
+    if(proxyButton) return true;
+
+    const original =
+      document.querySelector(
+        '#products .product button'
+      );
+
+    if(!original){
+      return false;
     }
 
-    const name = clean(btn.dataset.readyName || '');
+    const card =
+      original.closest('.product');
 
-    return products.find(
-      p => clean(p.name) === name
-    ) || null;
+    if(!card){
+      return false;
+    }
+
+    const host =
+      document.createElement('div');
+
+    host.id =
+      'ymkNativeOrderProxyHost';
+
+    host.style.cssText = `
+      display:none!important;
+      position:absolute!important;
+      width:0!important;
+      height:0!important;
+      overflow:hidden!important;
+      pointer-events:none!important;
+    `;
+
+    /*
+      ย้าย Node จริง ไม่ clone
+      เพื่อเก็บ event listener ของ Preview เดิมไว้
+    */
+    host.appendChild(card);
+
+    document.body.appendChild(host);
+
+    proxyCard = card;
+    proxyButton = original;
+
+    proxyCard.classList.add(
+      'ready-stock-card'
+    );
+
+    return true;
   }
 
-  function maxFor(btn){
-    const p = productFor(btn);
+  function resetNormalMode(){
+
+    window.YMK_SEND_SELECTION = null;
+    window.YMK_SEND_ORDER_META = null;
+
+    window.YMK_PENDING_ORDER_META = null;
+  }
+
+  function prepareProxy(source, mode){
 
     if(
-      !p ||
-      p.unlimitedStock === true ||
-      p.stock == null
+      !proxyButton &&
+      !captureNativeButton()
     ){
-      return 99;
+      return false;
     }
 
-    return Math.max(
-      1,
-      Math.floor(Number(p.stock) || 0)
-    );
-  }
+    const isSend =
+      mode === 'send';
 
-  function ensureModal(){
-
-    let shade =
-      document.getElementById('ymkReadyOrderShade');
-
-    if(shade) return shade;
-
-    shade = document.createElement('div');
-
-    shade.id = 'ymkReadyOrderShade';
-
-    shade.innerHTML = `
-      <div class="ymk-ready-modal">
-
-        <button
-          type="button"
-          class="ymk-ready-close"
-          aria-label="ปิด"
-        >×</button>
-
-        <div class="ymk-ready-kicker">
-          ♡ รายละเอียดการสั่งซื้อ
-        </div>
-
-        <h3 class="ymk-ready-name">
-          สินค้า
-        </h3>
-
-        <div class="ymk-ready-mode">
-          เติมทันที
-        </div>
-
-        <div class="ymk-ready-unit">
-          ราคา 0 บาท
-        </div>
-
-        <div class="ymk-ready-qty-label">
-          จำนวน
-        </div>
-
-        <div class="ymk-ready-qty">
-          <button type="button" class="ymk-ready-minus">−</button>
-
-          <input
-            type="text"
-            inputmode="numeric"
-            value="1"
-            class="ymk-ready-input"
-          >
-
-          <button type="button" class="ymk-ready-plus">+</button>
-        </div>
-
-        <div class="ymk-ready-total">
-          รวม 0 บาท
-        </div>
-
-        <button
-          type="button"
-          class="ymk-ready-confirm"
-        >
-          ยืนยันสั่งซื้อ
-        </button>
-
-      </div>
-    `;
-
-    const style = document.createElement('style');
-
-    style.textContent = `
-      #ymkReadyOrderShade{
-        position:fixed;
-        inset:0;
-        z-index:2147483000;
-        display:none;
-        align-items:center;
-        justify-content:center;
-        padding:18px;
-        box-sizing:border-box;
-        background:rgba(42,24,32,.38);
-        backdrop-filter:blur(5px);
-      }
-
-      #ymkReadyOrderShade.on{
-        display:flex;
-      }
-
-      .ymk-ready-modal{
-        position:relative;
-        width:min(390px,100%);
-        box-sizing:border-box;
-        padding:24px 20px 20px;
-        border:1px solid rgba(226,124,165,.28);
-        border-radius:26px;
-        background:var(--card,#fff);
-        color:var(--text,#513642);
-        box-shadow:0 24px 70px rgba(70,35,50,.18);
-        text-align:center;
-      }
-
-      .ymk-ready-close{
-        position:absolute;
-        right:13px;
-        top:12px;
-        width:34px;
-        height:34px;
-        border:0;
-        border-radius:50%;
-        background:rgba(226,124,165,.10);
-        color:#c85f88;
-        font-size:22px;
-        cursor:pointer;
-      }
-
-      .ymk-ready-kicker{
-        color:#d16d96;
-        font-size:12px;
-        font-weight:800;
-        margin-bottom:8px;
-      }
-
-      .ymk-ready-name{
-        margin:0;
-        font-size:20px;
-      }
-
-      .ymk-ready-mode{
-        display:inline-flex;
-        margin-top:9px;
-        padding:6px 12px;
-        border-radius:999px;
-        background:rgba(226,124,165,.11);
-        color:#c85f88;
-        font-size:12px;
-        font-weight:850;
-      }
-
-      .ymk-ready-unit{
-        margin-top:10px;
-        font-size:13px;
-        opacity:.75;
-      }
-
-      .ymk-ready-qty-label{
-        margin:20px 0 9px;
-        font-size:12px;
-        font-weight:800;
-      }
-
-      .ymk-ready-qty{
-        display:flex;
-        justify-content:center;
-        align-items:center;
-        gap:12px;
-      }
-
-      .ymk-ready-minus,
-      .ymk-ready-plus{
-        width:40px;
-        height:40px;
-        border:0;
-        border-radius:50%;
-        background:#e27ca5;
-        color:#fff;
-        font-size:22px;
-        font-weight:900;
-        cursor:pointer;
-      }
-
-      .ymk-ready-input{
-        width:64px;
-        height:40px;
-        box-sizing:border-box;
-        border:1px solid #e7a6bf;
-        border-radius:13px;
-        background:var(--card,#fff);
-        color:inherit;
-        text-align:center;
-        font:inherit;
-        font-size:16px;
-      }
-
-      .ymk-ready-total{
-        margin:14px 0;
-        color:#c85f88;
-        font-size:14px;
-        font-weight:850;
-      }
-
-      .ymk-ready-confirm{
-        width:100%;
-        height:46px;
-        border:0;
-        border-radius:999px;
-        background:#e27ca5;
-        color:#fff;
-        font:inherit;
-        font-weight:850;
-        cursor:pointer;
-      }
-    `;
-
-    document.head.appendChild(style);
-    document.body.appendChild(shade);
-
-    const input =
-      shade.querySelector('.ymk-ready-input');
-
-    shade
-      .querySelector('.ymk-ready-close')
-      .onclick = close;
-
-    shade.onclick = e => {
-      if(e.target === shade) close();
-    };
-
-    shade
-      .querySelector('.ymk-ready-minus')
-      .onclick = () => {
-        if(!current) return;
-
-        input.value = Math.max(
-          1,
-          (Number(input.value) || 1) - 1
-        );
-
-        update();
-      };
-
-    shade
-      .querySelector('.ymk-ready-plus')
-      .onclick = () => {
-        if(!current) return;
-
-        input.value = Math.min(
-          maxFor(current.btn),
-          (Number(input.value) || 1) + 1
-        );
-
-        update();
-      };
-
-    input.oninput = update;
-
-    shade
-      .querySelector('.ymk-ready-confirm')
-      .onclick = confirm;
-
-    return shade;
-  }
-
-  function update(){
-
-    if(!current) return;
-
-    const shade = ensureModal();
-
-    const input =
-      shade.querySelector('.ymk-ready-input');
-
-    const q = Math.max(
-      1,
-      Math.min(
-        maxFor(current.btn),
-        Math.floor(Number(input.value) || 1)
-      )
-    );
-
-    input.value = q;
-
-    shade.querySelector(
-      '.ymk-ready-total'
-    ).textContent =
-      'รวม ' +
-      (current.unit * q).toLocaleString('th-TH') +
-      ' บาท';
-  }
-
-  function open(card, mode){
-
-    const btn =
-      card?.querySelector('.ready-stock-order-btn');
-
-    if(!btn || btn.disabled) return;
-
-    const isSend = mode === 'send';
-
-    const unit = isSend
-      ? number(btn.dataset.sendPrice)
-      : number(btn.dataset.readyPrice);
-
-    if(isSend && unit <= 0) return;
-
-    current = {
-      card,
-      btn,
-      mode: isSend ? 'send' : 'instant',
-      unit,
-      base: clean(
-        btn.dataset.ymkBaseName ||
-        btn.dataset.readyName ||
+    const base =
+      clean(
+        source.dataset.readyName ||
+        source
+          .closest('.ready-stock-card')
+          ?.querySelector('.ymk-store-name')
+          ?.textContent ||
         'สินค้า'
-      )
-    };
+      );
 
-    const shade = ensureModal();
-
-    shade.querySelector(
-      '.ymk-ready-name'
-    ).textContent = current.base;
-
-    shade.querySelector(
-      '.ymk-ready-mode'
-    ).textContent =
+    const unit =
       isSend
-        ? 'แบบส่ง'
-        : 'เติมทันที';
+        ? num(source.dataset.sendPrice)
+        : num(source.dataset.readyPrice);
 
-    shade.querySelector(
-      '.ymk-ready-unit'
-    ).textContent =
-      'ราคา ' +
-      unit.toLocaleString('th-TH') +
-      ' บาท';
-
-    shade.querySelector(
-      '.ymk-ready-input'
-    ).value = '1';
-
-    shade.querySelector(
-      '.ymk-ready-confirm'
-    ).textContent =
-      isSend
-        ? 'ยืนยันแบบส่ง'
-        : 'ยืนยันสั่งซื้อ';
-
-    shade.classList.add('on');
-
-    update();
-  }
-
-  function close(){
-    const shade =
-      document.getElementById('ymkReadyOrderShade');
-
-    if(shade){
-      shade.classList.remove('on');
+    if(unit <= 0){
+      return false;
     }
 
-    current = null;
-  }
+    const category =
+      source.dataset.readyCategory ||
+      source
+        .closest('.ready-stock-card')
+        ?.dataset.readyCategory ||
+      '';
 
-  function confirm(){
+    const title =
+      proxyCard.querySelector('b');
 
-    if(!current) return;
+    const price =
+      proxyCard.querySelector('.price');
 
-    const shade = ensureModal();
+    if(title){
+      title.textContent = base;
+    }
 
-    const input =
-      shade.querySelector('.ymk-ready-input');
+    if(price){
+      price.textContent =
+        '฿' +
+        unit.toLocaleString('th-TH');
+    }
 
-    const q = Math.max(
-      1,
-      Math.min(
-        maxFor(current.btn),
-        Math.floor(Number(input.value) || 1)
-      )
-    );
+    proxyButton.dataset.readyName =
+      base;
 
-    const total =
-      current.unit * q;
+    proxyButton.dataset.readyPrice =
+      String(unit);
 
-    const btn = current.btn;
-    const base = current.base;
-    const mode = current.mode;
+    proxyButton.dataset.readyCategory =
+      category;
 
-    const oldName =
-      btn.dataset.readyName;
+    proxyButton.dataset.productId =
+      source.dataset.productId || '';
 
-    const oldPrice =
-      btn.dataset.readyPrice;
+    proxyButton.dataset.sendPrice =
+      source.dataset.sendPrice || '';
 
-    btn.dataset.readyName =
-      q > 1
-        ? base + ' × ' + q
-        : base;
+    proxyButton.dataset.sendEnabled =
+      source.dataset.sendEnabled || '0';
 
-    btn.dataset.readyPrice =
-      String(total);
+    proxyCard.dataset.readyCategory =
+      category;
 
-    btn.dataset.ymkConfirming = '1';
-    btn.dataset.ymkInstantConfirming = '1';
+    proxyCard.dataset.productId =
+      source.dataset.productId || '';
 
-    if(mode === 'send'){
+    if(isSend){
+
+      proxyButton.dataset.ymkSendConfirming =
+        '1';
 
       window.YMK_SEND_SELECTION = {
         mode:'send',
         name:base,
-        category:btn.dataset.readyCategory || '',
-        price:current.unit,
-        quantity:q,
-        total
+        category,
+        price:unit,
+        quantity:1,
+        total:unit
       };
 
       window.YMK_SEND_ORDER_META = {
         mode:'send',
-        q,
+        q:1,
         base,
-        unit:current.unit,
-        total
+        unit,
+        total:unit
       };
 
       window.YMK_PENDING_ORDER_META = {
-        q,
+        q:1,
         base,
         p:{
           send:true,
-          unit:current.unit,
-          total
+          unit,
+          total:unit
         },
         orderMode:'send'
       };
 
-      window.YMK_FORCED_PACK_META = null;
+      window.YMK_FORCED_PACK_META =
+        null;
 
     }else{
 
-      window.YMK_SEND_SELECTION = null;
-      window.YMK_SEND_ORDER_META = null;
+      delete proxyButton.dataset
+        .ymkSendConfirming;
+
+      resetNormalMode();
 
       window.YMK_PENDING_ORDER_META = {
-        q,
+        q:1,
         base,
         p:{
-          unit:current.unit,
-          total
+          unit,
+          total:unit
         },
         orderMode:'instant'
       };
     }
 
-    close();
-
-    btn.click();
-
-    setTimeout(() => {
-      btn.dataset.readyName =
-        oldName || base;
-
-      btn.dataset.readyPrice =
-        oldPrice || String(current?.unit || '');
-
-      delete btn.dataset.ymkConfirming;
-      delete btn.dataset.ymkInstantConfirming;
-    }, 500);
+    return true;
   }
 
-  window.YMK_OPEN_READY_ORDER =
-    function(card, mode){
-      open(card, mode || 'instant');
-    };
-
-  document.addEventListener('click', e => {
-
-    const btn =
-      e.target.closest('.ready-stock-order-btn');
+  function openNative(source, mode){
 
     if(
-      !btn ||
-      btn.disabled ||
-      btn.dataset.ymkConfirming === '1'
+      !source ||
+      source.disabled
     ){
       return;
     }
 
-    const card =
-      btn.closest('.ready-stock-card');
+    if(
+      !prepareProxy(
+        source,
+        mode || 'instant'
+      )
+    ){
+      console.warn(
+        'Preview native order flow not ready'
+      );
 
-    if(!card) return;
+      return;
+    }
 
-    e.preventDefault();
-    e.stopPropagation();
-    e.stopImmediatePropagation();
+    /*
+      ปุ่มนี้คือปุ่มเดิมจาก Preview
+      จึงเปิด:
+      "ส่งออเดอร์ให้ร้าน ♡"
+      + จำนวนสินค้า − / +
+      + UID / Server
+      + ไปชำระเงิน
+      แบบเดิมทั้งหมด
+    */
+    proxyButton.click();
 
-    open(card, 'instant');
-
-  }, true);
-
-  function load(){
-
-    try{
-
-      if(
-        !window.firebase ||
-        !firebase.firestore
-      ){
-        return setTimeout(load,250);
-      }
-
-      firebase
-        .firestore()
-        .collection('products')
-        .onSnapshot(s => {
-
-          products = s.docs.map(d => ({
-            id:d.id,
-            ...d.data()
-          }));
-
-        });
-
-    }catch(e){
-      setTimeout(load,500);
+    if(mode === 'send'){
+      document.dispatchEvent(
+        new CustomEvent(
+          'ymk-send-flow-opened'
+        )
+      );
     }
   }
 
-  if(document.readyState === 'loading'){
+  window.YMK_OPEN_NATIVE_PRODUCT_ORDER =
+    function(source, mode){
+      openNative(
+        source,
+        mode || 'instant'
+      );
+    };
+
+  /*
+    ปุ่ม "สั่งซื้อ" สินค้าจริง
+    → เข้า Flow Preview เดิมโดยตรง
+  */
+  document.addEventListener(
+    'click',
+    e => {
+
+      const btn =
+        e.target.closest(
+          '.ready-stock-order-btn'
+        );
+
+      if(!btn){
+        return;
+      }
+
+      /*
+        ปุ่ม Proxy ต้องปล่อยให้
+        Preview เดิมรับ Event เอง
+      */
+      if(
+        btn.closest(
+          '#ymkNativeOrderProxyHost'
+        )
+      ){
+        return;
+      }
+
+      if(
+        btn.disabled ||
+        btn.dataset.ymkConfirming === '1'
+      ){
+        return;
+      }
+
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+
+      openNative(
+        btn,
+        'instant'
+      );
+
+    },
+    true
+  );
+
+  function boot(){
+
+    /*
+      ต้องเก็บปุ่ม Preview เดิม
+      ก่อน renderer สินค้าจริงแทนที่ DOM
+    */
+    if(!captureNativeButton()){
+      setTimeout(boot,50);
+      return;
+    }
+  }
+
+  if(
+    document.readyState === 'loading'
+  ){
     document.addEventListener(
       'DOMContentLoaded',
-      load
+      boot,
+      {once:true}
     );
   }else{
-    load();
+    boot();
   }
 
 })();
