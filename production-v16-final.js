@@ -79,16 +79,16 @@ function installStyle(){
       will-change:transform,box-shadow!important;
 
       transition:
-        transform .28s cubic-bezier(.22,.61,.36,1),
-        box-shadow .28s ease!important;
+        transform .65s cubic-bezier(.16,1,.3,1),
+        box-shadow .65s cubic-bezier(.16,1,.3,1)!important;
     }
 
     .ready-stock-card.ymk-production-card:hover{
-      transform:translate3d(0,-3px,0)!important;
+      transform:translate3d(0,-5px,0)!important;
 
       box-shadow:
-        0 10px 22px
-        rgba(177,90,125,.09)!important;
+        0 12px 26px
+        rgba(177,90,125,.10)!important;
     }
 
     .ready-stock-card .ymk-store-name{
