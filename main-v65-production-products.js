@@ -1,602 +1,635 @@
-(function () {
-  var CACHE = 'ymk_production_products_cache_v1';
-  var items = [];
-  var activeLabel = 'ทั้งหมด';
+(function(){
+var CACHE='ymk_production_products_cache_v2',items=[],active='all';
 
-  function clean(v) {
-    return String(v || '').trim();
+function clean(v){
+  return String(v||'').trim()
+}
+
+function esc(v){
+  return String(v==null?'':v).replace(/[&<>"']/g,function(c){
+    return {
+      '&':'&amp;',
+      '<':'&lt;',
+      '>':'&gt;',
+      '"':'&quot;',
+      "'":'&#39;'
+    }[c]
+  })
+}
+
+function label(p){
+  return clean(p.categoryLabel||p.category)
+}
+
+function cat(p){
+  var c=clean(p.category).toLowerCase();
+  var l=label(p);
+
+  if(
+    c==='echoes'||
+    c==='echo'||
+    l==='เติมกระดุม'||
+    l==='กระดุม'
+  ) return 'echoes';
+
+  if(
+    c==='skins'||
+    l==='เติมสกิน'
+  ) return 'skins';
+
+  if(
+    c==='accessories'||
+    c==='accessory'||
+    l==='เติมประดับ'
+  ) return 'accessory';
+
+  if(
+    l==='แพ็กสกิน'||
+    c==='skinpack'
+  ) return 'skinpack';
+
+  if(
+    l==='สัตว์เลี้ยง'||
+    c==='pets'
+  ) return 'pets';
+
+  if(
+    l==='ห้อง'||
+    c==='room'
+  ) return 'room';
+
+  return c||l
+}
+
+function off(p){
+  return (
+    p.status==='out'||
+    p.status==='paused'||
+    (
+      !p.unlimitedStock&&
+      p.stock!=null&&
+      Number(p.stock)<=0
+    )
+  )
+}
+
+function panes(){
+  return [].slice.call(
+    document.querySelectorAll(
+      '.realProductPane[data-product-pane]'
+    )
+  )
+}
+
+function pane(name){
+  return document.querySelector(
+    '.realProductPane[data-product-pane="'+name+'"]'
+  )
+}
+
+function grid(p){
+  if(!p) return null;
+
+  var g=p.querySelector('.products');
+
+  if(!g){
+    p.innerHTML='';
+    g=document.createElement('div');
+    g.className='products';
+    p.appendChild(g)
   }
 
-  function esc(v) {
-    return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
-      return {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#39;'
-      }[c];
-    });
+  return g
+}
+
+function card(p){
+  var disabled=off(p);
+
+  var status=disabled
+    ?(
+      p.status==='paused'
+        ?'ปิดชั่วคราว'
+        :'สินค้าหมด'
+    )
+    :'พร้อมเติม';
+
+  var img=
+    p.image||
+    p.imageUrl||
+    p.icon||
+    '';
+
+  var send=
+    p.sendEnabled===true&&
+    Number(p.sendPrice||0)>0;
+
+  return (
+    '<div '+
+      'class="product ready-stock-card ymk-live-product" '+
+      'data-product-id="'+esc(p.id)+'" '+
+      'data-ready-category="'+esc(p.category||'')+'">'+
+
+      '<div class="gem ymk-live-image">'+
+        (
+          img
+            ?'<img src="'+esc(img)+'" alt="'+esc(p.name||'สินค้า')+'">'
+            :'♡'
+        )+
+      '</div>'+
+
+      '<b>'+
+        esc(p.name||'สินค้า')+
+      '</b>'+
+
+      '<span class="ready-stock-status ymk-live-status">'+
+        status+
+      '</span>'+
+
+      '<div class="ymk-store-bottom">'+
+
+        '<div class="price">'+
+          Number(p.price||0).toLocaleString('th-TH')+
+          ' บาท'+
+        '</div>'+
+
+        '<button '+
+          'type="button" '+
+          'class="ready-stock-order-btn" '+
+
+          'data-ready-name="'+
+            esc(p.name||'สินค้า')+
+          '" '+
+
+          'data-ready-price="'+
+            Number(p.price||0)+
+          '" '+
+
+          'data-ready-category="'+
+            esc(p.category||'')+
+          '" '+
+
+          'data-send-enabled="'+
+            (send?'1':'0')+
+          '" '+
+
+          'data-send-price="'+
+            (
+              send
+                ?Number(p.sendPrice||0)
+                :0
+            )+
+          '" '+
+
+          (disabled?'disabled':'')+
+        '>'+
+
+          (disabled?status:'สั่งซื้อ')+
+
+        '</button>'+
+
+      '</div>'+
+    '</div>'
+  )
+}
+
+function css(){
+  if(
+    document.getElementById(
+      'ymkV65LiveStyle'
+    )
+  ) return;
+
+  var s=document.createElement('style');
+
+  s.id='ymkV65LiveStyle';
+
+  s.textContent=`
+
+  .realProductPane .products{
+    display:grid!important;
+    grid-template-columns:
+      repeat(4,minmax(0,1fr))!important;
+    gap:10px!important;
+    width:100%!important;
   }
 
-  function labelOf(p) {
-    return clean(p.categoryLabel || p.category || 'เติมกระดุม');
+  .realProductPane .product{
+    width:auto!important;
+    min-width:0!important;
+    max-width:none!important;
+    min-height:0!important;
+
+    padding:16px 10px!important;
+
+    border:
+      1px solid
+      var(--line)!important;
+
+    border-radius:18px!important;
+
+    text-align:center!important;
+
+    background:
+      linear-gradient(
+        #fff,
+        #fff8fb
+      )!important;
+
+    box-shadow:none!important;
+
+    display:flex!important;
+    flex-direction:column!important;
+
+    box-sizing:border-box!important;
+    overflow:hidden!important;
   }
 
-  function isEcho(p) {
-    var category = clean(p.category).toLowerCase();
-    var label = labelOf(p);
+  .ymk-live-image{
+    height:74px!important;
+    width:100%!important;
 
-    return (
-      category === 'echoes' ||
-      category === 'echo' ||
-      label === 'เติมกระดุม' ||
-      label === 'กระดุม'
-    );
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+
+    margin:0!important;
+
+    font-size:34px!important;
+
+    background:transparent!important;
+    border-radius:0!important;
+
+    overflow:hidden!important;
   }
 
-  function sameCategory(p, label) {
-    label = clean(label);
+  .ymk-live-image img{
+    width:66px!important;
+    height:66px!important;
 
-    if (label === 'ทั้งหมด') return true;
+    max-width:66px!important;
+    max-height:66px!important;
 
-    if (label === 'เติมกระดุม') {
-      return isEcho(p);
+    object-fit:contain!important;
+
+    display:block!important;
+  }
+
+  .ymk-live-product b{
+    display:block!important;
+
+    margin:6px!important;
+
+    line-height:1.35!important;
+  }
+
+  .ymk-live-status{
+    display:block!important;
+
+    margin:
+      2px 0
+      4px!important;
+
+    color:#8f6a79!important;
+
+    font-size:13px!important;
+  }
+
+  .ymk-live-product
+  .ymk-store-bottom{
+    margin-top:auto!important;
+
+    display:block!important;
+
+    width:100%!important;
+  }
+
+  .ymk-live-product
+  .price{
+    font-size:20px!important;
+    font-weight:900!important;
+
+    color:#d86f99!important;
+
+    margin:
+      2px 0
+      0!important;
+
+    white-space:normal!important;
+  }
+
+  .ymk-live-product
+  .ready-stock-order-btn{
+    width:100%!important;
+    min-width:0!important;
+
+    height:auto!important;
+
+    border:0!important;
+
+    background:
+      var(--p)!important;
+
+    color:#fff!important;
+
+    border-radius:10px!important;
+
+    padding:9px!important;
+
+    margin-top:10px!important;
+
+    font-weight:900!important;
+
+    cursor:pointer!important;
+  }
+
+  .ymk-live-product
+  .ready-stock-order-btn:disabled{
+    opacity:.55!important;
+
+    cursor:not-allowed!important;
+  }
+
+  .ymk-live-product{
+    animation:
+      ymkV65ProductIn
+      .28s
+      ease
+      both;
+  }
+
+  @keyframes ymkV65ProductIn{
+    from{
+      opacity:0;
+      transform:
+        translateY(7px);
     }
 
-    /*
-      หมวดอื่นยึดชื่อจริงจาก Admin
-      เช่น แพ็กสกิน / สัตว์เลี้ยง / ห้อง
-      ไม่เดาหรือแปลงชื่อหมวดเอง
-    */
-    return (
-      labelOf(p) === label ||
-      clean(p.category) === label
-    );
+    to{
+      opacity:1;
+      transform:none;
+    }
   }
 
-  function unavailable(p) {
-    return (
-      p.status === 'out' ||
-      p.status === 'paused' ||
-      (
-        !p.unlimitedStock &&
-        p.stock != null &&
-        Number(p.stock) <= 0
-      )
-    );
+  @media(max-width:780px){
+
+    .realProductPane .products{
+      grid-template-columns:
+        repeat(
+          2,
+          minmax(0,1fr)
+        )!important;
+    }
+
+    .ymk-live-image{
+      height:70px!important;
+    }
+
+    .ymk-live-image img{
+      width:62px!important;
+      height:62px!important;
+
+      max-width:62px!important;
+      max-height:62px!important;
+    }
+
   }
 
-  /*
-    หาโซน "สินค้าพร้อมเติม" ของหน้า v65
-    แล้วใช้พื้นที่สินค้าจริงแทน Preview
-  */
-  function getArea() {
-    var title = Array.prototype.slice.call(
-      document.querySelectorAll('h1,h2,h3,h4,b,strong,div,span')
-    ).find(function (el) {
-      var t = clean(el.textContent);
+  `;
+
+  document.head.appendChild(s)
+}
+
+function rows(name){
+  return items
+    .filter(function(p){
       return (
-        t === '🎀 สินค้าพร้อมเติม' ||
-        t === 'สินค้าพร้อมเติม'
-      );
-    });
-
-    if (!title) return null;
-
-    var root =
-      title.closest(
-        'section,.card,.panel,[class*="ready"],[class*="stock"]'
-      ) ||
-      title.parentElement;
-
-    if (!root) return null;
-
-    /*
-      ซ่อน Preview เดิม
-      ไม่ได้ลบสินค้าใน Firestore
-    */
-    root.querySelectorAll(
-      '.ready-stock-grid,.products,.realProductPane'
-    ).forEach(function (el) {
-      if (!el.classList.contains('ymk-production-products')) {
-        el.style.setProperty('display', 'none', 'important');
-      }
-    });
-
-    var box = root.querySelector('.ymk-production-products');
-
-    if (!box) {
-      box = document.createElement('div');
-      box.className = 'products ymk-production-products';
-      root.appendChild(box);
-    }
-
-    return box;
-  }
-
-  function productCard(p) {
-    var disabled = unavailable(p);
-
-    var status = disabled
-      ? (p.status === 'paused'
-          ? 'ปิดชั่วคราว'
-          : 'สินค้าหมด')
-      : 'พร้อมเติม';
-
-    var sendEnabled =
-      p.sendEnabled === true &&
-      Number(p.sendPrice || 0) > 0;
-
-    var image =
-      p.image ||
-      p.imageUrl ||
-      p.icon ||
-      '';
-
-    return (
-      '<article ' +
-        'class="product ready-stock-card ymk-real-product' +
-        (disabled ? ' is-soldout' : '') +
-        '" ' +
-        'data-product-id="' + esc(p.id) + '" ' +
-        'data-ready-category="' + esc(p.category || '') + '">' +
-
-        '<div class="ymk-prod-image">' +
-
-          (
-            image
-              ? '<img src="' +
-                  esc(image) +
-                  '" alt="' +
-                  esc(p.name || 'สินค้า') +
-                  '" loading="eager">'
-              : '<span class="ymk-no-image">◉</span>'
-          ) +
-
-        '</div>' +
-
-        '<b class="ymk-prod-name">' +
-          esc(p.name || 'สินค้า') +
-        '</b>' +
-
-        '<span class="ready-stock-status ymk-prod-status">' +
-          status +
-        '</span>' +
-
-        '<div class="ymk-store-bottom">' +
-
-          '<strong class="ymk-store-price">' +
-            Number(p.price || 0).toLocaleString('th-TH') +
-            ' บาท' +
-          '</strong>' +
-
-          '<button ' +
-            'type="button" ' +
-            'class="ready-stock-order-btn" ' +
-
-            'data-ready-name="' +
-              esc(p.name || 'สินค้า') +
-            '" ' +
-
-            'data-ready-price="' +
-              Number(p.price || 0) +
-            '" ' +
-
-            'data-ready-category="' +
-              esc(p.category || '') +
-            '" ' +
-
-            'data-send-enabled="' +
-              (sendEnabled ? '1' : '0') +
-            '" ' +
-
-            'data-send-price="' +
-              (sendEnabled
-                ? Number(p.sendPrice || 0)
-                : 0) +
-            '" ' +
-
-            (disabled ? 'disabled' : '') +
-
-          '>' +
-
-            (disabled ? status : 'สั่งซื้อ') +
-
-          '</button>' +
-
-        '</div>' +
-
-      '</article>'
-    );
-  }
-
-  function addStyle() {
-    if (document.getElementById('ymkProductionProductsV10')) {
-      return;
-    }
-
-    var style = document.createElement('style');
-    style.id = 'ymkProductionProductsV10';
-
-    style.textContent = `
-
-      .ymk-production-products{
-        display:grid!important;
-        grid-template-columns:
-          repeat(auto-fill,minmax(155px,1fr))!important;
-        gap:10px!important;
-        width:100%!important;
-        box-sizing:border-box!important;
-      }
-
-      .ymk-production-products
-      .ready-stock-card{
-        min-width:0!important;
-        max-width:100%!important;
-        box-sizing:border-box!important;
-        overflow:hidden!important;
-      }
-
-      .ymk-production-products
-      .ymk-prod-image{
-        width:100%!important;
-        height:88px!important;
-
-        display:flex!important;
-        align-items:center!important;
-        justify-content:center!important;
-
-        overflow:hidden!important;
-
-        margin:
-          4px auto
-          8px!important;
-      }
-
-      .ymk-production-products
-      .ymk-prod-image img{
-        width:70px!important;
-        height:70px!important;
-
-        max-width:70px!important;
-        max-height:70px!important;
-
-        object-fit:contain!important;
-
-        display:block!important;
-      }
-
-      .ymk-production-products
-      .ymk-no-image{
-        font-size:46px!important;
-        color:#e38caf!important;
-      }
-
-      .ymk-production-products
-      .ymk-prod-name{
-        display:block!important;
-      }
-
-      .ymk-production-products
-      .ymk-prod-status{
-        display:inline-flex!important;
-        margin:6px 0!important;
-      }
-
-      .ymk-production-products
-      .ymk-store-bottom{
-        margin-top:auto!important;
-
-        display:flex!important;
-        align-items:center!important;
-        justify-content:space-between!important;
-
-        gap:8px!important;
-      }
-
-      .ymk-production-products
-      .ymk-store-price{
-        white-space:nowrap!important;
-      }
-
-      /*
-        หมวด "ทั้งหมด"
-        มีสินค้าหลายรายการจึงเลื่อนภายในได้
-      */
-      .ymk-production-products.ymk-all{
-        max-height:520px!important;
-        overflow-y:auto!important;
-        overflow-x:hidden!important;
-
-        overscroll-behavior:contain;
-
-        padding-right:4px;
-      }
-
-      /*
-        animation ใช้กับสินค้า Production จริงเท่านั้น
-      */
-      .ymk-production-products
-      .ymk-real-product{
-        animation:
-          ymkProductionProductIn
-          .32s
-          ease
-          both;
-      }
-
-      @keyframes ymkProductionProductIn{
-        from{
-          opacity:0;
-          transform:translateY(7px);
-        }
-
-        to{
-          opacity:1;
-          transform:translateY(0);
-        }
-      }
-
-      @media(max-width:699px){
-
-        .ymk-production-products{
-          grid-template-columns:
-            repeat(2,minmax(0,1fr))!important;
-        }
-
-        .ymk-production-products
-        .ymk-prod-image{
-          height:84px!important;
-        }
-
-        .ymk-production-products
-        .ymk-prod-image img{
-          width:66px!important;
-          height:66px!important;
-
-          max-width:66px!important;
-          max-height:66px!important;
-        }
-
-      }
-
-    `;
-
-    document.head.appendChild(style);
-  }
-
-  function render() {
-    var box = getArea();
-
-    if (!box || !items.length) {
-      return;
-    }
-
-    addStyle();
-
-    var rows = items
-      .filter(function (p) {
-        return (
-          p.visible !== false &&
-          sameCategory(p, activeLabel)
-        );
-      })
-      .sort(function (a, b) {
-
-        var categoryOrder =
-          Number(a.categoryOrder || 999) -
-          Number(b.categoryOrder || 999);
-
-        if (categoryOrder) {
-          return categoryOrder;
-        }
-
-        return (
-          Number(a.order || 0) -
-          Number(b.order || 0)
-        );
-      });
-
-    box.classList.toggle(
-      'ymk-all',
-      activeLabel === 'ทั้งหมด'
-    );
-
-    box.innerHTML =
-      rows.map(productCard).join('');
-
-    /*
-      แจ้ง script แบบส่ง
-      ให้ตรวจสินค้าใหม่อีกครั้ง
-    */
-    document.dispatchEvent(
-      new CustomEvent(
-        'ymk-storefront-products-rendered',
-        {
-          detail: {
-            count: rows.length,
-            category: activeLabel
-          }
-        }
+        p.visible!==false&&
+        (
+          name==='all'||
+          cat(p)===name
+        )
       )
-    );
-  }
+    })
+    .sort(function(a,b){
+
+      var categoryOrder=
+        Number(a.categoryOrder||999)-
+        Number(b.categoryOrder||999);
+
+      if(categoryOrder){
+        return categoryOrder
+      }
+
+      return (
+        Number(a.order||0)-
+        Number(b.order||0)
+      )
+    })
+}
+
+function render(){
+  css();
 
   /*
-    อ่านชื่อแท็บตามที่หน้าเว็บแสดงจริง
-    ไม่เปลี่ยน "แพ็กสกิน" เป็น "สกิน"
+    "ทั้งหมด" ใช้ pane กระดุมเป็นพื้นที่แสดง
+    แต่เอาสินค้าทุกหมวดมารวมกัน
   */
-  function getTabLabel(el) {
-    if (!el) return '';
+  var target=
+    active==='all'
+      ?'echoes'
+      :active;
 
-    var text = clean(el.textContent);
+  var p=pane(target);
 
-    var labels = [
-      'ทั้งหมด',
-      'เติมกระดุม',
-      'แพ็กสกิน',
-      'สัตว์เลี้ยง',
-      'ห้อง',
-      'เติมสกิน',
-      'เติมประดับ'
-    ];
+  if(!p) return;
 
-    return labels.indexOf(text) !== -1
-      ? text
-      : '';
+  panes().forEach(function(x){
+    x.classList.toggle(
+      'on',
+      x===p
+    )
+  });
+
+  var g=grid(p);
+
+  if(!g) return;
+
+  var list=rows(active);
+
+  g.innerHTML=
+    list.length
+      ?list.map(card).join('')
+      :(
+        '<div class="categoryPlaceholder">'+
+          '<b>♡ ยังไม่มีสินค้า</b>'+
+        '</div>'
+      );
+
+  /*
+    ให้ระบบปุ่ม "แบบส่ง"
+    ตรวจสินค้าที่ render ใหม่
+  */
+  document.dispatchEvent(
+    new CustomEvent(
+      'ymk-storefront-products-rendered',
+      {
+        detail:{
+          count:list.length,
+          category:active
+        }
+      }
+    )
+  )
+}
+
+function bind(){
+
+  document.addEventListener(
+    'click',
+    function(e){
+
+      var b=
+        e.target.closest(
+          '.catbar [data-maincat]'
+        );
+
+      if(!b) return;
+
+      active=
+        clean(b.dataset.maincat)||
+        'all';
+
+      setTimeout(
+        render,
+        0
+      )
+    },
+    true
+  )
+}
+
+function loadCache(){
+  try{
+
+    var a=
+      JSON.parse(
+        localStorage.getItem(CACHE)||
+        '[]'
+      );
+
+    if(
+      Array.isArray(a)&&
+      a.length
+    ){
+      items=a;
+
+      window.YMK_PRODUCTION_PRODUCTS=
+        items;
+
+      render()
+    }
+
+  }catch(e){}
+}
+
+function connect(){
+
+  if(
+    !window.firebase||
+    !firebase.firestore
+  ){
+    setTimeout(
+      connect,
+      120
+    );
+
+    return
   }
 
-  function bindTabs() {
-    document.addEventListener(
-      'click',
-      function (event) {
+  firebase
+    .firestore()
+    .collection('products')
+    .onSnapshot(
+      function(snapshot){
 
-        var tab =
-          event.target.closest(
-            'button,a,[role="tab"]'
+        items=
+          snapshot.docs.map(
+            function(doc){
+
+              return Object.assign(
+                {
+                  id:doc.id
+                },
+                doc.data()
+              )
+            }
           );
 
-        if (!tab) return;
-
-        var label = getTabLabel(tab);
-
-        if (!label) return;
-
-        activeLabel = label;
-
-        setTimeout(render, 0);
-      },
-      true
-    );
-  }
-
-  /*
-    cache นี้เก็บเฉพาะข้อมูลที่เคยอ่าน
-    สำเร็จจาก collection products จริง
-  */
-  function loadCache() {
-    try {
-      var cache =
-        JSON.parse(
-          localStorage.getItem(CACHE) ||
-          '[]'
-        );
-
-      if (
-        Array.isArray(cache) &&
-        cache.length
-      ) {
-        items = cache;
-
-        window.YMK_PRODUCTION_PRODUCTS =
+        window.YMK_PRODUCTION_PRODUCTS=
           items;
 
-        render();
+        /*
+          cache เฉพาะข้อมูลสินค้า
+          Production จริง
+        */
+        try{
+          localStorage.setItem(
+            CACHE,
+            JSON.stringify(items)
+          )
+        }catch(e){}
+
+        render()
+      },
+
+      function(error){
+        console.warn(
+          'production products failed',
+          error
+        )
       }
+    )
+}
 
-    } catch (e) {
-      console.warn(
-        'production cache unavailable',
-        e
-      );
-    }
-  }
+function boot(){
 
-  function saveCache() {
-    try {
-      localStorage.setItem(
-        CACHE,
-        JSON.stringify(items)
-      );
-    } catch (e) {}
-  }
+  css();
 
-  function connectProduction() {
+  bind();
 
-    if (
-      !window.firebase ||
-      !firebase.firestore
-    ) {
-      setTimeout(
-        connectProduction,
-        120
-      );
+  /*
+    โหลดสินค้าจริงล่าสุดจาก cache ก่อน
+    แล้ว Firestore sync ตามหลัง
+  */
+  loadCache();
 
-      return;
-    }
+  connect();
 
-    firebase
-      .firestore()
-      .collection('products')
-      .onSnapshot(
-        function (snapshot) {
+  /*
+    เผื่อ UI v65 สร้าง pane
+    หลัง script เริ่มทำงาน
+  */
+  setTimeout(
+    render,
+    150
+  );
 
-          items =
-            snapshot.docs.map(
-              function (doc) {
-                return Object.assign(
-                  { id: doc.id },
-                  doc.data()
-                );
-              }
-            );
+  setTimeout(
+    render,
+    400
+  )
+}
 
-          window.YMK_PRODUCTION_PRODUCTS =
-            items;
-
-          /*
-            cache หลังจากอ่าน Production
-            สำเร็จเท่านั้น
-          */
-          saveCache();
-
-          render();
-        },
-
-        function (error) {
-          console.warn(
-            'production products failed',
-            error
-          );
-        }
-      );
-  }
-
-  function boot() {
-
-    addStyle();
-
-    bindTabs();
-
-    /*
-      ลำดับสำคัญ:
-      1. สินค้าจริงครั้งล่าสุดจาก cache
-      2. Production Firestore อัปเดตตามหลัง
-    */
-    loadCache();
-
-    connectProduction();
-
-    /*
-      หน้า v65 บางส่วนสร้าง DOM ภายหลัง
-      ถ้า cache โหลดก่อน container เกิด
-      ให้ลอง render อีกครั้ง
-    */
-    setTimeout(render, 150);
-    setTimeout(render, 400);
-    setTimeout(render, 900);
-  }
-
-  if (
-    document.readyState === 'loading'
-  ) {
-    document.addEventListener(
-      'DOMContentLoaded',
-      boot
-    );
-  } else {
-    boot();
-  }
+if(
+  document.readyState===
+  'loading'
+){
+  document.addEventListener(
+    'DOMContentLoaded',
+    boot
+  )
+}else{
+  boot()
+}
 
 })();
