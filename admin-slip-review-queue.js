@@ -52,7 +52,7 @@
 
   async function approve(id,data){
     const orderId=await uniqueOrderId(),now=firebase.firestore.FieldValue.serverTimestamp(),batch=db.batch();
-    batch.set(db.collection('orders').doc(orderId),{id:orderId,item:data.item||'',pack:data.pack||'',price:data.price||'',paymentMethod:data.paymentMethod||'',uid:data.uid||'',server:data.server||'Asia',name:data.name||'',paymentStatus:'ชำระแล้ว',shopStatus:'รอเติม',orderReady:true,slipAttached:true,slipVerified:false,slipVerificationMode:'manual-approved',sourceReviewId:id,createdAt:now},{merge:true});
+    batch.set(db.collection('orders').doc(orderId),{id:orderId,item:data.item||'',pack:data.pack||'',price:data.price||'',paymentMethod:data.paymentMethod||'',uid:data.uid||'',server:data.server||'Asia',name:data.name||'',memberId:data.memberId||'',paymentStatus:'ชำระแล้ว',shopStatus:'รอเติม',orderReady:true,slipAttached:true,slipVerified:false,slipVerificationMode:'manual-approved',sourceReviewId:id,createdAt:now},{merge:true});
     batch.set(db.collection('order_slips').doc(orderId),{orderId,imageData:data.imageData||'',mimeType:data.mimeType||'image/jpeg',width:data.width||0,height:data.height||0,bytes:data.bytes||0,verified:false,verificationMode:'manual-approved',reviewPending:false,sourceReviewId:id,createdAt:now});
     batch.set(db.collection('order_status').doc(orderId),{status:'รอเติม',paymentStatus:'ชำระแล้ว',orderReady:true,updatedAt:now},{merge:true});
     batch.set(db.collection('order_status').doc(id),{status:'ยืนยันแล้ว',paymentStatus:'ชำระแล้ว',orderReady:true,approvedOrderId:orderId,updatedAt:now},{merge:true});
