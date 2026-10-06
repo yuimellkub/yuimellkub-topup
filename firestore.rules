@@ -1,0 +1,29 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn(){ return request.auth != null; }
+    function admin(){ return signedIn() && request.auth.uid == 'xu43sk3PvOddYjmhyJPBXcCdmUn2'; }
+    match /products/{id} { allow read: if true; allow write: if admin(); }
+    match /orders/{id} {
+      allow read, update, delete: if admin();
+      allow create: if request.resource.data.paymentMethod != 'เครดิต' || admin();
+    }
+    match /order_status/{id} { allow read: if true; allow write: if admin(); }
+    match /order_slips/{id} { allow read, write: if admin(); }
+    match /members/{uid} {
+      allow read: if admin() || (signedIn() && request.auth.uid == uid);
+      allow create: if signedIn() && request.auth.uid == uid && request.resource.data.credit == 0;
+      allow update, delete: if admin();
+    }
+    match /credit_requests/{id} {
+      allow read: if admin() || (signedIn() && resource.data.memberId == request.auth.uid);
+      allow create: if signedIn() && request.resource.data.memberId == request.auth.uid && request.resource.data.status == 'pending';
+      allow update, delete: if admin();
+    }
+    match /credit_history/{id} {
+      allow read: if admin() || (signedIn() && resource.data.memberId == request.auth.uid);
+      allow write: if admin();
+    }
+    match /admin_push_tokens/{id} { allow read, write: if admin(); }
+  }
+}
