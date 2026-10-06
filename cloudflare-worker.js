@@ -103,6 +103,7 @@ async function saveManualSlip(env,body){
     uid:fsString(String(body.uid||'').slice(0,100)),
     server:fsString(String(body.server||'Asia').slice(0,40)),
     name:fsString(String(body.name||'').slice(0,100)),
+    memberId:fsString(String(body.memberId||'').slice(0,128)),
     imageData:fsString(imageData),
     mimeType:fsString('image/jpeg'),
     width:fsInt(Math.max(0,Math.min(5000,Number(body.width)||0))),
