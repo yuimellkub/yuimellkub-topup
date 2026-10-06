@@ -1,29 +1,48 @@
 rules_version = '2';
 service cloud.firestore {
-  match /databases/{database}/documents {
-    function signedIn(){ return request.auth != null; }
-    function admin(){ return signedIn() && request.auth.uid == 'xu43sk3PvOddYjmhyJPBXcCdmUn2'; }
-    match /products/{id} { allow read: if true; allow write: if admin(); }
-    match /orders/{id} {
-      allow read, update, delete: if admin();
-      allow create: if request.resource.data.paymentMethod != 'เครดิต' || admin();
-    }
-    match /order_status/{id} { allow read: if true; allow write: if admin(); }
-    match /order_slips/{id} { allow read, write: if admin(); }
-    match /members/{uid} {
-      allow read: if admin() || (signedIn() && request.auth.uid == uid);
-      allow create: if signedIn() && request.auth.uid == uid && request.resource.data.credit == 0;
-      allow update, delete: if admin();
-    }
-    match /credit_requests/{id} {
-      allow read: if admin() || (signedIn() && resource.data.memberId == request.auth.uid);
-      allow create: if signedIn() && request.resource.data.memberId == request.auth.uid && request.resource.data.status == 'pending';
-      allow update, delete: if admin();
-    }
-    match /credit_history/{id} {
-      allow read: if admin() || (signedIn() && resource.data.memberId == request.auth.uid);
-      allow write: if admin();
-    }
-    match /admin_push_tokens/{id} { allow read, write: if admin(); }
+ match /databases/{database}/documents {
+  function signed(){return request.auth != null;}
+  function admin(){return signed() && request.auth.uid == 'xu43sk3PvOddYjmhyJPBXcCdmUn2';}
+  function memberPath(){return /databases/$(database)/documents/members/$(request.auth.uid);}
+  function orderPath(id){return /databases/$(database)/documents/orders/$(id);}
+  match /products/{id}{allow read:if true;allow write:if admin();}
+  match /orders/{id}{
+   allow read,update,delete:if admin() || (signed() && resource.data.memberId==request.auth.uid);
+   allow create:if admin() || request.resource.data.paymentMethod!='เครดิต' || (
+    signed() &&
+    request.resource.data.memberId==request.auth.uid &&
+    request.resource.data.creditAmount is int &&
+    request.resource.data.creditAmount>0 &&
+    get(memberPath()).data.credit-request.resource.data.creditAmount==getAfter(memberPath()).data.credit &&
+    getAfter(memberPath()).data.lastCreditOrderId==id
+   );
   }
+  match /order_status/{id}{
+   allow read:if true;
+   allow write:if admin() || (signed() && getAfter(orderPath(id)).data.memberId==request.auth.uid && getAfter(orderPath(id)).data.paymentMethod=='เครดิต');
+  }
+  match /order_slips/{id}{allow read,write:if admin();}
+  match /members/{uid}{
+   allow read:if admin() || (signed() && request.auth.uid==uid);
+   allow create:if signed() && request.auth.uid==uid && request.resource.data.credit==0;
+   allow update:if admin() || (signed() && request.auth.uid==uid &&
+    request.resource.data.diff(resource.data).affectedKeys().hasOnly(['credit','lastCreditOrderId','updatedAt']) &&
+    request.resource.data.credit>=0 && request.resource.data.credit<resource.data.credit &&
+    getAfter(orderPath(request.resource.data.lastCreditOrderId)).data.memberId==uid &&
+    getAfter(orderPath(request.resource.data.lastCreditOrderId)).data.creditAmount==resource.data.credit-request.resource.data.credit
+   );
+   allow delete:if admin();
+  }
+  match /credit_requests/{id}{
+   allow read:if admin() || (signed() && resource.data.memberId==request.auth.uid);
+   allow create:if signed() && request.resource.data.memberId==request.auth.uid && request.resource.data.status=='pending';
+   allow update,delete:if admin();
+  }
+  match /credit_history/{id}{
+   allow read:if admin() || (signed() && resource.data.memberId==request.auth.uid);
+   allow create:if admin() || (signed() && request.resource.data.memberId==request.auth.uid && request.resource.data.type=='purchase' && request.resource.data.amount<0 && getAfter(orderPath(request.resource.data.orderId)).data.memberId==request.auth.uid);
+   allow update,delete:if admin();
+  }
+  match /admin_push_tokens/{id}{allow read,write:if admin();}
+ }
 }
