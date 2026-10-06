@@ -1,0 +1,252 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Yuimellkub Admin Preview</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#fff6fa;color:#6f4658}.wrap{max-width:920px;margin:auto;padding:24px 16px 60px}.head{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}.title{font-weight:900;font-size:25px;color:#8f4f68}.sub{color:#a16b80;font-size:13px;margin-top:4px}.notice{margin:16px 0;padding:13px 14px;border:1px solid #f1c7d8;border-radius:14px;background:#fff0f6;font-size:12px;line-height:1.6}.actions,.adminTabs{display:flex;gap:8px;flex-wrap:wrap}.btn{border:0;border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer}.btn.primary,.adminTab.active{background:#e889ad;color:#fff}.btn.soft,.adminTab{background:#fff0f6;color:#92566e;border:1px solid #efc8d7}.danger{background:#fff;color:#a65367;border:1px solid #efc8d7}
+.adminTabs{margin:14px 0}.adminView{display:none}.adminView.active{display:block}.panel{background:#fff;border:1px solid #f2ccdc;border-radius:18px;padding:16px;margin-top:14px;box-shadow:0 8px 24px rgba(190,105,145,.06)}.panel h2{margin:0;color:#8f4f68;font-size:18px}
+.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}.summary>div{border:1px solid #f2ccdc;border-radius:14px;padding:12px;background:#fffafd}.summary b{display:block;color:#d96f9a;font-size:20px;margin-top:4px}
+.toolbar{display:grid;grid-template-columns:1fr 180px auto;gap:8px;margin:14px 0}.toolbar input,.toolbar select{width:100%;border:1px solid #efc8d7;border-radius:11px;padding:10px;background:#fff;color:#71465a}
+.item{background:#fff;border:1px solid #f2ccdc;border-radius:18px;padding:14px;margin-top:10px}.itemTop{display:flex;justify-content:space-between;gap:12px}.oid{font-weight:900;color:#8f4f68}.time{font-size:11px;color:#af8193}.price{font-weight:900;font-size:20px;color:#d96f9a}.rows{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}.row{font-size:11px;background:#fff7fa;border-radius:10px;padding:9px}.row b{display:block;color:#8f5d71}.slip{border:1px dashed #efc8d7;border-radius:11px;padding:10px;font-size:11px;margin-bottom:10px}.pill{display:inline-block;padding:5px 9px;border-radius:999px;background:#eef9f1;color:#48845a;font-size:11px;font-weight:800}
+.oldGrid{display:grid;gap:14px}.oldCard{background:#fff;border:1px solid #f2ccdc;border-radius:18px;padding:16px}.productAdmin{margin-top:22px}.productGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.productEdit{background:#fff;border:1px solid #f2ccdc;border-radius:18px;padding:14px}.fakeImg{height:110px;background:#fff7fa;border:1px solid #f2ccdc;border-radius:14px;display:grid;place-items:center;color:#a16b80}.account{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center}.balance{font-size:17px;font-weight:900;color:#d96f9a}.preview{position:fixed;right:12px;bottom:12px;padding:7px 10px;border-radius:999px;background:#8f4f68;color:#fff;font-size:10px;font-weight:800}
+@media(max-width:700px){.summary,.rows,.toolbar,.account,.productGrid{grid-template-columns:1fr}}
+</style>
+<style id="ym-admin-font-smooth-v2">
+/* Typography + smoother UI only */
+html{scroll-behavior:smooth}
+body{
+  font-family:"Noto Sans Thai","Leelawadee UI","Tahoma",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-weight:400;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+.title,h1,h2,.oid,.price,.balance,.btn,.pill{letter-spacing:-.015em}
+.title{font-weight:800}
+h1,h2{font-weight:750}
+.btn{font-weight:700}
+.sub,.time,.row,.slip{line-height:1.6}
+.adminView{display:none}
+.adminView.active{
+  display:block;
+  animation:ymAdminViewIn .24s ease both;
+}
+.btn,.adminTab,.item,.oldCard,.panel,.productEdit{
+  transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease,background-color .18s ease,opacity .18s ease;
+}
+.btn:hover:not(:disabled){transform:translateY(-1px)}
+.btn:active:not(:disabled){transform:translateY(0) scale(.985)}
+.adminTab:hover:not(.active){background:#fff7fa}
+.item:hover,.oldCard:hover,.productEdit:hover{box-shadow:0 9px 24px rgba(190,105,145,.08)}
+input,select,button{font-family:inherit}
+input:focus,select:focus{
+  outline:none;
+  border-color:#e889ad !important;
+  box-shadow:0 0 0 3px rgba(232,137,173,.10);
+}
+@keyframes ymAdminViewIn{
+  from{opacity:0;transform:translateY(5px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+
+
+<style id="ym-admin-font-match-v51">
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap');
+body,button,input,select,textarea,
+.title,h1,h2,.sub,.btn,.adminTab,.panel,.item,.oldCard,.productEdit,
+.oid,.time,.price,.balance,.row,.slip,.pill{
+  font-family:"Noto Sans Thai",Tahoma,sans-serif !important;
+}
+body{font-weight:400}
+.title,h1,h2{font-weight:800}
+.btn,.adminTab,.oid,.pill{font-weight:700}
+.price,.balance{font-weight:800;letter-spacing:0}
+</style>
+
+<style id="ym-admin-v4-clean-member-state">
+.emptyState{min-height:210px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:5px;border:1px dashed #efc8d7;border-radius:16px;background:#fffafd;color:#a16b80;margin-top:14px;padding:28px}
+.emptyState .emptyHeart{font-size:30px;line-height:1;color:#e889ad;margin-bottom:3px}
+.emptyState b{font-size:14px;color:#8f4f68}
+.emptyState span{font-size:12px;color:#ad7b8f;line-height:1.65}
+</style>
+
+<style id="ym-admin-v7-clean-static-preview">
+/* v7: old mock sales/order figures are preview-only and should not be mistaken for live data */
+#orders .summary>div b{font-size:0!important}
+#orders .summary>div b::after{content:"0 บาท";font-size:20px}
+#orders .summary>div .time{font-size:0}
+#orders .summary>div .time::after{content:"0 ออเดอร์สำเร็จ";font-size:11px}
+#orders .oldGrid{display:none!important}
+#orders .panel:nth-of-type(4)::after{
+ content:"ยังไม่มีออเดอร์ใน Preview";
+ display:block;text-align:center;padding:28px;color:#aa7c8e;
+}
+</style>
+
+</head><body><div class="wrap">
+<div class="head"><div><div class="title">♡ Yuimellkub จัดการออเดอร์</div><div class="sub">ดูออเดอร์ออนไลน์จากหน้าเว็บ • สลิปตรวจผ่าน Messenger</div></div><div class="actions"><button class="btn primary">เข้าสู่ระบบร้าน</button><button class="btn soft">รีเฟรช</button><button class="btn soft">🔔 เปิดแจ้งเตือน</button><button class="btn danger">ล้างออเดอร์</button></div></div>
+<div class="adminTabs"><button class="btn adminTab active" data-tab="orders">ระบบเดิม</button><button class="btn adminTab" data-tab="credit">อนุมัติเครดิต</button><button class="btn adminTab" data-tab="accounts">จัดการบัญชี</button></div>
+
+<section id="orders" class="adminView active">
+<div class="panel"><h2>♡ การตรวจสอบสลิป</h2><div class="sub">โหมดอัตโนมัติจะใช้ EasySlip • ถ้า EasySlip หมดโควตา/แพ็กหมด/ระบบขัดข้อง ออเดอร์จะเปลี่ยนเป็นให้ร้านตรวจเองอัตโนมัติ</div><div class="actions" style="margin-top:12px"><button class="btn primary">ระบบอัตโนมัติ</button><button class="btn soft">ร้านตรวจเอง</button></div></div>
+<div class="notice">หลังบ้านนี้รองรับ <b>Firebase ออนไลน์</b> แล้ว หากยังไม่ได้ใส่ค่า Firebase จะกลับไปใช้โหมดในเบราว์เซอร์นี้อัตโนมัติ</div>
+<div class="panel"><h2>♡ สรุปยอดขาย</h2><div class="summary"><div>วันนี้<b>30 บาท</b><span class="time">1 ออเดอร์สำเร็จ</span></div><div>เดือนนี้<b>13,945 บาท</b><span class="time">40 ออเดอร์สำเร็จ</span></div><div>ปีนี้<b>48,175 บาท</b><span class="time">128 ออเดอร์สำเร็จ</span></div></div></div>
+<div class="panel"><div class="toolbar"><input placeholder="ค้นหาเลขออเดอร์ / UID / ชื่อ / สินค้า"><select><option>ทุกสถานะ</option></select><button class="btn soft">ล้างตัวกรอง</button></div><div class="sub">แสดง 100 จาก 100 ออเดอร์</div></div>
+<div class="oldGrid"><div class="oldCard"><div class="itemTop"><div><div class="oid">YMK261006-141355</div><div class="time">6/10/2569 14:13:56</div></div><div class="price">30 บาท</div></div><div style="margin-top:10px"><span class="pill">✓ เติมสำเร็จ</span></div></div><div class="oldCard"><div class="itemTop"><div><div class="oid">YMK261005-215627</div><div class="time">5/10/2569 21:56:28</div></div><div class="price">380 บาท</div></div><div style="margin-top:10px"><span class="pill">✓ เติมสำเร็จ</span></div></div></div>
+<section class="productAdmin"><div class="head"><div><h2 style="margin:0;color:#8f4f68">♡ จัดการสินค้าพร้อมเติม</h2><div class="sub">เพิ่ม/แก้ชื่อ ราคา รายละเอียด รูป หมวดหมู่ สถานะ และจัดเก็บสต๊อกสินค้าได้เองจากหลังบ้าน</div></div><div class="actions"><button class="btn primary">+ เพิ่มสินค้า</button><button class="btn soft">ใส่แพ็กกระดุมเริ่มต้น</button></div></div><div class="productGrid" style="margin-top:12px"><div class="productEdit"><div class="fakeImg">รูปสินค้าเดิม</div><b>66 กระดุม</b><div class="sub">30 บาท • พร้อมเติม</div></div><div class="productEdit"><div class="fakeImg">รูปสินค้าเดิม</div><b>203 กระดุม</b><div class="sub">90 บาท • พร้อมเติม</div></div></div></section>
+</section>
+
+<section id="credit" class="adminView">
+<div class="panel">
+  <h2>♡ อนุมัติเติมเครดิต</h2>
+  <div class="sub">ตรวจสอบคำขอเติมเครดิตและสลิปจากสมาชิก ก่อนอนุมัติยอดเข้ากระเป๋าเครดิต</div>
+  <div class="toolbar">
+    <input placeholder="ค้นหารหัสคำขอ / ชื่อ / อีเมล">
+    <select><option>รอตรวจสอบ</option><option>อนุมัติแล้ว</option><option>ไม่อนุมัติ</option></select>
+    <button class="btn soft">ค้นหา</button>
+  </div>
+  <div class="emptyState">
+    <div class="emptyHeart">♡</div>
+    <b>ยังไม่มีคำขอเติมเครดิต</b>
+    <span>เมื่อสมาชิกส่งคำขอเติมเครดิต รายการจะมาแสดงที่หน้านี้</span>
+  </div>
+</div>
+</section>
+
+<section id="accounts" class="adminView">
+<div class="panel">
+  <h2>♡ จัดการบัญชีสมาชิก</h2>
+  <div class="sub">ค้นหาและดูข้อมูลสมาชิก ยอดเครดิต ประวัติเครดิต และสถานะบัญชี</div>
+  <div class="toolbar">
+    <input placeholder="ค้นหาชื่อเล่น / อีเมล / UID">
+    <select><option>ทุกบัญชี</option><option>ใช้งานปกติ</option><option>ระงับ</option></select>
+    <button class="btn soft">ค้นหา</button>
+  </div>
+  <div class="emptyState">
+    <div class="emptyHeart">♡</div>
+    <b>ยังไม่มีบัญชีสมาชิก</b>
+    <span>บัญชีจะปรากฏหลังจากผู้ใช้สมัครสมาชิกสำเร็จเท่านั้น</span>
+  </div>
+</div>
+</section>
+</div><div class="preview">LOCAL PREVIEW</div>
+<script>
+document.querySelectorAll('.adminTab').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.adminTab').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.adminView').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(b.dataset.tab).classList.add('active')}));
+
+</script>
+<script id="ym-preview-shared-store-v3">
+window.YMPreviewStore=(function(){
+ const K='ymk_preview_shared_v3', RESET='ymk_preview_reset_v57_done';
+ const blank=()=>({members:[],creditRequests:[],creditHistory:[],session:null});
+ if(!localStorage.getItem(RESET)){
+   ['ymkPreviewMemberV3','ymkPreviewWalletV3','ymkPreviewWalletTxV3','ymkPreviewCreditPendingV4',
+    'ymk_preview_shared_v1','ymk_preview_shared_v2'].forEach(k=>localStorage.removeItem(k));
+   localStorage.setItem(RESET,'1');
+ }
+ function load(){try{return Object.assign(blank(),JSON.parse(localStorage.getItem(K)||'{}'))}catch(e){return blank()}}
+ function save(s){localStorage.setItem(K,JSON.stringify(s));window.dispatchEvent(new CustomEvent('ympreviewchange'));return s}
+ const uid=p=>p+'-'+Date.now().toString(36).toUpperCase()+'-'+Math.random().toString(36).slice(2,6).toUpperCase();
+ const safe=m=>{if(!m)return null;let x={...m};delete x.password;return x};
+ function legacy(m){localStorage.setItem('ymkPreviewWalletV3',String(Number(m?.credit||0)))}
+ function member(s){return s.members.find(x=>x.id===s.session)}
+ return {
+  load,
+  signup({nickname,email,password}){
+   const s=load(),em=String(email||'').trim().toLowerCase(),nick=String(nickname||'').trim(),pw=String(password||'');
+   if(!nick||!em||!pw)throw Error('กรุณากรอกข้อมูลสมัครสมาชิกให้ครบค่ะ');
+   if(pw.length<6)throw Error('รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษรค่ะ');
+   if(s.members.some(x=>x.email===em))throw Error('อีเมลนี้สมัครสมาชิกแล้วค่ะ');
+   const m={id:uid('MEM'),nickname:nick,email:em,password:pw,credit:0,status:'active',createdAt:Date.now()};
+   s.members.push(m);s.session=m.id;save(s);legacy(m);return safe(m);
+  },
+  login({email,password}){
+   const s=load(),em=String(email||'').trim().toLowerCase(),pw=String(password||'');
+   const m=s.members.find(x=>x.email===em&&x.password===pw&&x.status==='active');
+   if(!m)throw Error('อีเมลหรือรหัสผ่านไม่ถูกต้องค่ะ');
+   s.session=m.id;save(s);legacy(m);return safe(m);
+  },
+  logout(){const s=load();s.session=null;save(s);legacy(null)},
+  me(){const s=load(),m=member(s);if(m)legacy(m);return safe(m)},
+  members(){return load().members.map(safe)},
+  requests(){return load().creditRequests},
+  history(mid){return load().creditHistory.filter(x=>x.memberId===mid)},
+  requestCredit({amount,slipName,slipData}){
+   const s=load(),m=member(s),a=Math.floor(Number(amount));
+   if(!m)throw Error('กรุณาเข้าสู่ระบบก่อนเติมเครดิตค่ะ');
+   if(!(a>0))throw Error('กรุณากรอกจำนวนเครดิตที่ต้องการเติมค่ะ');
+   if(!slipData)throw Error('กรุณาแนบสลิปชำระเงินก่อนส่งตรวจสอบค่ะ');
+   if(s.creditRequests.some(x=>x.memberId===m.id&&x.status==='pending'))throw Error('มีรายการเติมเครดิตที่กำลังรอตรวจสอบอยู่แล้วค่ะ');
+   const r={id:uid('YMK-CREDIT'),memberId:m.id,nickname:m.nickname,email:m.email,amount:a,slipName:slipName||'slip',slipData,status:'pending',createdAt:Date.now()};
+   s.creditRequests.unshift(r);save(s);return r;
+  },
+  approve(id){
+   const s=load(),r=s.creditRequests.find(x=>x.id===id);if(!r||r.status!=='pending')return false;
+   const m=s.members.find(x=>x.id===r.memberId);if(!m)return false;
+   m.credit=Number(m.credit||0)+Number(r.amount||0);r.status='approved';r.updatedAt=Date.now();
+   s.creditHistory.unshift({id:uid('CRH'),memberId:m.id,label:'เติมเครดิต',amount:Number(r.amount||0),createdAt:Date.now()});
+   save(s);if(s.session===m.id)legacy(m);return true;
+  },
+  reject(id){const s=load(),r=s.creditRequests.find(x=>x.id===id);if(!r||r.status!=='pending')return false;r.status='rejected';r.updatedAt=Date.now();save(s);return true},
+  debit(amount,label){
+   const s=load(),m=member(s),a=Math.floor(Number(amount));
+   if(!m)throw Error('กรุณาเข้าสู่ระบบก่อนชำระด้วยเครดิตค่ะ');
+   if(!(a>0))throw Error('ยอดชำระไม่ถูกต้องค่ะ');
+   if(Number(m.credit||0)<a)throw Error('เครดิตไม่เพียงพอ กรุณาเติมเครดิตก่อน');
+   m.credit=Number(m.credit||0)-a;
+   s.creditHistory.unshift({id:uid('CRH'),memberId:m.id,label:label||'ชำระด้วยเครดิต',amount:-a,createdAt:Date.now()});
+   save(s);legacy(m);return Number(m.credit||0);
+  }
+ };
+})();
+</script>
+
+<style id="ym-admin-v8-live-css">
+.ymLiveItem{background:#fff;border:1px solid #f2ccdc;border-radius:16px;padding:13px;margin-top:10px}.ymLiveTop{display:flex;justify-content:space-between;gap:10px}.ymLiveMeta{font-size:11px;color:#aa7c8e}.ymLiveAmount{font-weight:800;font-size:18px;color:#d96f9a}.ymLiveActions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.ymLiveStatus{display:inline-block;margin-top:8px;padding:4px 8px;border-radius:999px;background:#fff0f6;border:1px solid #efc8d7;font-size:10px;font-weight:700}
+.ymSlipThumb{display:block;max-width:180px;max-height:150px;object-fit:contain;margin-top:10px;border:1px solid #f2ccdc;border-radius:12px;background:#fff8fb;cursor:pointer}
+.ymSlipModal{position:fixed;inset:0;z-index:99999;background:rgba(61,38,48,.66);display:none;align-items:center;justify-content:center;padding:20px}.ymSlipModal.show{display:flex}.ymSlipModal img{max-width:min(760px,96vw);max-height:88vh;border-radius:16px;background:#fff}.ymSlipModal button{position:absolute;right:22px;top:18px;border:0;border-radius:999px;width:38px;height:38px;font-size:22px;cursor:pointer}
+</style>
+<div class="ymSlipModal" id="ymSlipModal"><button type="button" id="ymSlipClose">×</button><img id="ymSlipLarge" alt="สลิปเติมเครดิต"></div>
+<script id="ym-admin-connected-v8">
+document.addEventListener('DOMContentLoaded',function(){
+ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),dt=n=>new Date(n).toLocaleString('th-TH');
+ const modal=document.getElementById('ymSlipModal'),large=document.getElementById('ymSlipLarge');
+ function openSlip(id){const r=YMPreviewStore.requests().find(x=>x.id===id);if(!r?.slipData){alert('ไม่พบรูปสลิป');return}large.src=r.slipData;modal.classList.add('show')}
+ document.getElementById('ymSlipClose').onclick=()=>modal.classList.remove('show');modal.onclick=e=>{if(e.target===modal)modal.classList.remove('show')};
+ function renderCredit(){
+  const p=document.querySelector('#credit .panel');if(!p)return;p.querySelector('.emptyState')?.remove();
+  let h=p.querySelector('#ymCreditLive');if(!h){h=document.createElement('div');h.id='ymCreditLive';p.appendChild(h)}
+  const rs=YMPreviewStore.requests();
+  h.innerHTML=rs.length?rs.map(r=>`<div class="ymLiveItem"><div class="ymLiveTop"><div><b>${esc(r.id)}</b><div class="ymLiveMeta">${esc(r.nickname)} • ${esc(r.email)} • ${dt(r.createdAt)}</div><div class="ymLiveMeta">สลิป: ${esc(r.slipName||'แนบแล้ว')}</div></div><div class="ymLiveAmount">${Number(r.amount).toLocaleString('th-TH')} บาท</div></div>${r.slipData?`<img class="ymSlipThumb" data-slip="${esc(r.id)}" src="${r.slipData}" alt="สลิป">`:''}<span class="ymLiveStatus">${r.status==='pending'?'รอตรวจสอบ':r.status==='approved'?'อนุมัติแล้ว':'ไม่อนุมัติ'}</span>${r.status==='pending'?`<div class="ymLiveActions"><button class="btn soft" data-slipbtn="${esc(r.id)}">เปิดสลิป</button><button class="btn primary" data-ap="${esc(r.id)}">อนุมัติ +${Number(r.amount).toLocaleString('th-TH')} บาท</button><button class="btn danger" data-rj="${esc(r.id)}">ไม่อนุมัติ</button></div>`:''}</div>`).join(''):'<div class="emptyState"><div class="emptyHeart">♡</div><b>ยังไม่มีคำขอเติมเครดิต</b><span>เมื่อสมาชิกส่งคำขอเติมเครดิต รายการจะมาแสดงที่หน้านี้</span></div>';
+  h.querySelectorAll('[data-slip],[data-slipbtn]').forEach(x=>x.onclick=()=>openSlip(x.dataset.slip||x.dataset.slipbtn));
+  h.querySelectorAll('[data-ap]').forEach(b=>b.onclick=()=>{YMPreviewStore.approve(b.dataset.ap);all()});h.querySelectorAll('[data-rj]').forEach(b=>b.onclick=()=>{YMPreviewStore.reject(b.dataset.rj);all()});
+ }
+ function renderMembers(){
+  const p=document.querySelector('#accounts .panel');if(!p)return;p.querySelector('.emptyState')?.remove();
+  let h=p.querySelector('#ymMemberLive');if(!h){h=document.createElement('div');h.id='ymMemberLive';p.appendChild(h)}
+  const ms=YMPreviewStore.members();
+  h.innerHTML=ms.length?ms.map(m=>`<div class="ymLiveItem"><div class="ymLiveTop"><div><b>${esc(m.nickname)}</b><div class="ymLiveMeta">${esc(m.email)} • ${esc(m.id)}</div></div><div class="ymLiveAmount">เครดิต ${Number(m.credit||0).toLocaleString('th-TH')} บาท</div></div><span class="ymLiveStatus">${m.status==='active'?'ใช้งานปกติ':'ระงับ'}</span></div>`).join(''):'<div class="emptyState"><div class="emptyHeart">♡</div><b>ยังไม่มีบัญชีสมาชิก</b><span>บัญชีจะปรากฏหลังจากผู้ใช้สมัครสมาชิกสำเร็จเท่านั้น</span></div>';
+ }
+ function all(){renderCredit();renderMembers()}
+ window.addEventListener('storage',all);window.addEventListener('ympreviewchange',all);window.addEventListener('focus',all);all();
+});
+</script>
+
+
+<script id="ym-paired-preview-sync-v56">
+(function(){
+ const PAIR='YMK_PREVIEW_PAIR_56_7';
+ window.addEventListener('focus',()=>window.dispatchEvent(new CustomEvent('ympreviewchange')));
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden)window.dispatchEvent(new CustomEvent('ympreviewchange'))});
+ try{
+   const bc=new BroadcastChannel(PAIR);
+   window.addEventListener('ympreviewchange',()=>bc.postMessage('refresh'));
+   bc.onmessage=()=>window.dispatchEvent(new CustomEvent('ympreviewremote'));
+   window.addEventListener('ympreviewremote',()=>window.dispatchEvent(new Event('storage')));
+ }catch(e){}
+})();
+</script>
+
+
+</body></html>
