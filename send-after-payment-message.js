@@ -1,19 +1,332 @@
 (function(){
   'use strict';
-  const ACTIVE='ymk_active_manual_review',PREFIX='ymk_send_review_';
-  let sendChosen=false,activeReview='';
-  function storageGet(k){try{return localStorage.getItem(k)||'';}catch(e){return '';}}
-  function storageSet(k,v){try{if(v)localStorage.setItem(k,v);else localStorage.removeItem(k);}catch(e){}}
-  function clearUi(){const old=document.getElementById('ymkSendAfterPaymentNotice');if(old)old.remove();}
-  function resetNewOrder(){sendChosen=false;activeReview='';clearUi();}
-  function liveSend(){try{const o=typeof lastOrder!=='undefined'&&lastOrder?lastOrder:null;return sendChosen||o?.orderMode==='send'||o?.pack==='แบบส่ง'||window.YMK_SEND_ORDER_META?.mode==='send'||window.YMK_SEND_SELECTION?.mode==='send'||window.YMK_PENDING_ORDER_META?.orderMode==='send';}catch(e){return sendChosen;}}
-  function captureReview(){const id=storageGet(ACTIVE);if(!/^SLIP\d{6}-\d{6}-[A-Z0-9]{3}$/.test(id))return;if(!activeReview)activeReview=id;if(liveSend())storageSet(PREFIX+id,'1');}
-  function approvedCard(){const card=document.getElementById('ymkForceCard');if(!card||card.dataset.ymkManualState!=='approved')return null;const m=(card.innerText||'').match(/YMK\d{6}-\d{6}/);return m?{card,id:m[0]}:null;}
-  function approvedIsSend(){captureReview();return !!(activeReview&&storageGet(PREFIX+activeReview)==='1');}
-  document.addEventListener('click',function(e){const el=e.target.closest('button,a');if(!el)return;if(el.classList.contains('ymk-send-choice')||el.classList.contains('ymk-send-confirm')){sendChosen=true;return;}if(el.classList.contains('ready-stock-order-btn')&&el.dataset.ymkSendConfirming!=='1'){resetNewOrder();return;}if(/ย้อนกลับแก้ไข UID|กลับไป|เริ่มใหม่/.test((el.textContent||'').trim()))resetNewOrder();},true);
-  function notice(){const el=document.createElement('div');el.id='ymkSendAfterPaymentNotice';el.style.cssText='margin:12px 0 0;padding:13px;border:1px solid #efc6d7;border-radius:14px;background:#fff3f8;color:#8f4f68;font-size:13px;font-weight:700;line-height:1.7;text-align:left';el.innerHTML='<div style="font-size:15px;font-weight:900;text-align:center;margin-bottom:6px">📦 สำหรับออเดอร์แบบส่ง</div><div style="text-align:center">กรุณาติดต่อทางร้านเพื่อแจ้ง <b>สกิน / ไอเทมที่ต้องการให้ส่ง</b><br>พร้อมแจ้งเลขออเดอร์ให้แอดมินนะคะ ♡</div><div style="margin-top:8px"><b>หมายเหตุ:</b> แบบส่งจำเป็นต้องแอดเพื่อนภายในเกมและรอครบ <b>24 ชั่วโมง</b> ก่อนจึงจะสามารถส่งของขวัญได้ค่ะ</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:11px"><a href="https://m.me/yuimellkubtopup" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none;padding:10px 8px;border-radius:12px;background:#e27ca5;color:#fff;font-weight:900">ติดต่อเพจ</a><a href="https://line.me/R/ti/p/@205svvxv" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none;padding:10px 8px;border:1px solid #e7a6bf;border-radius:12px;background:#fff;color:#c85f88;font-weight:900">ติดต่อ LINE</a></div>';return el;}
-  function fixMessage(card){const nodes=[...card.querySelectorAll('div,p,span')].filter(el=>!el.children.length);for(const el of nodes){const t=(el.textContent||'').trim();if(t.includes('กรุณาเก็บเลขออเดอร์ไว้สำหรับติดตามสถานะ')&&t.includes('และรอร้านดำเนินการเติมสักครู่นะคะ')){el.textContent='กรุณาเก็บเลขออเดอร์ไว้สำหรับติดตามสถานะนะคะ ♡';continue;}if(t.includes('และรอร้านดำเนินการเติมสักครู่นะคะ'))el.remove();else if(t==='กรุณาเก็บเลขออเดอร์ไว้สำหรับติดตามสถานะ')el.textContent='กรุณาเก็บเลขออเดอร์ไว้สำหรับติดตามสถานะนะคะ ♡';}}
-  function patch(){captureReview();const a=approvedCard();if(!a)return;if(!approvedIsSend()){clearUi();return;}fixMessage(a.card);if(!a.card.querySelector('#ymkSendAfterPaymentNotice')){const n=notice(),copy=[...a.card.querySelectorAll('button,a')].find(el=>/คัดลอกเลขออเดอร์/.test(el.textContent||''));if(copy)copy.insertAdjacentElement('beforebegin',n);else a.card.appendChild(n);}}
-  let busy=false;function schedule(){if(busy)return;busy=true;setTimeout(()=>{busy=false;patch();},0);}
-  resetNewOrder();setInterval(()=>{captureReview();patch();},250);new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true,characterData:true});
+
+  const ACTIVE =
+    'ymk_active_manual_review';
+
+  const PREFIX =
+    'ymk_send_review_';
+
+  let sendChosen = false;
+  let activeReview = '';
+
+  function get(k){
+    try{
+      return (
+        localStorage.getItem(k) ||
+        ''
+      );
+    }catch(e){
+      return '';
+    }
+  }
+
+  function set(k,v){
+    try{
+      if(v){
+        localStorage.setItem(k,v);
+      }else{
+        localStorage.removeItem(k);
+      }
+    }catch(e){}
+  }
+
+  function removeNotice(){
+
+    document
+      .getElementById(
+        'ymkSendAfterPaymentNotice'
+      )
+      ?.remove();
+  }
+
+  function isSend(){
+
+    try{
+
+      const order =
+        typeof lastOrder !==
+          'undefined'
+          ? lastOrder
+          : null;
+
+      return (
+        sendChosen ||
+        order?.orderMode === 'send' ||
+        order?.pack === 'แบบส่ง' ||
+        window
+          .YMK_SEND_ORDER_META
+          ?.mode === 'send' ||
+        window
+          .YMK_SEND_SELECTION
+          ?.mode === 'send' ||
+        window
+          .YMK_PENDING_ORDER_META
+          ?.orderMode === 'send'
+      );
+
+    }catch(e){
+
+      return sendChosen;
+    }
+  }
+
+  function captureReview(){
+
+    const id =
+      get(ACTIVE);
+
+    if(
+      !/^SLIP\d{6}-\d{6}-[A-Z0-9]{3}$/
+        .test(id)
+    ){
+      return;
+    }
+
+    if(!activeReview){
+      activeReview = id;
+    }
+
+    if(isSend()){
+      set(
+        PREFIX + id,
+        '1'
+      );
+    }
+  }
+
+  function approved(){
+
+    const card =
+      document.getElementById(
+        'ymkForceCard'
+      );
+
+    if(
+      !card ||
+      card.dataset.ymkManualState !==
+        'approved'
+    ){
+      return null;
+    }
+
+    const match =
+      (card.innerText || '')
+        .match(
+          /YMK\d{6}-\d{6}/
+        );
+
+    if(!match){
+      return null;
+    }
+
+    return {
+      card,
+      orderId:match[0]
+    };
+  }
+
+  function approvedIsSend(){
+
+    captureReview();
+
+    return !!(
+      activeReview &&
+      get(
+        PREFIX +
+        activeReview
+      ) === '1'
+    );
+  }
+
+  function notice(orderId){
+
+    const box =
+      document.createElement(
+        'div'
+      );
+
+    box.id =
+      'ymkSendAfterPaymentNotice';
+
+    box.style.cssText = `
+      margin:12px 0 0;
+      padding:13px 14px;
+      border:1px solid #efc6d7;
+      border-radius:14px;
+      background:#fff3f8;
+      color:#8f4f68;
+      font-size:13px;
+      font-weight:700;
+      line-height:1.7;
+      text-align:center;
+    `;
+
+    box.innerHTML = `
+      <b style="
+        display:block;
+        font-size:15px;
+        margin-bottom:5px;
+      ">
+        สำหรับออเดอร์แบบส่ง ♡
+      </b>
+
+      รบกวนลูกค้าทักเพจร้าน
+      พร้อมแจ้งเลขออเดอร์
+
+      <b style="
+        display:block;
+        margin:4px 0;
+        color:#c85f88;
+      ">
+        ${orderId}
+      </b>
+
+      เพื่อให้ทางร้านดำเนินการแบบส่งต่อให้ค่ะ ♡
+
+      <a
+        href="https://m.me/yuimellkubtopup"
+        target="_blank"
+        rel="noopener"
+        style="
+          display:block;
+          margin-top:10px;
+          padding:10px;
+          border-radius:999px;
+          background:#e27ca5;
+          color:#fff;
+          text-decoration:none;
+          font-weight:900;
+        "
+      >
+        ทักเพจร้าน
+      </a>
+    `;
+
+    return box;
+  }
+
+  function patch(){
+
+    captureReview();
+
+    const a =
+      approved();
+
+    if(!a){
+      return;
+    }
+
+    if(
+      !approvedIsSend()
+    ){
+      removeNotice();
+      return;
+    }
+
+    if(
+      a.card.querySelector(
+        '#ymkSendAfterPaymentNotice'
+      )
+    ){
+      return;
+    }
+
+    const n =
+      notice(a.orderId);
+
+    const copy =
+      [...a.card.querySelectorAll(
+        'button,a'
+      )].find(el =>
+        /คัดลอกเลขออเดอร์/
+          .test(
+            el.textContent || ''
+          )
+      );
+
+    if(copy){
+      copy.insertAdjacentElement(
+        'beforebegin',
+        n
+      );
+    }else{
+      a.card.appendChild(n);
+    }
+  }
+
+  document.addEventListener(
+    'click',
+    e => {
+
+      const el =
+        e.target.closest(
+          'button,a'
+        );
+
+      if(!el){
+        return;
+      }
+
+      if(
+        el.classList.contains(
+          'ymk-send-choice'
+        )
+      ){
+        sendChosen = true;
+        return;
+      }
+
+      /*
+        สั่งซื้อปกติ = ล้างโหมดแบบส่ง
+        แต่ Proxy แบบส่งห้ามล้าง
+      */
+      if(
+        el.classList.contains(
+          'ready-stock-order-btn'
+        ) &&
+        el.dataset
+          .ymkSendConfirming !== '1'
+      ){
+        sendChosen = false;
+        activeReview = '';
+        removeNotice();
+      }
+
+    },
+    true
+  );
+
+  let busy = false;
+
+  function schedule(){
+
+    if(busy){
+      return;
+    }
+
+    busy = true;
+
+    setTimeout(() => {
+      busy = false;
+      patch();
+    },0);
+  }
+
+  new MutationObserver(
+    schedule
+  ).observe(
+    document.body,
+    {
+      childList:true,
+      subtree:true,
+      characterData:true
+    }
+  );
+
+  setInterval(() => {
+    captureReview();
+    patch();
+  },300);
+
 })();
