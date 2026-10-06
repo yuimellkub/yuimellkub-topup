@@ -20,10 +20,8 @@ document.getElementById('site').addEventListener('load',function(){
   w.ymkCopyOrderIdOnly=async function(scope){return writeOrderId(findOrderId(scope));};
   d.addEventListener('click',async function(e){const el=e.target.closest('button,a');if(!el)return;const text=(el.textContent||'').trim();if(!(/คัดลอก/.test(text)&&(/ออเดอร์/.test(text)||/YMK\d{6}-\d{6}/.test(text))))return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();const scope=el.closest('#ymkFinalOrderStatusCard,#ymkForceCard,.done-card,.order-done,.modal-content,.modal-card')||d.body;const id=findOrderId(scope);if(!(await writeOrderId(id)))return;const old=el.textContent;el.textContent='คัดลอกแล้ว ✓';setTimeout(()=>{el.textContent=old},900);},true);
   // Production Firebase bridge for v65: products/orders use the existing live project.
-  const fbApp=d.createElement('script');fbApp.src='https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js';d.head.appendChild(fbApp);
-  const fbFs=d.createElement('script');fbFs.src='https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js';d.head.appendChild(fbFs);
-  const fbAuth=d.createElement('script');fbAuth.src='https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js';d.head.appendChild(fbAuth);
   const fbCfg=d.createElement('script');fbCfg.src='firebase-config.js?v=prod65';d.head.appendChild(fbCfg);
+  const prod=d.createElement('script');prod.src='production-main-bridge.js?v=1';d.body.appendChild(prod);
   const calcRules=d.createElement('script');calcRules.src='calculator-pack-rules.js?v=7';d.body.appendChild(calcRules);
   const discountFix=d.createElement('script');discountFix.src='discount-price-fix.js?v=1';d.body.appendChild(discountFix);
   const store=d.createElement('script');store.src='storefront-category-sync.js?v=6';d.body.appendChild(store);
