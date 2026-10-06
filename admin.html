@@ -1,21 +1,10 @@
 <!doctype html>
-<html lang="th">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Yuimellkub Admin</title>
-<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#fff6fa}iframe{border:0;width:100%;height:100%;display:block;background:#fff6fa}</style>
-</head>
-<body>
-<iframe id="adminFrame" src="admin.html.html" title="Yuimellkub Admin"></iframe>
+<html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Yuimellkub Admin</title><style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#fff6fa}iframe{border:0;width:100%;height:100%;display:block;background:#fff6fa}</style></head>
+<body><iframe id="adminFrame" src="admin.html.html?v=9" title="Yuimellkub Admin"></iframe>
 <script>
 document.getElementById('adminFrame').addEventListener('load',function(){
-  const d=this.contentDocument;if(!d)return;
-  const cfg=d.createElement('script');cfg.src='firebase-config.js?v=prod-v8-2';cfg.onload=()=>{
-    const libs=['https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js','https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js','https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js'];
-    let i=0;function next(){if(i<libs.length){const x=d.createElement('script');x.src=libs[i++];x.onload=next;d.head.appendChild(x);return;}const live=d.createElement('script');live.src='admin-v8-live-production.js?v=2';d.body.appendChild(live);}next();
-  };d.head.appendChild(cfg);
+ var d=this.contentDocument;if(!d)return;
+ var urls=['https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js','https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js','https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js','firebase-config.js?v=9','admin-v8-live-production.js?v=9'];
+ var i=0;function load(){if(i>=urls.length)return;var s=d.createElement('script');s.src=urls[i++];s.onload=load;d.head.appendChild(s)}load();
 });
-</script>
-</body>
-</html>
+</script></body></html>
