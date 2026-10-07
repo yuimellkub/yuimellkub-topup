@@ -68,6 +68,10 @@ const fmt=
 let readyMeta=
   null;
 
+window.YMK_ORDER_SOURCE=
+  window.YMK_ORDER_SOURCE||
+  null;
+
 let lastStatusText=
   '';
 
@@ -978,6 +982,13 @@ function readyPackForUI(
 
 function syncReadyCheckoutUI(){
 
+  if(
+    window.YMK_ORDER_SOURCE !==
+    'ready'
+  ){
+    return;
+  }
+
   const x=
     readyMeta;
 
@@ -1179,8 +1190,10 @@ function openReadyViaCalculator(
 
   /*
     READY STOCK = source of truth ของรอบล่าสุด
-    ล้าง state เก่าก่อนทุกครั้ง เพื่อไม่ให้ราคาหรือแพ็กจากรายการก่อนย้อนกลับมา
   */
+  window.YMK_ORDER_SOURCE=
+    'ready';
+
   readyMeta=
     null;
 
@@ -1594,7 +1607,17 @@ window.addEventListener(
       return;
     }
 
-    clearReadyProductState();
+    window.YMK_ORDER_SOURCE=
+      'calc';
+
+    readyMeta=null;
+
+    if(
+      typeof window.YMK_CLEAR_READY_PACK_PATCH ===
+      'function'
+    ){
+      window.YMK_CLEAR_READY_PACK_PATCH();
+    }
 
   },
   true
@@ -1608,7 +1631,11 @@ document.addEventListener(
         '[data-ym-order-pay]'
       );
 
-    if(!payBtn || readyMeta){
+    if(
+      !payBtn ||
+      window.YMK_ORDER_SOURCE !==
+      'calc'
+    ){
       return;
     }
 
