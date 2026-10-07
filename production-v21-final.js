@@ -1607,17 +1607,29 @@ window.addEventListener(
       return;
     }
 
-    window.YMK_ORDER_SOURCE=
-      'calc';
+  window.YMK_ORDER_SOURCE=
+  'calc';
 
-    readyMeta=null;
+readyMeta=null;
 
-    if(
-      typeof window.YMK_CLEAR_READY_PACK_PATCH ===
-      'function'
-    ){
-      window.YMK_CLEAR_READY_PACK_PATCH();
-    }
+/*
+  ออกจาก Ready Stock แล้ว:
+  ล้าง metadata ของสินค้าพร้อมเติมเก่า
+  แต่ห้ามล้าง lastOrder เพราะ Calculator จะใช้ตัวนี้
+*/
+window.YMK_SEND_SELECTION=null;
+window.YMK_SEND_ORDER_META=null;
+window.YMK_PENDING_ORDER_META=null;
+window.YMK_ACTIVE_PRODUCT_ORDER=null;
+window.YMK_CALC_CHECKOUT_STATE=null;
+window.YMK_FORCED_PACK_META=null;
+
+if(
+  typeof window.YMK_CLEAR_READY_PACK_PATCH ===
+  'function'
+){
+  window.YMK_CLEAR_READY_PACK_PATCH();
+}
 
   },
   true
