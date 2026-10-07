@@ -935,8 +935,80 @@ async function register(){
   }
 }
 
-function ensurePreviewToastController(){
+function ensurePreviewToastMotion(){
 
+  if(
+    document.getElementById(
+      'ymProductionPreviewToastMotion'
+    )
+  ){
+    return;
+  }
+
+  const s=
+    document.createElement(
+      'style'
+    );
+
+  s.id=
+    'ymProductionPreviewToastMotion';
+
+  s.textContent=`
+
+    #ymMemberToast{
+      transform:
+        translate(-50%,-50%)
+        scale(.985)!important;
+
+      filter:
+        blur(3px);
+
+      opacity:
+        0!important;
+
+      transition:
+        opacity .48s ease,
+        transform .58s cubic-bezier(.16,1,.3,1),
+        filter .42s ease!important;
+    }
+
+    #ymMemberToast.show{
+      opacity:
+        1!important;
+
+      transform:
+        translate(-50%,-50%)
+        scale(1)!important;
+
+      filter:
+        blur(0);
+    }
+
+    #ymMemberToast.ym-leaving{
+      opacity:
+        0!important;
+
+      visibility:
+        visible!important;
+
+      transform:
+        translate(-50%,-51%)
+        scale(.99)!important;
+
+      filter:
+        blur(2px);
+
+      transition:
+        opacity .38s ease,
+        transform .42s ease,
+        filter .32s ease!important;
+    }
+
+  `;
+
+  document.head
+    .appendChild(s);
+}
   const toast=
     document.getElementById(
       'ymMemberToast'
@@ -1628,7 +1700,9 @@ async function payWithCredit(btn){
 
 
 function boot(){
+   ensurePreviewToastMotion();
 ensurePreviewToastController();
+
  
 
   if(
