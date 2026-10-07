@@ -256,19 +256,6 @@ function card(p){
       </b>
 
 
-      ${
-        p.description
-
-        ? `
-          <div class="ymk-store-desc">
-            ${esc(p.description)}
-          </div>
-        `
-
-        : ''
-      }
-
-
       <div class="ymk-store-bottom">
 
         <div class="price ready-stock-price ymk-store-price">
