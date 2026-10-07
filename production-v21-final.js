@@ -1443,6 +1443,20 @@ function clearReadyProductState(){
   window.YMK_SEND_SELECTION=null;
   window.YMK_SEND_ORDER_META=null;
   window.YMK_CALC_CHECKOUT_STATE=null;
+
+  const selected=
+    $('#ymOrderSelected');
+
+  if(selected){
+    selected.innerHTML='';
+  }
+
+  const summary=
+    $('#ymOrderSummary');
+
+  if(summary){
+    summary.innerHTML='';
+  }
 }
 /* =========================================================
    READY / CALCULATOR STATE
