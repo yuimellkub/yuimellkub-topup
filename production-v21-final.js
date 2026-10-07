@@ -1344,7 +1344,7 @@ function openReadyViaCalculator(
   window.YMK_LAST_CALC={
 
     type:
-      'echoes',
+      'ready',
 
     item:
       x.item,
@@ -1451,22 +1451,13 @@ function openReadyViaCalculator(
     Preview Calculator อาจเขียนค่าคำนวณรอบเก่ากลับเข้ามาหลัง trigger.click()
     ดังนั้น Ready Stock ล่าสุดต้องเขียนทับหลัง Flow เปิดแล้ว
   */
-  syncReadyCheckoutUI();
+syncReadyCheckoutUI();
 
-  setTimeout(
-    syncReadyCheckoutUI,
-    0
-  );
-
-  setTimeout(
-    syncReadyCheckoutUI,
-    40
-  );
-
-  setTimeout(
-    syncReadyCheckoutUI,
-    120
-  );
+requestAnimationFrame(
+  ()=>{
+    syncReadyCheckoutUI();
+  }
+);
 
 
   return true;
@@ -1566,24 +1557,34 @@ window.addEventListener(
     if(!readyMeta){
       return;
     }
+/* READY UI AUTHORITY
+   sync ตอนเข้า Payment ครั้งเดียว
+   ไม่ rewrite DOM ซ้ำทุกครั้งที่สลับช่องทางชำระเงิน
+*/
+window.addEventListener(
+  'click',
+  e=>{
+
+    if(!readyMeta){
+      return;
+    }
 
     if(
-      e.target.closest?.(
-        '#ymOrderNext,[data-ym-order-pay]'
+      !e.target.closest?.(
+        '#ymOrderNext'
       )
     ){
-      syncReadyCheckoutUI();
-
-      setTimeout(
-        syncReadyCheckoutUI,
-        0
-      );
-
-      setTimeout(
-        syncReadyCheckoutUI,
-        60
-      );
+      return;
     }
+
+    syncReadyCheckoutUI();
+
+    requestAnimationFrame(
+      ()=>{
+        syncReadyCheckoutUI();
+      }
+    );
+
   },
   true
 );
@@ -1605,7 +1606,46 @@ document.addEventListener(
   true
 );
 
+/*
+  CALCULATOR SOURCE OF TRUTH
 
+  ถ้าผู้ใช้กดสั่งจาก Calculator จริง
+  ให้ตัด state ของ Ready Stock รอบเก่าออกทันที
+*/
+window.addEventListener(
+  'click',
+  e=>{
+
+    const calcBtn=
+      e.target.closest?.(
+        '#ymCalcOrder,'+
+        '#ymCalcPopupOrder,'+
+        '.ymCalcOrderBtn,'+
+        '[data-calc-order]'
+      );
+
+    if(
+      !calcBtn ||
+      !e.isTrusted
+    ){
+      return;
+    }
+
+    readyMeta=
+      null;
+
+    window.YMK_ACTIVE_PRODUCT_ORDER=
+      null;
+
+    window.YMK_SEND_SELECTION=
+      null;
+
+    window.YMK_SEND_ORDER_META=
+      null;
+
+  },
+  true
+);
 /* =========================================================
    SLIP SUBMIT
    ========================================================= */
