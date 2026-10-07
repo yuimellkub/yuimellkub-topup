@@ -829,20 +829,26 @@ async function login(){
     );
   }
 
-  await auth
-    .signInWithEmailAndPassword(
-      email,
-      pass
-    );
+  const result =
+    await auth
+      .signInWithEmailAndPassword(
+        email,
+        pass
+      );
 
   if(
     typeof window
       .ymMemberToast ===
     'function'
   ){
+    const nickname =
+      result.user?.displayName ||
+      profile?.nickname ||
+      'สมาชิก Yuimellkub';
+
     window.ymMemberToast(
       'เข้าสู่ระบบสำเร็จ ♡',
-      'ยินดีต้อนรับกลับมา'
+      'ยินดีต้อนรับกลับมา '+nickname
     );
   }
 }
@@ -1420,6 +1426,8 @@ async function payWithCredit(btn){
 
 
 function boot(){
+
+  installPreviewMemberToastStyle();
 
   if(
     !window.firebase ||
