@@ -113,24 +113,8 @@ function installStyle(){
     }
 
 
-    #products .products{
-
-      align-items:
-        start!important;
-    }
-
-
     #products
     .ready-stock-card{
-
-      height:
-        auto!important;
-
-      min-height:
-        0!important;
-
-      align-self:
-        start!important;
 
       animation:
         none!important;
@@ -1009,6 +993,247 @@ function calcOrderButton(){
 }
 
 
+function readyPackForUI(
+  x,
+  qty
+){
+
+  if(!x){
+    return '';
+  }
+
+  if(
+    x.orderMode ===
+    'send'
+  ){
+    return 'แบบส่ง';
+  }
+
+  const m=
+    String(
+      x.item||
+      ''
+    )
+      .match(
+        /(\d[\d,]*)\s*(?:กระดุม|echoes?)/i
+      );
+
+  if(m){
+
+    return (
+      Number(
+        m[1]
+          .replace(
+            /,/g,
+            ''
+          )
+      )
+      .toLocaleString(
+        'th-TH'
+      )
+      +
+      ' × '
+      +
+      qty
+    );
+  }
+
+  /*
+    สกิน / ประดับ / แพ็ก / สัตว์เลี้ยง / ห้อง:
+    ห้ามดึงแพ็กคำนวณเก่ามาปน
+  */
+  return (
+    x.item||
+    x.pack||
+    ''
+  );
+}
+
+
+function syncReadyCheckoutUI(){
+
+  const x=
+    readyMeta;
+
+  if(!x){
+    return;
+  }
+
+  const qty=
+    Math.max(
+      1,
+      Number(
+        $('#ymOrderQty')
+          ?.value||
+        1
+      )
+    );
+
+  const total=
+    Number(
+      x.price||
+      0
+    )
+    *
+    qty;
+
+  const pack=
+    readyPackForUI(
+      x,
+      qty
+    );
+
+  window.YMK_ACTIVE_PRODUCT_ORDER={
+    mode:
+      x.orderMode,
+    name:
+      x.item,
+    price:
+      Number(
+        x.price||
+        0
+      ),
+    total,
+    quantity:
+      qty,
+    pack,
+    productId:
+      x.productId,
+    category:
+      x.category
+  };
+
+  window.lastOrder={
+    item:
+      x.item,
+    pack,
+    price:
+      fmt(total)+
+      ' บาท',
+    quantity:
+      qty,
+    orderMode:
+      x.orderMode,
+    productId:
+      x.productId,
+    category:
+      x.category
+  };
+
+  window.YMK_LAST_CALC={
+    type:
+      'ready',
+    item:
+      x.item,
+    pack,
+    price:
+      total,
+    ready:
+      true,
+    orderMode:
+      x.orderMode,
+    productId:
+      x.productId,
+    category:
+      x.category
+  };
+
+  window.YMK_CALC_CHECKOUT_STATE={
+    ...window.YMK_LAST_CALC
+  };
+
+  const selected=
+    $('#ymOrderSelected');
+
+  if(selected){
+
+    selected.innerHTML=
+      '<b>'+
+      esc(x.item)+
+      (
+        qty>1
+          ? ' × '+qty
+          : ''
+      )+
+      '</b>'+
+      (
+        pack
+          ? '<span class="ymPackLine">แพ็กที่เติม: '+
+            esc(pack)+
+            '</span>'
+          : ''
+      )+
+      '<br>ราคา '+
+      fmt(total)+
+      ' บาท';
+  }
+
+  const amount=
+    $('#ymOrderAmount');
+
+  if(amount){
+
+    amount.textContent=
+      fmt(total)+
+      ' บาท';
+  }
+
+  const summary=
+    $('#ymOrderSummary');
+
+  if(summary){
+
+    const uid=
+      String(
+        $('#ymOrderUid')
+          ?.value||
+        ''
+      ).trim();
+
+    const server=
+      String(
+        $('#ymOrderServer')
+          ?.value||
+        'Asia'
+      ).trim();
+
+    const name=
+      String(
+        $('#ymOrderName')
+          ?.value||
+        ''
+      ).trim();
+
+    summary.innerHTML=
+      '<b>'+
+      esc(x.item)+
+      (
+        qty>1
+          ? ' × '+qty
+          : ''
+      )+
+      '</b>'+
+      (
+        pack
+          ? '<span class="ymPackLine">แพ็กที่เติม: '+
+            esc(pack)+
+            '</span>'
+          : ''
+      )+
+      '<br>UID: '+
+      esc(uid||'-')+
+      ' • Server: '+
+      esc(server)+
+      (
+        name
+          ? '<br>ชื่อ: '+
+            esc(name)
+          : ''
+      );
+  }
+}
+
+
 function openReadyViaCalculator(
   normal,
   mode
@@ -1190,6 +1415,28 @@ function openReadyViaCalculator(
   trigger.click();
 
 
+  /*
+    Preview Calculator อาจเขียนค่าคำนวณรอบเก่ากลับเข้ามาหลัง trigger.click()
+    ดังนั้น Ready Stock ล่าสุดต้องเขียนทับหลัง Flow เปิดแล้ว
+  */
+  syncReadyCheckoutUI();
+
+  setTimeout(
+    syncReadyCheckoutUI,
+    0
+  );
+
+  setTimeout(
+    syncReadyCheckoutUI,
+    40
+  );
+
+  setTimeout(
+    syncReadyCheckoutUI,
+    120
+  );
+
+
   return true;
 }
 
@@ -1273,6 +1520,55 @@ document.addEventListener(
 
     return false;
 
+  },
+  true
+);
+
+
+
+/* READY UI AUTHORITY */
+window.addEventListener(
+  'click',
+  e=>{
+
+    if(!readyMeta){
+      return;
+    }
+
+    if(
+      e.target.closest?.(
+        '#ymOrderNext,[data-ym-order-pay]'
+      )
+    ){
+      syncReadyCheckoutUI();
+
+      setTimeout(
+        syncReadyCheckoutUI,
+        0
+      );
+
+      setTimeout(
+        syncReadyCheckoutUI,
+        60
+      );
+    }
+  },
+  true
+);
+
+
+document.addEventListener(
+  'input',
+  e=>{
+
+    if(
+      readyMeta
+      &&
+      e.target?.id ===
+      'ymOrderQty'
+    ){
+      syncReadyCheckoutUI();
+    }
   },
   true
 );
@@ -1408,23 +1704,10 @@ function prepareProductionSubmit(){
       qty;
 
     const pack=
-      readyMeta.orderMode ===
-        'send'
-        ? 'แบบส่ง'
-        : (
-            readyMeta.item.match(
-              /(\d[\d,]*)\s*(?:กระดุม|echoes?)/i
-            )
-              ? readyMeta.item.match(
-                  /(\d[\d,]*)\s*(?:กระดุม|echoes?)/i
-                )[1]
-                  .replace(/,/g,'')
-                  .replace(
-                    /^(.*)$/,
-                    '$1 × '+qty
-                  )
-              : readyMeta.pack
-          );
+      readyPackForUI(
+        readyMeta,
+        qty
+      );
 
     window.YMK_ACTIVE_PRODUCT_ORDER={
       mode:
