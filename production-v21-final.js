@@ -1599,7 +1599,96 @@ window.addEventListener(
   },
   true
 );
+document.addEventListener(
+  'click',
+  e=>{
 
+    const payBtn=
+      e.target.closest?.(
+        '[data-ym-order-pay]'
+      );
+
+    if(!payBtn || readyMeta){
+      return;
+    }
+
+    requestAnimationFrame(
+      ()=>{
+
+        const order=
+          window.lastOrder;
+
+        if(!order){
+          return;
+        }
+
+        const amount=
+          $('#ymOrderAmount');
+
+        const summary=
+          $('#ymOrderSummary');
+
+        const price=
+          num(order.price);
+
+        if(amount && price>0){
+          amount.textContent=
+            fmt(price)+
+            ' บาท';
+        }
+
+        if(summary){
+
+          const uid=
+            String(
+              $('#ymOrderUid')
+                ?.value||
+              ''
+            ).trim();
+
+          const server=
+            String(
+              $('#ymOrderServer')
+                ?.value||
+              'Asia'
+            ).trim();
+
+          const name=
+            String(
+              $('#ymOrderName')
+                ?.value||
+              ''
+            ).trim();
+
+          summary.innerHTML=
+            '<b>'+
+            esc(order.item||'')+
+            '</b>'+
+            (
+              order.pack
+                ? '<span class="ymPackLine">แพ็กที่เติม: '+
+                  esc(order.pack)+
+                  '</span>'
+                : ''
+            )+
+            '<br>UID: '+
+            esc(uid||'-')+
+            ' • Server: '+
+            esc(server)+
+            (
+              name
+                ? '<br>ชื่อ: '+
+                  esc(name)
+                : ''
+            );
+        }
+
+      }
+    );
+
+  },
+  true
+);
 
 /* =========================================================
    SLIP SUBMIT
