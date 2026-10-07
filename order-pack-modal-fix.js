@@ -2,6 +2,20 @@
   let products=[];
   let selectedCard=null;
   let modalPatchTimer=null;
+    function clearReadyPackPatch(){
+
+    selectedCard=null;
+
+    window.YMK_FORCED_PACK_META=null;
+
+    if(modalPatchTimer){
+      clearInterval(modalPatchTimer);
+      modalPatchTimer=null;
+    }
+  }
+
+  window.YMK_CLEAR_READY_PACK_PATCH=
+    clearReadyPackPatch;
   function clean(v){return String(v||'').replace(/\s*[×xX]\s*\d+\s*$/,'').trim();}
   function amountFromName(name){const t=clean(name),m=t.match(/(\d[\d,]*)\s*(?:กระดุม|ปุ่ม|buttons?)/i);return m?Number(m[1].replace(/,/g,''))||0:0;}
   function isSend(){return window.YMK_SEND_SELECTION?.mode==='send'||window.YMK_PENDING_ORDER_META?.orderMode==='send';}
