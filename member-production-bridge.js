@@ -1009,6 +1009,7 @@ function ensurePreviewToastMotion(){
   document.head
     .appendChild(s);
 }
+  function ensurePreviewToastController(){
   const toast=
     document.getElementById(
       'ymMemberToast'
