@@ -1026,8 +1026,62 @@ function openReadyViaCalculator(
   }
 
 
+  /*
+    READY STOCK = source of truth ของรอบล่าสุด
+    ล้าง state เก่าก่อนทุกครั้ง เพื่อไม่ให้ราคาหรือแพ็กจากรายการก่อนย้อนกลับมา
+  */
   readyMeta=
-    x;
+    null;
+
+  window.lastOrder=
+    null;
+
+  window.YMK_LAST_CALC=
+    null;
+
+  window.YMK_CALC_CHECKOUT_STATE=
+    null;
+
+  window.YMK_SEND_SELECTION=
+    null;
+
+  window.YMK_SEND_ORDER_META=
+    null;
+
+  window.YMK_ACTIVE_PRODUCT_ORDER=
+    null;
+
+  document.body
+    .classList
+    .remove(
+      'ymCalcCheckout'
+    );
+
+
+  readyMeta=
+    {
+      ...x
+    };
+
+
+  window.YMK_ACTIVE_PRODUCT_ORDER={
+    mode:
+      x.orderMode,
+    name:
+      x.item,
+    price:
+      x.price,
+    total:
+      x.price,
+    quantity:
+      1,
+    pack:
+      x.pack,
+    productId:
+      x.productId,
+    category:
+      x.category
+  };
 
 
   window.YMK_LAST_CALC={
@@ -1334,23 +1388,81 @@ function prepareProductionSubmit(){
 
   if(
     readyMeta
-
-    &&
-
-    window.lastOrder
   ){
+
+    const qty=
+      Math.max(
+        1,
+        Number(
+          $('#ymOrderQty')
+            ?.value ||
+          1
+        )
+      );
+
+    const total=
+      Number(
+        readyMeta.price ||
+        0
+      ) *
+      qty;
+
+    const pack=
+      readyMeta.orderMode ===
+        'send'
+        ? 'แบบส่ง'
+        : (
+            readyMeta.item.match(
+              /(\d[\d,]*)\s*(?:กระดุม|echoes?)/i
+            )
+              ? readyMeta.item.match(
+                  /(\d[\d,]*)\s*(?:กระดุม|echoes?)/i
+                )[1]
+                  .replace(/,/g,'')
+                  .replace(
+                    /^(.*)$/,
+                    '$1 × '+qty
+                  )
+              : readyMeta.pack
+          );
+
+    window.YMK_ACTIVE_PRODUCT_ORDER={
+      mode:
+        readyMeta.orderMode,
+      name:
+        readyMeta.item,
+      price:
+        Number(
+          readyMeta.price ||
+          0
+        ),
+      total,
+      quantity:
+        qty,
+      pack,
+      productId:
+        readyMeta.productId,
+      category:
+        readyMeta.category
+    };
+
+    window.lastOrder=
+      window.lastOrder ||
+      {};
 
     window.lastOrder.item=
       readyMeta.item;
 
 
     window.lastOrder.pack=
-      readyMeta.pack;
+      window.YMK_ACTIVE_PRODUCT_ORDER
+        .pack;
 
 
     window.lastOrder.price=
       fmt(
-        readyMeta.price
+        window.YMK_ACTIVE_PRODUCT_ORDER
+          .total
       )+
       ' บาท';
 
@@ -2474,6 +2586,202 @@ async function resolveOrder(raw){
 }
 
 
+
+let activeTrackStop=
+  null;
+
+let activeTrackId=
+  '';
+
+let activeTrackOrder=
+  null;
+
+let activeTrackStatus=
+  null;
+
+let activeTrackSignature=
+  '';
+
+
+function stopRealtimeTrack(){
+
+  if(activeTrackStop){
+
+    try{
+      activeTrackStop();
+    }catch(_){}
+  }
+
+  activeTrackStop=
+    null;
+
+  activeTrackId=
+    '';
+
+  activeTrackOrder=
+    null;
+
+  activeTrackStatus=
+    null;
+
+  activeTrackSignature=
+    '';
+}
+
+
+function renderRealtimeTrack(){
+
+  if(
+    !activeTrackId ||
+    !activeTrackOrder
+  ){
+    return;
+  }
+
+  const merged={
+    ...activeTrackOrder,
+    ...(activeTrackStatus||{}),
+    id:
+      activeTrackId,
+    proof:
+      proofImages(
+        activeTrackStatus||{}
+      )
+  };
+
+  const sig=
+    JSON.stringify([
+      merged.id,
+      merged.shopStatus,
+      merged.status,
+      merged.paymentStatus,
+      merged.item,
+      merged.pack,
+      merged.uid,
+      merged.server,
+      (merged.proof||[]).length,
+      ...(merged.proof||[]).map(
+        x=>String(x).slice(0,80)
+      )
+    ]);
+
+  if(
+    sig ===
+    activeTrackSignature
+  ){
+    return;
+  }
+
+  activeTrackSignature=
+    sig;
+
+  renderTracked(
+    merged,
+    true
+  );
+}
+
+
+function startRealtimeTrack(
+  id,
+  initialOrder
+){
+
+  stopRealtimeTrack();
+
+  if(
+    !id ||
+    !/^YMK\d{6}-\d{6}$/.test(id)
+  ){
+    return;
+  }
+
+  const store=
+    db();
+
+  if(!store){
+    return;
+  }
+
+  activeTrackId=
+    id;
+
+  activeTrackOrder=
+    initialOrder
+      ? {
+          ...initialOrder,
+          id
+        }
+      : null;
+
+  let offOrder=
+    null;
+
+  let offStatus=
+    null;
+
+  offOrder=
+    store
+      .collection('orders')
+      .doc(id)
+      .onSnapshot(
+        snap=>{
+
+          if(!snap.exists){
+            return;
+          }
+
+          activeTrackOrder={
+            id:
+              snap.id,
+            ...snap.data()
+          };
+
+          renderRealtimeTrack();
+        },
+        err=>
+          console.warn(
+            'realtime order watch failed',
+            err
+          )
+      );
+
+  offStatus=
+    store
+      .collection(
+        'order_status'
+      )
+      .doc(id)
+      .onSnapshot(
+        snap=>{
+
+          activeTrackStatus=
+            snap.exists
+              ? snap.data()
+              : {};
+
+          renderRealtimeTrack();
+        },
+        err=>
+          console.warn(
+            'realtime status watch failed',
+            err
+          )
+      );
+
+  activeTrackStop=()=>{
+
+    try{
+      offOrder?.();
+    }catch(_){}
+
+    try{
+      offStatus?.();
+    }catch(_){}
+  };
+}
+
+
 function playPop(){
 
   try{
@@ -2569,7 +2877,8 @@ function playPop(){
 
 
 function renderTracked(
-  order
+  order,
+  realtime=false
 ){
 
   const result=
@@ -2846,7 +3155,9 @@ function renderTracked(
   }
 
 
-  playPop();
+  if(!realtime){
+    playPop();
+  }
 }
 
 
@@ -2893,6 +3204,9 @@ window.addEventListener(
     e.stopImmediatePropagation();
 
 
+    stopRealtimeTrack();
+
+
     const result=
       $('#orderPopupResult');
 
@@ -2930,6 +3244,13 @@ window.addEventListener(
       renderTracked(
         order
       );
+
+      if(order?.id){
+        startRealtimeTrack(
+          order.id,
+          order
+        );
+      }
 
     }catch(err){
 
