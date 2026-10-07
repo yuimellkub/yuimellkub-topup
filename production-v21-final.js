@@ -1446,6 +1446,8 @@ function clearReadyProductState(){
 
   window.lastOrder=null;
   window.YMK_LAST_CALC=null;
+  window.YMK_PENDING_ORDER_META=null;
+  window.YMK_FORCED_PACK_META=null;
 
   const selected=
     $('#ymOrderSelected');
@@ -1520,14 +1522,6 @@ document.addEventListener(
 );
 
 
-/*
-  เมื่อผู้ใช้กด Calculator จริง
-  ให้ตัด Ready Stock state เก่าออก
-
-  e.isTrusted สำคัญ:
-  Ready Stock ใช้ trigger.click() เพื่อเรียก checkout กลาง
-  จึงห้ามล้าง state ตอนเป็น synthetic click
-*/
 window.addEventListener(
   'click',
   e=>{
@@ -1545,7 +1539,6 @@ window.addEventListener(
     e.stopPropagation();
     e.stopImmediatePropagation();
 
-    // ใช้ข้อมูลสินค้าพร้อมเติมรอบปัจจุบัน
     syncReadyCheckoutUI();
 
     const orderOverlay=
@@ -1561,12 +1554,10 @@ window.addEventListener(
       return;
     }
 
-    // ปิดหน้าใส่ UID
     orderOverlay?.classList.remove(
       'show'
     );
 
-    // เปิดหน้าชำระเงิน
     paymentOverlay.classList.add(
       'show'
     );
@@ -1576,6 +1567,8 @@ window.addEventListener(
   },
   true
 );
+
+
 window.addEventListener(
   'click',
   e=>{
@@ -1600,6 +1593,7 @@ window.addEventListener(
   },
   true
 );
+
 
 /* =========================================================
    SLIP SUBMIT
