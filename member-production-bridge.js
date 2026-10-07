@@ -146,21 +146,40 @@ function render(){
   const logged =
     q('#loggedMember');
 
+  const signedIn =
+    !!auth?.currentUser;
+
   if(guest){
     guest.hidden =
-      !!profile;
+      signedIn;
+
+    guest.style.setProperty(
+      'display',
+      signedIn
+        ? 'none'
+        : '',
+      'important'
+    );
   }
 
   if(logged){
     logged.hidden =
-      !profile;
+      !signedIn;
+
+    logged.style.setProperty(
+      'display',
+      signedIn
+        ? ''
+        : 'none',
+      'important'
+    );
   }
 
   document.documentElement
     .classList
     .toggle(
       'ymGuestSession',
-      !profile
+      !signedIn
     );
 
   /*
@@ -170,10 +189,22 @@ function render(){
     '[data-ym-order-pay="credit"]'
   ).forEach(btn=>{
     btn.hidden =
-      !profile;
+      !signedIn;
 
-    btn.style.display =
-      profile ? '' : 'none';
+    btn.style.setProperty(
+      'display',
+      signedIn
+        ? ''
+        : 'none',
+      'important'
+    );
+
+    btn.setAttribute(
+      'aria-hidden',
+      signedIn
+        ? 'false'
+        : 'true'
+    );
   });
 
   /*
@@ -187,26 +218,35 @@ function render(){
       'บัญชีสมาชิกเชื่อมกับระบบร้านแล้ว ♡';
   }
 
-  if(!profile){
+  if(!signedIn){
     return;
   }
 
+  const liveProfile =
+    profile || {
+      nickname:
+        auth.currentUser?.displayName || '',
+      email:
+        auth.currentUser?.email || '',
+      credit:0
+    };
+
   if(q('#memberName')){
     q('#memberName').textContent =
-      profile.nickname ||
+      liveProfile.nickname ||
       'สมาชิก Yuimellkub';
   }
 
   if(q('#memberEmail')){
     q('#memberEmail').textContent =
-      profile.email || '';
+      liveProfile.email || '';
   }
 
   qa('[data-wallet]')
     .forEach(el=>{
       el.textContent =
         money(
-          profile.credit
+          liveProfile.credit
         );
     });
 
@@ -836,11 +876,21 @@ async function forgot(){
 
 async function submitCredit(btn){
 
-  if(!auth.currentUser){
+  const user=
+    auth.currentUser;
+
+  if(!user){
     throw Error(
       'กรุณาเข้าสู่ระบบก่อนค่ะ'
     );
   }
+
+  /*
+    บังคับ refresh Firebase Auth token ก่อนเขียนคำขอเติมเครดิต
+    ป้องกัน session หน้าเว็บใหม่แต่ Firestore ยังถือ token เก่า
+  */
+  await user
+    .getIdToken(true);
 
   const amount =
     Math.floor(
@@ -893,14 +943,14 @@ async function submitCredit(btn){
 
   await ref.set({
     memberId:
-      auth.currentUser.uid,
+      user.uid,
 
     nickname:
       profile?.nickname ||
       '',
 
     email:
-      auth.currentUser.email ||
+      user.email ||
       '',
 
     amount,
@@ -966,7 +1016,7 @@ async function payWithCredit(btn){
 
   if(
     Number(
-      profile.credit || 0
+      liveProfile.credit || 0
     ) < amount
   ){
     throw Error(
@@ -1541,7 +1591,57 @@ function boot(){
 
 
   auth.onAuthStateChanged(
-    watch
+    user=>{
+
+      watch(
+        user
+      );
+
+      /*
+        Firebase Auth เป็น source of truth ของ production
+      */
+      if(window.YMPreviewStore){
+
+        window.YMPreviewStore.me =
+          () =>
+            auth.currentUser
+              ? (
+                  profile ||
+                  {
+                    id:
+                      auth.currentUser.uid,
+                    email:
+                      auth.currentUser.email || '',
+                    nickname:
+                      auth.currentUser.displayName || '',
+                    credit:0
+                  }
+                )
+              : null;
+
+        window.YMPreviewStore.history =
+          () => history;
+
+        window.YMPreviewStore.requests =
+          () => requests;
+      }
+
+      render();
+
+      requestAnimationFrame(
+        render
+      );
+
+      setTimeout(
+        render,
+        120
+      );
+
+      setTimeout(
+        render,
+        350
+      );
+    }
   );
 }
 
