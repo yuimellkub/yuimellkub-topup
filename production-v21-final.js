@@ -71,7 +71,10 @@ let readyMeta=
 window.YMK_ORDER_SOURCE=
   window.YMK_ORDER_SOURCE||
   null;
-
+  
+window.YMK_CALC_LOCKED_ORDER=
+  window.YMK_CALC_LOCKED_ORDER||
+  null;
 let lastStatusText=
   '';
 
@@ -1609,7 +1612,34 @@ window.addEventListener(
 
   window.YMK_ORDER_SOURCE=
   'calc';
+requestAnimationFrame(
+  ()=>{
 
+    if(
+      window.YMK_ORDER_SOURCE !==
+      'calc' ||
+      !window.lastOrder
+    ){
+      return;
+    }
+
+    window.YMK_CALC_LOCKED_ORDER={
+      item:
+        window.lastOrder.item||
+        '',
+
+      pack:
+        window.lastOrder.pack||
+        '',
+
+      price:
+        num(
+          window.lastOrder.price
+        )
+    };
+
+  }
+);
 readyMeta=null;
 
 /*
@@ -1649,9 +1679,10 @@ document.addEventListener(
 
     requestAnimationFrame(
       ()=>{
-
-        const order=
-          window.lastOrder;
+const order=
+  window.YMK_ORDER_SOURCE === 'calc'
+    ? window.YMK_CALC_LOCKED_ORDER
+    : window.lastOrder;
 
         if(!order){
           return;
@@ -1743,8 +1774,10 @@ document.addEventListener(
           setTimeout(
             ()=>{
 
-              const current=
-                window.lastOrder;
+             const current=
+  window.YMK_ORDER_SOURCE === 'calc'
+    ? window.YMK_CALC_LOCKED_ORDER
+    : window.lastOrder;
 
               if(
                 !current ||
