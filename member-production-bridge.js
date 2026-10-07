@@ -521,7 +521,58 @@ function watch(user){
     render();
     return;
   }
+  /*
+    บัญชี Auth เก่าบางบัญชียังไม่มี members/{uid}
+    สร้างเอกสารจริงครั้งแรกที่เข้าสู่ระบบ
+    โดยไม่แตะเครดิตของบัญชีที่มีอยู่แล้ว
+  */
+  const memberRef =
+    db
+      .collection('members')
+      .doc(user.uid);
 
+  memberRef
+    .get()
+    .then(snap=>{
+
+      if(snap.exists){
+        return;
+      }
+
+      return memberRef.set({
+        nickname:
+          user.displayName ||
+          '',
+
+        email:
+          user.email ||
+          '',
+
+        credit:0,
+
+        status:'active',
+
+        createdAt:
+          firebase
+            .firestore
+            .FieldValue
+            .serverTimestamp(),
+
+        updatedAt:
+          firebase
+            .firestore
+            .FieldValue
+            .serverTimestamp()
+      });
+
+    })
+    .catch(err=>{
+
+      console.error(
+        'member document ensure failed',
+        err
+      );
+    });
   /*
     โปรไฟล์
   */
