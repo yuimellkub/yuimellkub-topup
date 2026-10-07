@@ -42,20 +42,17 @@ function installStyle(){
     return;
   }
 
-
   const s =
     document.createElement(
       'style'
     );
 
-
   s.id =
     'ymkReadyCalcBridgeStyle';
 
-
   /*
-    ไม่มี CSS hover / transform / transition ของ card ตรงนี้
-    ให้ Preview เดิมเป็นคนคุมทั้งหมด
+    ไม่ใส่ hover / transform / transition การ์ด
+    ใช้ Motion ของ Preview เดิมทั้งหมด
   */
 
   s.textContent = `
@@ -63,14 +60,10 @@ function installStyle(){
     #products
     .ready-stock-card
     .ymk-store-bottom{
-
       display:flex;
-
       flex-direction:column;
-
       gap:7px;
     }
-
 
     #products
     .ready-stock-card
@@ -81,30 +74,18 @@ function installStyle(){
     .ready-stock-card
     .ymk-store-bottom
     > .ymk-send-choice{
-
       width:100%;
-
       box-sizing:border-box;
-
       margin-top:0;
     }
-
 
     #products
     .ready-stock-card
     .ymk-send-choice{
-
-      border:
-        1px solid
-        #efbfd1;
-
-      background:
-        #fff7fa;
-
-      color:
-        #c45f87;
+      border:1px solid #efbfd1;
+      background:#fff7fa;
+      color:#c45f87;
     }
-
 
     html.ymDark
     #products
@@ -115,19 +96,12 @@ function installStyle(){
     #products
     .ready-stock-card
     .ymk-send-choice{
-
-      background:
-        #382930;
-
-      border-color:
-        #805066;
-
-      color:
-        #efb1c9;
+      background:#382930;
+      border-color:#805066;
+      color:#efb1c9;
     }
 
   `;
-
 
   document.head
     .appendChild(s);
@@ -140,18 +114,15 @@ function addSendButton(card){
     return;
   }
 
-
   const normal =
     card.querySelector(
       '.ready-stock-order-btn'
     );
 
-
   const bottom =
     card.querySelector(
       '.ymk-store-bottom'
     );
-
 
   if(
     !normal ||
@@ -159,7 +130,6 @@ function addSendButton(card){
   ){
     return;
   }
-
 
   const enabled =
 
@@ -173,12 +143,10 @@ function addSendButton(card){
         .sendPrice
     ) > 0;
 
-
   let send =
     card.querySelector(
       '.ymk-send-choice'
     );
-
 
   if(!enabled){
 
@@ -189,35 +157,28 @@ function addSendButton(card){
     return;
   }
 
-
   if(send){
     return;
   }
-
 
   send =
     document.createElement(
       'button'
     );
 
-
   send.type =
     'button';
-
 
   send.className =
     'ymk-send-choice';
 
-
   send.textContent =
     'แบบส่ง';
-
 
   send.setAttribute(
     'aria-label',
     'สั่งซื้อแบบส่ง'
   );
-
 
   bottom.appendChild(
     send
@@ -251,17 +212,14 @@ function readyData(
     return null;
   }
 
-
   const card =
     normal.closest(
       '.ready-stock-card'
     );
 
-
   if(!card){
     return null;
   }
-
 
   const name =
     clean(
@@ -280,7 +238,6 @@ function readyData(
       'สินค้า'
     );
 
-
   const unit =
 
     mode === 'send'
@@ -295,20 +252,9 @@ function readyData(
             .readyPrice
         );
 
-
   if(!(unit > 0)){
     return null;
   }
-
-
-  /*
-    Calculator Flow รับ type:
-    echoes / discount / gacha
-
-    ใช้ echoes เป็นชนิดกลาง
-    แต่ราคาจะเป็นราคาสินค้าจริง
-    ไม่มีการคำนวณราคาใหม่
-  */
 
   const pack =
 
@@ -317,7 +263,6 @@ function readyData(
       ? 'แบบส่ง'
 
       : name;
-
 
   return {
 
@@ -391,14 +336,13 @@ function openThroughCalculator(
       mode
     );
 
-
   if(!data){
     return false;
   }
 
-
   /*
-    Source of truth ตัวเดียวกับ Calculator
+    ส่งข้อมูลสินค้าเข้า source-of-truth
+    ตัวเดียวกับหมวดคำนวณ
   */
 
   window.YMK_LAST_CALC = {
@@ -421,7 +365,7 @@ function openThroughCalculator(
 
 
   /*
-    metadata สำหรับแบบส่ง
+    เก็บ metadata สำหรับแบบส่ง
   */
 
   if(
@@ -486,7 +430,6 @@ function openThroughCalculator(
       .YMK_SEND_SELECTION =
         null;
 
-
     window
       .YMK_SEND_ORDER_META =
         null;
@@ -494,16 +437,12 @@ function openThroughCalculator(
 
 
   /*
-    ไม่เปิด Payment popup เอง
-
-    กดปุ่ม Order ของ Calculator
-    เพื่อให้ Calculator Flow เดิม
-    เป็นคนทำขั้นตอนต่อทั้งหมด
+    เรียก Flow ของ Calculator โดยตรง
+    ไม่สร้าง Popup / Slip Flow แยกอีก
   */
 
   const trigger =
     calcOrderButton();
-
 
   if(!trigger){
 
@@ -514,9 +453,7 @@ function openThroughCalculator(
     return false;
   }
 
-
   trigger.click();
-
 
   return true;
 }
@@ -535,7 +472,6 @@ document.addEventListener(
         '.ymk-send-choice'
       );
 
-
     if(send){
 
       const normal =
@@ -548,11 +484,9 @@ document.addEventListener(
             '.ready-stock-order-btn'
           );
 
-
       if(!normal){
         return;
       }
-
 
       e.preventDefault();
 
@@ -560,12 +494,10 @@ document.addEventListener(
 
       e.stopImmediatePropagation();
 
-
       openThroughCalculator(
         normal,
         'send'
       );
-
 
       return false;
     }
@@ -575,7 +507,6 @@ document.addEventListener(
       e.target.closest?.(
         '.ready-stock-order-btn'
       );
-
 
     if(
       !normal
@@ -589,19 +520,16 @@ document.addEventListener(
       return;
     }
 
-
     e.preventDefault();
 
     e.stopPropagation();
 
     e.stopImmediatePropagation();
 
-
     openThroughCalculator(
       normal,
       'instant'
     );
-
 
     return false;
 
@@ -611,7 +539,7 @@ document.addEventListener(
 
 
 /* =========================================================
-   KEEP SEND META AFTER CALCULATOR CREATES lastOrder
+   KEEP SEND META
    ========================================================= */
 
 document.addEventListener(
@@ -635,7 +563,6 @@ document.addEventListener(
       return;
     }
 
-
     setTimeout(
       ()=>{
 
@@ -657,7 +584,6 @@ document.addEventListener(
               .lastOrder
               .orderMode =
               'send';
-
 
             window
               .lastOrder
@@ -685,15 +611,12 @@ function startProductObserver(){
   const root =
     $('#products');
 
-
   if(!root){
     return;
   }
 
-
   let queued =
     false;
-
 
   new MutationObserver(
     ()=>{
@@ -702,17 +625,14 @@ function startProductObserver(){
         return;
       }
 
-
       queued =
         true;
-
 
       requestAnimationFrame(
         ()=>{
 
           queued =
             false;
-
 
           decorate();
         }
@@ -739,12 +659,10 @@ function boot(){
 
   decorate();
 
-
   document.addEventListener(
     'ymk-storefront-products-rendered',
     decorate
   );
-
 
   startProductObserver();
 }
