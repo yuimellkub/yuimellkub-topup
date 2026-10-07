@@ -2089,40 +2089,90 @@ function syncProductionStatus(){
 
 
   if(
-    /สลิปไม่ผ่าน|มีปัญหา|ไม่สำเร็จ|ผิดพลาด/
-      .test(text)
-  ){
+  /สลิปไม่ผ่าน/
+    .test(text)
+){
 
-    const st=
-      $('#ymOrderStatus');
+  const st=
+    $('#ymOrderStatus');
 
+  const slip=
+    $('#ymOrderSlip');
 
-    if(st){
+  const submit=
+    $('#ymOrderSubmitProdV21') ||
+    $('#ymOrderSubmit');
 
-      st.className=
-        'ymOrderStatus show';
-
-
-      st.innerHTML=
-
-        '<div class="ymSlipTitle">ออเดอร์มีปัญหา</div>'+
-
-        '<div class="ymSlipReceived" style="margin-top:8px">'+
-          esc(text)+
-        '</div>'+
-
-        '<div class="ymSlipNote">รบกวนติดต่อเข้ามาทางเพจเพื่อให้ทางร้านตรวจสอบและทำรายการใหม่ให้นะคะ ♡</div>'+
-
-        '<div class="ymSlipContacts">'+
-
-          '<a href="https://m.me/yuimellkubtopup" target="_blank" rel="noopener">ติดต่อเพจร้าน</a>'+
-
-        '</div>';
-    }
-
-
-    return;
+  if(slip){
+    slip.value='';
   }
+
+  $('#ymOrderSlipPreview')
+    ?.replaceChildren();
+
+  if(submit){
+
+    submit.disabled=false;
+
+    if(
+      submit.id ===
+      'ymOrderSubmitProdV21'
+    ){
+      submit.id=
+        'ymOrderSubmit';
+    }
+  }
+
+  if(st){
+
+    st.className=
+      'ymOrderStatus show';
+
+    st.innerHTML=
+      '<div class="ymSlipTitle">สลิปไม่ผ่าน</div>'+
+      '<div class="ymSlipReceived" style="margin-top:8px">'+
+        'กรุณาแนบสลิปที่ถูกต้อง แล้วส่งให้ร้านตรวจสอบใหม่อีกครั้งนะคะ ♡'+
+      '</div>';
+  }
+
+  lastStatusText='';
+
+  return;
+}
+
+
+if(
+  /มีปัญหา|ไม่สำเร็จ|ผิดพลาด/
+    .test(text)
+){
+
+  const st=
+    $('#ymOrderStatus');
+
+  if(st){
+
+    st.className=
+      'ymOrderStatus show';
+
+    st.innerHTML=
+
+      '<div class="ymSlipTitle">ออเดอร์มีปัญหา</div>'+
+
+      '<div class="ymSlipReceived" style="margin-top:8px">'+
+        esc(text)+
+      '</div>'+
+
+      '<div class="ymSlipNote">รบกวนติดต่อเข้ามาทางเพจเพื่อให้ทางร้านตรวจสอบและทำรายการใหม่ให้นะคะ ♡</div>'+
+
+      '<div class="ymSlipContacts">'+
+
+        '<a href="https://m.me/yuimellkubtopup" target="_blank" rel="noopener">ติดต่อเพจร้าน</a>'+
+
+      '</div>';
+  }
+
+  return;
+}
 
 
   const id=
