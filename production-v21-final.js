@@ -113,17 +113,49 @@ function installStyle(){
     }
 
 
+    #products .products{
+      display:grid!important;
+      grid-template-columns:repeat(4,1fr)!important;
+      gap:10px!important;
+      align-items:start!important;
+    }
+
     #products
     .ready-stock-card{
+      border-radius:18px!important;
+      padding:16px 10px!important;
+      text-align:center!important;
+      height:auto!important;
+      min-height:0!important;
+      align-self:start!important;
+      animation:none!important;
+      transform:translateY(0);
+      transition:.2s ease!important;
+    }
 
-      animation:
-        none!important;
+    #products .ready-stock-card .ymk-store-name{
+      display:block!important;
+      margin:6px!important;
+    }
 
-      transform:
-        translateY(0);
+    #products .ready-stock-card .ymk-store-price{
+      font-size:20px!important;
+      font-weight:900!important;
+      margin:0!important;
+    }
 
-      transition:
-        .2s ease!important;
+    #products .ready-stock-card .ready-stock-order-btn{
+      width:100%!important;
+      border-radius:10px!important;
+      padding:9px!important;
+      margin-top:10px!important;
+      font-weight:900!important;
+    }
+
+    @media(max-width:780px){
+      #products .products{
+        grid-template-columns:repeat(2,1fr)!important;
+      }
     }
 
 
