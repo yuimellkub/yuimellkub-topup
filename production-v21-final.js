@@ -1444,6 +1444,9 @@ function clearReadyProductState(){
   window.YMK_SEND_ORDER_META=null;
   window.YMK_CALC_CHECKOUT_STATE=null;
 
+  window.lastOrder=null;
+  window.YMK_LAST_CALC=null;
+
   const selected=
     $('#ymOrderSelected');
 
@@ -1573,6 +1576,31 @@ window.addEventListener(
   },
   true
 );
+window.addEventListener(
+  'click',
+  e=>{
+
+    const calcBtn=
+      e.target.closest?.(
+        '#ymCalcOrder,'+
+        '#ymCalcPopupOrder,'+
+        '.ymCalcOrderBtn,'+
+        '[data-calc-order]'
+      );
+
+    if(
+      !calcBtn ||
+      !e.isTrusted
+    ){
+      return;
+    }
+
+    clearReadyProductState();
+
+  },
+  true
+);
+
 /* =========================================================
    SLIP SUBMIT
    ========================================================= */
