@@ -1323,43 +1323,36 @@ function openReadyViaCalculator(
   }
 
 
-  const trigger=
-    calcOrderButton();
+ const qty=
+  $('#ymOrderQty');
 
-
-  if(!trigger){
-
-    console.error(
-      'YMK V21: calculator checkout trigger not found'
-    );
-
-
-    return false;
-  }
-
-
-  trigger.click();
-
-
-  /*
-    Preview Calculator อาจเขียนค่าคำนวณรอบเก่ากลับเข้ามาหลัง trigger.click()
-    ดังนั้น Ready Stock ล่าสุดต้องเขียนทับหลัง Flow เปิดแล้ว
-  */
-syncReadyCheckoutUI();
-
-requestAnimationFrame(
-  ()=>{
-    syncReadyCheckoutUI();
-  }
-);
-
-
-  return true;
+if(qty){
+  qty.value='1';
 }
 
+syncReadyCheckoutUI();
+
+const overlay=
+  $('#ymProductOrderOverlay');
+
+if(!overlay){
+
+  console.error(
+    'YMK V21: product order overlay not found'
+  );
+
+  return false;
+}
+
+overlay.classList.add(
+  'show'
+);
+
+return true;
+  }
 
 document.addEventListener(
-  'click',
+  'click', 
   e=>{
 
     const send=
@@ -1442,7 +1435,15 @@ document.addEventListener(
 );
 
 
+function clearReadyProductState(){
 
+  readyMeta=null;
+
+  window.YMK_ACTIVE_PRODUCT_ORDER=null;
+  window.YMK_SEND_SELECTION=null;
+  window.YMK_SEND_ORDER_META=null;
+  window.YMK_CALC_CHECKOUT_STATE=null;
+}
 /* =========================================================
    READY / CALCULATOR STATE
    ========================================================= */
@@ -1529,11 +1530,22 @@ window.addEventListener(
       return;
     }
 
-    readyMeta=null;
+  clearReadyProductState();
 
-    window.YMK_ACTIVE_PRODUCT_ORDER=null;
-    window.YMK_SEND_SELECTION=null;
-    window.YMK_SEND_ORDER_META=null;
+  },
+  true
+);
+  document.addEventListener(
+  'input',
+  e=>{
+
+    if(
+      e.target?.id === 'target' ||
+      e.target?.id === 'gachaRolls' ||
+      e.target?.id === 'specialCrystalPacks'
+    ){
+      clearReadyProductState();
+    }
 
   },
   true
