@@ -1448,6 +1448,12 @@ function clearReadyProductState(){
   window.YMK_LAST_CALC=null;
   window.YMK_PENDING_ORDER_META=null;
   window.YMK_FORCED_PACK_META=null;
+  if(
+  typeof window.YMK_CLEAR_READY_PACK_PATCH ===
+  'function'
+){
+  window.YMK_CLEAR_READY_PACK_PATCH();
+}
 
   const selected=
     $('#ymOrderSelected');
