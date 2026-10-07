@@ -1202,11 +1202,11 @@ function openReadyViaCalculator(
   window.YMK_ACTIVE_PRODUCT_ORDER=
     null;
 
-  document.body
-    .classList
-    .remove(
-      'ymCalcCheckout'
-    );
+document.body
+  .classList
+  .add(
+    'ymCalcCheckout'
+  );
 
 
   readyMeta=
