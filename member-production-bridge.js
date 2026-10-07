@@ -884,7 +884,86 @@ async function register(){
   }
 }
 
+function ensurePreviewToastController(){
 
+  const toast=
+    document.getElementById(
+      'ymMemberToast'
+    );
+
+  const title=
+    document.getElementById(
+      'ymToastTitle'
+    );
+
+  const msg=
+    document.getElementById(
+      'ymToastText'
+    );
+
+  if(
+    !toast ||
+    !title ||
+    !msg
+  ){
+    return;
+  }
+
+  let timer=null;
+  let cleanup=null;
+
+  window.ymMemberToast=
+    function(t,m){
+
+      clearTimeout(timer);
+      clearTimeout(cleanup);
+
+      toast.classList.remove(
+        'show',
+        'ym-leaving'
+      );
+
+      title.textContent=t;
+      msg.textContent=m;
+
+      requestAnimationFrame(
+        ()=>
+          requestAnimationFrame(
+            ()=>{
+              toast.classList.add(
+                'show'
+              );
+            }
+          )
+      );
+
+      timer=
+        setTimeout(
+          ()=>{
+
+            toast.classList.remove(
+              'show'
+            );
+
+            toast.classList.add(
+              'ym-leaving'
+            );
+
+            cleanup=
+              setTimeout(
+                ()=>{
+                  toast.classList.remove(
+                    'ym-leaving'
+                  );
+                },
+                450
+              );
+
+          },
+          3000
+        );
+    };
+}
 async function login(){
 
   const email =
@@ -917,16 +996,12 @@ async function login(){
     profile?.nickname ||
     'สมาชิก Yuimellkub';
 
-  if(
-    typeof window
-      .ymMemberToast ===
-    'function'
-  ){
-    window.ymMemberToast(
-      'เข้าสู่ระบบสำเร็จ ♡',
-      'ยินดีต้อนรับกลับมา '+nickname
-    );
-  }
+  ensurePreviewToastController();
+
+  window.ymMemberToast?.(
+    'เข้าสู่ระบบสำเร็จ ♡',
+    'ยินดีต้อนรับกลับมา '+nickname
+  );
 }
 
 
@@ -1502,7 +1577,7 @@ async function payWithCredit(btn){
 
 
 function boot(){
-
+ensurePreviewToastController();
  
 
   if(
