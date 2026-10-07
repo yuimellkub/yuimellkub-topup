@@ -2088,8 +2088,8 @@ function syncProductionStatus(){
     text;
 
 
-  if(
-  /สลิปไม่ผ่าน/
+if(
+  /สลิปไม่ผ่าน|ตรวจสอบสลิปไม่สำเร็จ|แนบสลิป.*ใหม่/
     .test(text)
 ){
 
@@ -2142,7 +2142,7 @@ function syncProductionStatus(){
 
 
 if(
-  /มีปัญหา|ไม่สำเร็จ|ผิดพลาด/
+  /มีปัญหา|ผิดพลาด/
     .test(text)
 ){
 
