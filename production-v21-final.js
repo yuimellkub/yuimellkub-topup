@@ -1529,37 +1529,46 @@ window.addEventListener(
   'click',
   e=>{
 
-    const calcBtn=
+    const next=
       e.target.closest?.(
-        '#ymCalcOrder,'+
-        '#ymCalcPopupOrder,'+
-        '.ymCalcOrderBtn,'+
-        '[data-calc-order]'
+        '#ymOrderNext'
       );
 
-    if(
-      !calcBtn ||
-      !e.isTrusted
-    ){
+    if(!next || !readyMeta){
       return;
     }
 
-  clearReadyProductState();
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
 
-  },
-  true
-);
-  document.addEventListener(
-  'input',
-  e=>{
+    // ใช้ข้อมูลสินค้าพร้อมเติมรอบปัจจุบัน
+    syncReadyCheckoutUI();
 
-    if(
-      e.target?.id === 'target' ||
-      e.target?.id === 'gachaRolls' ||
-      e.target?.id === 'specialCrystalPacks'
-    ){
-      clearReadyProductState();
+    const orderOverlay=
+      $('#ymProductOrderOverlay');
+
+    const paymentOverlay=
+      $('#ymProductPaymentOverlay');
+
+    if(!paymentOverlay){
+      console.error(
+        'YMK: payment overlay not found'
+      );
+      return;
     }
+
+    // ปิดหน้าใส่ UID
+    orderOverlay?.classList.remove(
+      'show'
+    );
+
+    // เปิดหน้าชำระเงิน
+    paymentOverlay.classList.add(
+      'show'
+    );
+
+    return false;
 
   },
   true
