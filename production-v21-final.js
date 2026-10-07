@@ -75,7 +75,6 @@ let lastStatusText=
 /* =========================================================
    CARD / MOTION
    ========================================================= */
-
 function installStyle(){
 
   if(
@@ -84,73 +83,275 @@ function installStyle(){
     return;
   }
 
-
   const s=
     document.createElement(
       'style'
     );
 
-
   s.id=
     'ymkProductionV21Style';
-
 
   s.textContent=`
 
     #ymkBackendCompatHost{
-
       display:none!important;
-
       width:0!important;
-
       height:0!important;
-
       overflow:hidden!important;
-
       visibility:hidden!important;
-
       pointer-events:none!important;
     }
 
-
-    #products .products{
-      display:grid!important;
-      grid-template-columns:repeat(4,1fr)!important;
-      gap:10px!important;
-      align-items:start!important;
-    }
+    /*
+      การ์ดสินค้าใช้ CSS / Motion จาก Preview เดิม
+      Production ไม่บังคับขนาดการ์ดซ้ำ
+    */
 
     #products
-    .ready-stock-card{
-      border-radius:18px!important;
-      padding:16px 10px!important;
-      text-align:center!important;
-      height:auto!important;
-      min-height:0!important;
-      align-self:start!important;
-      animation:none!important;
-      transform:translateY(0);
-      transition:.2s ease!important;
+    .ready-stock-card
+    .ymk-send-choice{
+      border:
+        1px solid
+        #efbfd1;
+
+      background:
+        #fff7fa;
+
+      color:
+        #c45f87;
     }
 
-    #products .ready-stock-card .ymk-store-name{
-      display:block!important;
-      margin:6px!important;
+    html.ymDark
+    #products
+    .ready-stock-card
+    .ymk-send-choice,
+
+    body.ymDark
+    #products
+    .ready-stock-card
+    .ymk-send-choice{
+      background:
+        #382930;
+
+      border-color:
+        #805066;
+
+      color:
+        #efb1c9;
     }
 
-    #products .ready-stock-card .ymk-store-price{
-      font-size:20px!important;
-      font-weight:900!important;
-      margin:0!important;
+    #ymkForceCard,
+    #ymkFinalOrderStatusCard{
+      display:
+        none!important;
     }
 
-    #products .ready-stock-card .ready-stock-order-btn{
-      width:100%!important;
-      border-radius:10px!important;
-      padding:9px!important;
-      margin-top:10px!important;
-      font-weight:900!important;
+    .ymk-track-proof{
+      margin-top:
+        12px;
+
+      padding:
+        11px;
+
+      border:
+        1px solid
+        #f0ccda;
+
+      border-radius:
+        13px;
+
+      background:
+        #fff8fb;
     }
+
+    .ymk-track-proof-grid{
+      display:
+        grid;
+
+      grid-template-columns:
+        repeat(
+          3,
+          minmax(0,1fr)
+        );
+
+      gap:
+        7px;
+
+      margin-top:
+        8px;
+    }
+
+    .ymk-track-proof-grid img{
+      display:
+        block;
+
+      width:
+        100%;
+
+      aspect-ratio:
+        1/1;
+
+      object-fit:
+        cover;
+
+      border-radius:
+        9px;
+
+      cursor:
+        pointer;
+
+      background:
+        #fff;
+    }
+
+    .ymk-track-save{
+      width:
+        100%;
+
+      min-height:
+        42px;
+
+      margin-top:
+        9px;
+
+      border:
+        0;
+
+      border-radius:
+        11px;
+
+      background:
+        #df76a0;
+
+      color:
+        #fff;
+
+      font:
+        inherit;
+
+      font-size:
+        12px;
+
+      font-weight:
+        900;
+
+      cursor:
+        pointer;
+    }
+
+    .ymk-track-problem{
+      margin-top:
+        10px;
+
+      padding:
+        11px;
+
+      border:
+        1px solid
+        #efbfd0;
+
+      border-radius:
+        12px;
+
+      background:
+        #fff2f6;
+
+      color:
+        #9d5870;
+
+      line-height:
+        1.65;
+
+      text-align:
+        center;
+    }
+
+    .ymk-track-problem a{
+      display:
+        block;
+
+      margin-top:
+        8px;
+
+      padding:
+        9px 11px;
+
+      border-radius:
+        10px;
+
+      background:
+        #df76a0;
+
+      color:
+        #fff;
+
+      text-decoration:
+        none;
+
+      font-weight:
+        900;
+    }
+
+    .ymk-proof-viewer{
+      position:
+        fixed;
+
+      inset:
+        0;
+
+      z-index:
+        9999999;
+
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        center;
+
+      padding:
+        20px;
+
+      background:
+        rgba(
+          60,
+          34,
+          46,
+          .76
+        );
+    }
+
+    .ymk-proof-viewer img{
+      max-width:
+        94vw;
+
+      max-height:
+        90vh;
+
+      object-fit:
+        contain;
+
+      border-radius:
+        12px;
+
+      background:
+        #fff;
+    }
+
+  `;
+
+  document.head
+    .appendChild(s);
+}
+
+  
+
+
+
+  
+
 
     @media(max-width:780px){
       #products .products{
@@ -176,9 +377,7 @@ function installStyle(){
     }
 
 
-    #products
-    .ready-stock-card
-    .ymk-store-bottom{
+
 
       display:flex;
 
@@ -190,9 +389,7 @@ function installStyle(){
     }
 
 
-    #products
-    .ready-stock-card
-    .ymk-send-choice{
+  
 
       width:
         100%;
@@ -1549,17 +1746,16 @@ document.addEventListener(
 
 
 
-/* READY UI AUTHORITY */
-window.addEventListener(
-  'click',
-  e=>{
+/* =========================================================
+   READY / CALCULATOR STATE
+   ========================================================= */
 
-    if(!readyMeta){
-      return;
-    }
-/* READY UI AUTHORITY
-   sync ตอนเข้า Payment ครั้งเดียว
-   ไม่ rewrite DOM ซ้ำทุกครั้งที่สลับช่องทางชำระเงิน
+/*
+  Ready Stock:
+  sync ข้อมูลเข้าหน้าชำระเงินตอนกด "ไปชำระเงิน" เท่านั้น
+
+  ห้าม sync ซ้ำตอนกด QR / ธนาคาร / Wallet / เครดิต
+  เพราะจะทำให้ Payment UI กระตุก
 */
 window.addEventListener(
   'click',
@@ -1590,27 +1786,32 @@ window.addEventListener(
 );
 
 
+/*
+  เปลี่ยนจำนวนสินค้า Ready Stock
+*/
 document.addEventListener(
   'input',
   e=>{
 
     if(
-      readyMeta
-      &&
-      e.target?.id ===
-      'ymOrderQty'
+      readyMeta &&
+      e.target?.id === 'ymOrderQty'
     ){
       syncReadyCheckoutUI();
     }
+
   },
   true
 );
 
-/*
-  CALCULATOR SOURCE OF TRUTH
 
-  ถ้าผู้ใช้กดสั่งจาก Calculator จริง
-  ให้ตัด state ของ Ready Stock รอบเก่าออกทันที
+/*
+  เมื่อผู้ใช้กด Calculator จริง
+  ให้ตัด Ready Stock state เก่าออก
+
+  e.isTrusted สำคัญ:
+  Ready Stock ใช้ trigger.click() เพื่อเรียก checkout กลาง
+  จึงห้ามล้าง state ตอนเป็น synthetic click
 */
 window.addEventListener(
   'click',
@@ -1631,17 +1832,11 @@ window.addEventListener(
       return;
     }
 
-    readyMeta=
-      null;
+    readyMeta=null;
 
-    window.YMK_ACTIVE_PRODUCT_ORDER=
-      null;
-
-    window.YMK_SEND_SELECTION=
-      null;
-
-    window.YMK_SEND_ORDER_META=
-      null;
+    window.YMK_ACTIVE_PRODUCT_ORDER=null;
+    window.YMK_SEND_SELECTION=null;
+    window.YMK_SEND_ORDER_META=null;
 
   },
   true
