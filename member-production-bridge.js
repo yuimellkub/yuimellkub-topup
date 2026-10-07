@@ -874,6 +874,38 @@ async function forgot(){
 }
 
 
+function creditWriteError(
+  err
+){
+
+  const code=
+    String(
+      err?.code||
+      ''
+    );
+
+  if(
+    code.includes(
+      'permission-denied'
+    )
+    ||
+    /Missing or insufficient permissions/i
+      .test(
+        String(
+          err?.message||
+          ''
+        )
+      )
+  ){
+    return Error(
+      'ระบบเติมเครดิตถูก Firestore ปฏิเสธสิทธิ์ กรุณาตรวจสอบว่า Rules ของ credit_requests ถูก Publish แล้ว'
+    );
+  }
+
+  return err;
+}
+
+
 async function submitCredit(btn){
 
   const user=
@@ -941,36 +973,45 @@ async function submitCredit(btn){
       )
       .doc();
 
-  await ref.set({
-    memberId:
-      user.uid,
+  try{
 
-    nickname:
-      profile?.nickname ||
-      '',
+    await ref.set({
+      memberId:
+        user.uid,
 
-    email:
-      user.email ||
-      '',
+      nickname:
+        profile?.nickname ||
+        '',
 
-    amount,
+      email:
+        user.email ||
+        '',
 
-    slipName:
-      file.name ||
-      'slip.jpg',
+      amount,
 
-    slipData:
-      data,
+      slipName:
+        file.name ||
+        'slip.jpg',
 
-    status:
-      'pending',
+      slipData:
+        data,
 
-    createdAt:
-      firebase
-        .firestore
-        .FieldValue
-        .serverTimestamp()
-  });
+      status:
+        'pending',
+
+      createdAt:
+        firebase
+          .firestore
+          .FieldValue
+          .serverTimestamp()
+    });
+
+  }catch(err){
+
+    throw creditWriteError(
+      err
+    );
+  }
 }
 
 
@@ -1016,7 +1057,7 @@ async function payWithCredit(btn){
 
   if(
     Number(
-      liveProfile.credit || 0
+      profile?.credit || 0
     ) < amount
   ){
     throw Error(
