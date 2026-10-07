@@ -1,0 +1,5 @@
+เพิ่ม 3 บรรทัดนี้ใน index.html หลัง production-v16-final.js และก่อน }); ปิดท้าย
+
+const v17=d.createElement('script');
+v17.src='production-v17-polish.js?v=1';
+d.body.appendChild(v17);
