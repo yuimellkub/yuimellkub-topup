@@ -1631,11 +1631,7 @@ document.addEventListener(
         '[data-ym-order-pay]'
       );
 
-    if(
-      !payBtn ||
-      window.YMK_ORDER_SOURCE !==
-      'calc'
-    ){
+    if(!payBtn){
       return;
     }
 
@@ -1649,65 +1645,158 @@ document.addEventListener(
           return;
         }
 
-        const amount=
-          $('#ymOrderAmount');
+        /*
+          Calculator:
+          ยึดราคา + รายการ + แพ็ก
+          จาก lastOrder รอบปัจจุบันเท่านั้น
+        */
+        if(
+          window.YMK_ORDER_SOURCE ===
+          'calc'
+        ){
 
-        const summary=
-          $('#ymOrderSummary');
+          const amount=
+            $('#ymOrderAmount');
 
-        const price=
-          num(order.price);
+          const summary=
+            $('#ymOrderSummary');
 
-        if(amount && price>0){
-          amount.textContent=
-            fmt(price)+
-            ' บาท';
-        }
-
-        if(summary){
-
-          const uid=
-            String(
-              $('#ymOrderUid')
-                ?.value||
-              ''
-            ).trim();
-
-          const server=
-            String(
-              $('#ymOrderServer')
-                ?.value||
-              'Asia'
-            ).trim();
-
-          const name=
-            String(
-              $('#ymOrderName')
-                ?.value||
-              ''
-            ).trim();
-
-          summary.innerHTML=
-            '<b>'+
-            esc(order.item||'')+
-            '</b>'+
-            (
-              order.pack
-                ? '<span class="ymPackLine">แพ็กที่เติม: '+
-                  esc(order.pack)+
-                  '</span>'
-                : ''
-            )+
-            '<br>UID: '+
-            esc(uid||'-')+
-            ' • Server: '+
-            esc(server)+
-            (
-              name
-                ? '<br>ชื่อ: '+
-                  esc(name)
-                : ''
+          const price=
+            num(
+              order.price
             );
+
+          if(
+            amount &&
+            price > 0
+          ){
+            amount.textContent=
+              fmt(price)+
+              ' บาท';
+          }
+
+          if(summary){
+
+            const uid=
+              String(
+                $('#ymOrderUid')
+                  ?.value||
+                ''
+              ).trim();
+
+            const server=
+              String(
+                $('#ymOrderServer')
+                  ?.value||
+                'Asia'
+              ).trim();
+
+            const name=
+              String(
+                $('#ymOrderName')
+                  ?.value||
+                ''
+              ).trim();
+
+            summary.innerHTML=
+              '<b>'+
+              esc(
+                order.item||
+                ''
+              )+
+              '</b>'+
+              (
+                order.pack
+                  ? '<span class="ymPackLine">แพ็กที่เติม: '+
+                    esc(order.pack)+
+                    '</span>'
+                  : ''
+              )+
+              '<br>UID: '+
+              esc(uid||'-')+
+              ' • Server: '+
+              esc(server)+
+              (
+                name
+                  ? '<br>ชื่อ: '+
+                    esc(name)
+                  : ''
+              );
+          }
+
+          /*
+            กัน script อื่นเอาราคา Ready เก่า
+            กลับมาเขียนทับหลังเปลี่ยนช่องทางจ่าย
+          */
+          setTimeout(
+            ()=>{
+
+              const current=
+                window.lastOrder;
+
+              if(
+                !current ||
+                window.YMK_ORDER_SOURCE !==
+                'calc'
+              ){
+                return;
+              }
+
+              const amount=
+                $('#ymOrderAmount');
+
+              const price=
+                num(
+                  current.price
+                );
+
+              if(
+                amount &&
+                price > 0
+              ){
+                amount.textContent=
+                  fmt(price)+
+                  ' บาท';
+              }
+
+            },
+            100
+          );
+
+          setTimeout(
+            ()=>{
+
+              const current=
+                window.lastOrder;
+
+              if(
+                !current ||
+                window.YMK_ORDER_SOURCE !==
+                'calc'
+              ){
+                return;
+              }
+
+              const amount=
+                $('#ymOrderAmount');
+
+              const price=
+                num(
+                  current.price
+                );
+
+              if(
+                amount &&
+                price > 0
+              ){
+                amount.textContent=
+                  fmt(price)+
+                  ' บาท';
+              }
+
+            },
+            300
+          );
         }
 
       }
@@ -1716,7 +1805,6 @@ document.addEventListener(
   },
   true
 );
-
 /* =========================================================
    SLIP SUBMIT
    ========================================================= */
