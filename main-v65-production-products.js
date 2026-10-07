@@ -565,88 +565,44 @@ function style(){
     return;
   }
 
-
   const s=
     document.createElement(
       'style'
     );
 
-
   s.id=
     'ymkProductionV15';
-
 
   s.textContent=`
 
     /*
-      ไม่ใส่ entry animation
-      เพื่อไม่ให้ตอนเปิดเว็บกระพริบ
+      Production ใช้ layout / ขนาด / motion ของ Preview
+      ห้ามกำหนด card ซ้ำ
     */
 
     .ymk-production-card{
       animation:none!important;
     }
 
-
-    .realProductPane .products{
-      align-items:start!important;
-    }
-
-
-    .ymk-production-image{
-
-      height:72px!important;
-
-      display:flex!important;
-
-      align-items:center!important;
-
-      justify-content:center!important;
-
-      overflow:hidden!important;
-    }
-
-
+    /*
+      จำกัดเฉพาะรูปจริงไม่ให้ล้นการ์ด
+    */
     .ymk-production-image img{
-
-      display:block!important;
-
-      width:66px!important;
-
-      height:66px!important;
-
-      max-width:66px!important;
-
-      max-height:66px!important;
-
-      object-fit:contain!important;
+      display:block;
+      width:auto;
+      height:auto;
+      max-width:66px;
+      max-height:66px;
+      margin:0 auto;
+      object-fit:contain;
     }
-
-
-    .ymk-store-desc{
-
-      margin-top:4px;
-
-      font-size:11px;
-
-      opacity:.65;
-    }
-
-
-    .ymk-store-bottom{
-      margin-top:10px;
-    }
-
 
     .ymk-production-card button:disabled{
-
       opacity:.55!important;
-
       cursor:not-allowed!important;
     }
 
   `;
-
 
   document.head
     .appendChild(s);
