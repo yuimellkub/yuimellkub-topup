@@ -11,6 +11,7 @@ const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 
 let activeOrder = null;
+let lastProductionStatusText = '';
 
 const esc = v =>
   String(v ?? '').replace(/[&<>"']/g,c=>({
@@ -48,10 +49,6 @@ function installStyle(){
 
   style.textContent = `
 
-    /* -------------------------
-       Preview card base
-    ------------------------- */
-
     #products .products{
       align-items:start!important;
     }
@@ -78,17 +75,25 @@ function installStyle(){
         )!important;
 
       transform:
-        translate3d(0,0,0)!important;
+        translate3d(
+          0,
+          0,
+          0
+        )!important;
 
       will-change:
         transform,
         box-shadow!important;
 
+      backface-visibility:
+        hidden!important;
+
+      -webkit-backface-visibility:
+        hidden!important;
+
       transition:
-        transform .58s
-          cubic-bezier(.22,.61,.36,1),
-        box-shadow .58s
-          cubic-bezier(.22,.61,.36,1)!important;
+        transform .20s ease,
+        box-shadow .20s ease!important;
     }
 
 
@@ -114,27 +119,24 @@ function installStyle(){
 
     #products .product:hover,
     #products .ready-stock-card:hover{
+
       transform:
         translate3d(
           0,
-          -4px,
+          -3px,
           0
         )!important;
 
       box-shadow:
-        0 12px 26px
+        0 10px 22px
         rgba(
           177,
           90,
           125,
-          .10
+          .09
         )!important;
     }
 
-
-    /* -------------------------
-       Product image
-    ------------------------- */
 
     #products .ymk-production-image,
     #products .gem{
@@ -165,10 +167,6 @@ function installStyle(){
     }
 
 
-    /* -------------------------
-       Product name
-    ------------------------- */
-
     #products .ymk-store-name{
       display:-webkit-box!important;
 
@@ -188,15 +186,10 @@ function installStyle(){
     }
 
 
-    /* ไม่ให้ description ดันการ์ดยาว */
     #products .ymk-store-desc{
       display:none!important;
     }
 
-
-    /* -------------------------
-       Price
-    ------------------------- */
 
     #products .ymk-store-price,
     #products .price{
@@ -223,10 +216,6 @@ function installStyle(){
       gap:7px!important;
     }
 
-
-    /* -------------------------
-       Buttons
-    ------------------------- */
 
     #products .ready-stock-order-btn,
     #products .ymk-send-choice{
@@ -294,10 +283,6 @@ function installStyle(){
     }
 
 
-    /* -------------------------
-       Payment / status Preview
-    ------------------------- */
-
     #ymkForceCard,
     #ymkFinalOrderStatusCard{
       display:none!important;
@@ -353,7 +338,7 @@ function installStyle(){
 
 
 /* =========================================================
-   2. ADD SEND BUTTON TO REAL FIRESTORE CARDS
+   2. ADD SEND BUTTON
    ========================================================= */
 
 function addSendButton(card){
@@ -728,6 +713,10 @@ function syncSelected(){
 }
 
 
+/* =========================================================
+   5. RESET STATUS
+   ========================================================= */
+
 function resetStatus(){
 
   const st =
@@ -762,6 +751,10 @@ function resetStatus(){
   }
 }
 
+
+/* =========================================================
+   6. OPEN ORDER
+   ========================================================= */
 
 function openProductOrder(
   normal,
@@ -824,7 +817,7 @@ function openProductOrder(
 
 
 /* =========================================================
-   5. CARD CLICK
+   7. CARD CLICK
    ========================================================= */
 
 window.addEventListener(
@@ -912,7 +905,7 @@ window.addEventListener(
 
 
 /* =========================================================
-   6. QUANTITY
+   8. QUANTITY
    ========================================================= */
 
 document.addEventListener(
@@ -965,7 +958,7 @@ document.addEventListener(
 
 
 /* =========================================================
-   7. ORDER POPUP → PAYMENT POPUP
+   9. ORDER → PAYMENT
    ========================================================= */
 
 window.addEventListener(
@@ -1131,7 +1124,7 @@ window.addEventListener(
 
 
 /* =========================================================
-   8. MEMBER CREDIT BUTTON
+   10. MEMBER CREDIT BUTTON
    ========================================================= */
 
 function syncCreditButton(){
@@ -1172,7 +1165,7 @@ function syncCreditButton(){
 
 
 /* =========================================================
-   9. BRIDGE PREVIEW FORM → PRODUCTION BACKEND
+   11. LEGACY BRIDGE
    ========================================================= */
 
 function ensureLegacy(){
@@ -1396,7 +1389,7 @@ function prepareBackendOrder(){
 
 
 /* =========================================================
-   10. PREVIEW PENDING UI
+   12. PENDING UI
    ========================================================= */
 
 function pendingHTML(){
@@ -1491,7 +1484,7 @@ function showPending(){
 
 
 /* =========================================================
-   11. PREVIEW APPROVED UI
+   13. APPROVED UI
    ========================================================= */
 
 function approvedHTML(
@@ -1644,7 +1637,7 @@ function showApproved(
 
 
 /* =========================================================
-   12. FAILED UI
+   14. FAILED UI
    ========================================================= */
 
 function showProblem(
@@ -1704,7 +1697,7 @@ function showProblem(
 
 
 /* =========================================================
-   13. SUBMIT REAL SLIP
+   15. SUBMIT REAL SLIP
    ========================================================= */
 
 window.addEventListener(
@@ -1721,10 +1714,6 @@ window.addEventListener(
       return;
     }
 
-
-    /*
-      เครดิตให้ member bridge จัดการเอง
-    */
 
     const method =
       document.querySelector(
@@ -1829,11 +1818,6 @@ window.addEventListener(
       }
 
 
-      /*
-        manual mode:
-        ยังไม่ออกเลขออเดอร์
-      */
-
       showPending();
 
     }catch(err){
@@ -1867,7 +1851,7 @@ window.addEventListener(
 
 
 /* =========================================================
-   14. WATCH REAL PRODUCTION STATUS
+   16. WATCH PRODUCTION STATUS
    ========================================================= */
 
 function syncProductionStatus(){
@@ -1893,9 +1877,17 @@ function syncProductionStatus(){
   }
 
 
-  /*
-    failed
-  */
+  if(
+    text ===
+    lastProductionStatusText
+  ){
+    return;
+  }
+
+
+  lastProductionStatusText =
+    text;
+
 
   if(
     /สลิปไม่ผ่าน|มีปัญหา|ไม่สำเร็จ|ผิดพลาด/
@@ -1907,10 +1899,6 @@ function syncProductionStatus(){
     return;
   }
 
-
-  /*
-    approved
-  */
 
   const match =
     text.match(
@@ -1943,10 +1931,6 @@ function syncProductionStatus(){
   }
 
 
-  /*
-    pending
-  */
-
   if(
     /รอร้านตรวจสอบ|กำลังรอร้านตรวจสอบ|ส่งสลิปแล้ว|กำลังส่งสลิป|ยังไม่มีการสร้างออเดอร์/
       .test(text)
@@ -1958,7 +1942,7 @@ function syncProductionStatus(){
 
 
 /* =========================================================
-   15. COPY / NEW ORDER
+   17. COPY / NEW ORDER
    ========================================================= */
 
 document.addEventListener(
@@ -2020,6 +2004,10 @@ document.addEventListener(
         null;
 
 
+      lastProductionStatusText =
+        '';
+
+
       window.lastOrder =
         null;
 
@@ -2069,7 +2057,7 @@ document.addEventListener(
 
 
 /* =========================================================
-   16. START
+   18. START
    ========================================================= */
 
 function boot(){
@@ -2095,22 +2083,54 @@ function boot(){
   );
 
 
-  new MutationObserver(
-    ()=>{
+  /*
+    ไม่ observe document.body ทั้งหน้าแล้ว
+    เพราะตอนแนบสลิป status UI จะเปลี่ยน DOM
+    แล้ว observer ตัวเก่าจะเรียกตัวเองวนซ้ำจนเว็บค้าง
 
-      decorateCards();
+    ตอนนี้ observe เฉพาะ #products
+    เพื่อรอ Firestore render การ์ดใหม่เท่านั้น
+  */
 
-      syncCreditButton();
+  const productRoot =
+    $('#products');
 
-      syncProductionStatus();
-    }
-  ).observe(
-    document.body,
-    {
-      childList:true,
-      subtree:true
-    }
-  );
+
+  if(productRoot){
+
+    let cardFrame =
+      0;
+
+
+    new MutationObserver(
+      ()=>{
+
+        if(cardFrame){
+          return;
+        }
+
+
+        cardFrame =
+          requestAnimationFrame(
+            ()=>{
+
+              cardFrame =
+                0;
+
+
+              decorateCards();
+            }
+          );
+
+      }
+    ).observe(
+      productRoot,
+      {
+        childList:true,
+        subtree:true
+      }
+    );
+  }
 
 
   const status =
