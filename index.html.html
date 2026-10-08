@@ -2646,6 +2646,9 @@ document.addEventListener('DOMContentLoaded',function(){
    }catch(e){$('#ymOrderQrMount').textContent='โหลดข้อมูลชำระเงินไม่สำเร็จ'}
  } loadPay();
  $('#ymOrderSubmit').onclick=function(){
+   // The production bridge owns credit checkout and its atomic Firestore transaction.
+   // Never run the legacy Preview wallet debit or write Preview orders for credit.
+   if(window.YMK_MEMBER_PRODUCTION && payment==='credit') return;
    const x=state();if(!x)return; const st=$('#ymOrderStatus');
    if(payment==='credit'){
      const memberCredit=window.YMPreviewStore?.me?.()||null;
@@ -4242,7 +4245,46 @@ window.addEventListener('click',function(e){
   else unlockSubmit();
 })();
 </script>
-\n<script id="ym-initial-order-state-clean-fix">\n(function(){\n  'use strict';\n  function cleanInitialOrderUI(){\n    /* หน้าเว็บใหม่ต้องเริ่มจากสถานะว่างเสมอ — ไม่เอาผลออเดอร์รอบก่อนมาติด */\n    var st=document.getElementById('ymOrderStatus');\n    if(st){ st.className='ymOrderStatus'; st.innerHTML=''; }\n    var approve=document.getElementById('ymCalcApproveSlip');\n    if(approve) approve.remove();\n    var slip=document.getElementById('ymOrderSlip');\n    if(slip) slip.value='';\n    var preview=document.getElementById('ymOrderSlipPreview');\n    if(preview) preview.innerHTML='';\n    var submit=document.getElementById('ymOrderSubmit');\n    if(submit){ submit.disabled=false; submit.removeAttribute('disabled'); }\n    document.body.classList.remove('ymCalcCheckout');\n    var order=document.getElementById('ymProductOrderOverlay');\n    var pay=document.getElementById('ymProductPaymentOverlay');\n    [order,pay].forEach(function(el){\n      if(!el)return;\n      el.classList.remove('show');\n      el.setAttribute('aria-hidden','true');\n    });\n  }\n  if(document.readyState==='loading'){\n    document.addEventListener('DOMContentLoaded',function(){\n      cleanInitialOrderUI();\n      /* รอ script เก่าที่ restore state ตอน DOMContentLoaded ให้ทำงานจบ แล้วล้างซ้ำหนึ่งครั้ง */\n      setTimeout(cleanInitialOrderUI,0);\n      setTimeout(cleanInitialOrderUI,120);\n    },{once:true});\n  }else{\n    cleanInitialOrderUI();\n    setTimeout(cleanInitialOrderUI,0);\n    setTimeout(cleanInitialOrderUI,120);\n  }\n})();\n</script>\n
+
+<script id="ym-initial-order-state-clean-fix">
+(function(){
+  'use strict';
+  function cleanInitialOrderUI(){
+    /* หน้าเว็บใหม่ต้องเริ่มจากสถานะว่างเสมอ — ไม่เอาผลออเดอร์รอบก่อนมาติด */
+    var st=document.getElementById('ymOrderStatus');
+    if(st){ st.className='ymOrderStatus'; st.innerHTML=''; }
+    var approve=document.getElementById('ymCalcApproveSlip');
+    if(approve) approve.remove();
+    var slip=document.getElementById('ymOrderSlip');
+    if(slip) slip.value='';
+    var preview=document.getElementById('ymOrderSlipPreview');
+    if(preview) preview.innerHTML='';
+    var submit=document.getElementById('ymOrderSubmit');
+    if(submit){ submit.disabled=false; submit.removeAttribute('disabled'); }
+    document.body.classList.remove('ymCalcCheckout');
+    var order=document.getElementById('ymProductOrderOverlay');
+    var pay=document.getElementById('ymProductPaymentOverlay');
+    [order,pay].forEach(function(el){
+      if(!el)return;
+      el.classList.remove('show');
+      el.setAttribute('aria-hidden','true');
+    });
+  }
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',function(){
+      cleanInitialOrderUI();
+      /* รอ script เก่าที่ restore state ตอน DOMContentLoaded ให้ทำงานจบ แล้วล้างซ้ำหนึ่งครั้ง */
+      setTimeout(cleanInitialOrderUI,0);
+      setTimeout(cleanInitialOrderUI,120);
+    },{once:true});
+  }else{
+    cleanInitialOrderUI();
+    setTimeout(cleanInitialOrderUI,0);
+    setTimeout(cleanInitialOrderUI,120);
+  }
+})();
+</script>
+
 <style id="ym-credit-clean-v2-css">
 #ymOrderStatus.ymCreditPaidDone{background:#edf9f3!important;border:1px solid #bfe4d0!important;color:#3f7d5c!important;padding:18px!important;border-radius:16px!important;text-align:center!important;line-height:1.65!important}
 #ymOrderStatus.ymCreditPaidDone b{font-size:16px!important;color:#347453!important}
@@ -5996,6 +6038,8 @@ document.addEventListener('DOMContentLoaded',function(){
  let selectedCreditAmount=0;
 
  function render(){
+   // Production member history is Firestore-owned; Preview must not overwrite it.
+   if(window.YMK_MEMBER_PRODUCTION) return;
    const m=YMPreviewStore.me();
    if(guest)guest.hidden=!!m;if(logged)logged.hidden=!m;
    if(!m)return;
