@@ -21,7 +21,10 @@ service cloud.firestore {
    allow read:if true;
    allow write:if admin() || (signed() && getAfter(orderPath(id)).data.memberId==request.auth.uid && getAfter(orderPath(id)).data.paymentMethod=='เครดิต');
   }
-  match /order_slips/{id}{allow read,write:if admin();}
+  match /order_slips/{id}{
+   allow read:if admin() || (signed() && resource.data.memberId == request.auth.uid);
+   allow write:if admin();
+  }
   match /members/{uid}{
    allow read:if admin() || (signed() && request.auth.uid==uid);
    allow create:if signed() && request.auth.uid==uid && request.resource.data.credit==0;

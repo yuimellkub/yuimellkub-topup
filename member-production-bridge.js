@@ -8,6 +8,7 @@ let profile = null;
 let history = [];
 let requests = [];
 let orders = [];
+let pendingReviews = [];
 let unsubs = [];
 
 
@@ -135,6 +136,7 @@ function timestampValue(v){
     return v.toMillis();
   }
 
+  if(typeof v === 'string') return Date.parse(v) || Number(v) || 0;
   return Number(v) || 0;
 }
 
@@ -370,15 +372,12 @@ function render(){
 
   if(ob){
 
-  const pendingOrder =
-  pendingManualOrder();
-
-const realOrders =
-  [
-    ...(pendingOrder
-      ? [pendingOrder]
-      : []
-    ),
+  // Pending slips have no orders/{id} yet: the Worker writes order_slips
+  // and the admin creates orders only after approval. Never substitute a
+  // localStorage draft for a Firestore record or duplicate an approved order.
+  const approvedReviews = new Set(orders.map(o=>String(o.sourceReviewId || '')));
+  const realOrders = [
+    ...pendingReviews.filter(r => !approvedReviews.has(String(r.reviewId || r.id))),
     ...orders
   ]
     .sort(
@@ -517,6 +516,7 @@ function watch(user){
     history = [];
     requests = [];
     orders = [];
+    pendingReviews = [];
 
     render();
     return;
@@ -663,6 +663,28 @@ function watch(user){
         },
         ()=>{}
       )
+  );
+
+  /*
+    สลิปที่ส่งแล้วและยังรอตรวจสอบเป็นเอกสารใน order_slips
+    ไม่ใช่ออเดอร์จริง จึงไม่สร้างเอกสาร orders ซ้ำ
+  */
+  unsubs.push(
+    db.collection('order_slips')
+      .where('memberId', '==', user.uid)
+      .onSnapshot(snap => {
+        pendingReviews = snap.docs
+          .map(d => ({id:d.id, ...d.data()}))
+          .filter(d => d.reviewPending === true && d.reviewDecision !== 'approved' && d.reviewDecision !== 'rejected')
+          .map(d => ({
+            id:'', reviewId:d.reviewId || d.id, pending:true,
+            item:d.item || '-', pack:d.pack || '-', price:d.price || '-',
+            uid:d.uid || '-', server:d.server || 'Asia',
+            createdAt:d.createdAt,
+            shopStatus:'กำลังรอตรวจสอบสลิป'
+          }));
+        render();
+      }, err => console.warn('member pending slip watch failed', err))
   );
 
   /*
