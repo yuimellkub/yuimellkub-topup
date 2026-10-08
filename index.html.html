@@ -2595,16 +2595,6 @@ document.addEventListener('DOMContentLoaded',function(){
  }
  function qty(){const i=$('#ymOrderQty');return Math.max(1,Math.min(99,Math.floor(Number(i?.value)||1)))}
  function state(){
-   // Production selection takes precedence over Preview's initial card selection.
-   if(window.YMK_ORDER_SOURCE==='ready' && window.YMK_ACTIVE_PRODUCT_ORDER){
-     const o=window.YMK_ACTIVE_PRODUCT_ORDER;
-     const q=qty(), unit=Number(o.price)||0;
-     return {name:String(o.name||''),q,total:unit*q,pack:String(o.pack||'')};
-   }
-   if(window.YMK_ORDER_SOURCE==='calc' && window.YMK_CALC_LOCKED_ORDER){
-     const o=window.YMK_CALC_LOCKED_ORDER;
-     return {name:String(o.item||''),q:1,total:Number(o.price)||0,pack:String(o.pack||'')};
-   }
    if(!selected)return null;
    const q=qty(), total=selected.price*q;
    const pack=selected.echo?selected.echo.toLocaleString('th-TH')+' × '+q:'';
@@ -3072,7 +3062,7 @@ document.addEventListener('click',function(e){if(e.target.id==='ymCalcPopupClose
   function capture(btn){
     var card=btn&&btn.closest('.product,.ready-stock-card'); if(!card)return;
     var name=(btn.dataset.readyName||card.dataset.readyName||card.querySelector('b')?.textContent||'').trim();
-    var m=name.replace(/,/g,'').match(/(\d+)\s*กระดุม/i); if(!m)return;
+    var m=name.replace(/,/g,'').match(/(\d+)\s*กระดุม/i); if(!m){S.unitEcho=0;S.name='';S.unitPrice=0;return;}
     S.unitEcho=Number(m[1]); S.name=name;
     S.unitPrice=number(btn.dataset.readyPrice||card.dataset.readyPrice||card.querySelector('.price')?.textContent||'');
     S.qty=1;
@@ -3084,7 +3074,7 @@ document.addEventListener('click',function(e){if(e.target.id==='ymCalcPopupClose
   }
   function syncOrder(){
     /* พร้อมเติมเท่านั้น — ห้าม state แพ็กพร้อมเติมเก่ามาทับ checkout ของหมวดคำนวณ */
-    if(document.body.classList.contains('ymCalcCheckout'))return;
+    if(window.YMK_ORDER_SOURCE==='ready' || window.YMK_ORDER_SOURCE==='calc' || document.body.classList.contains('ymCalcCheckout'))return;
     if(!S.unitEcho)return;
     var d=data(), qi=document.getElementById('ymOrderQty'); if(qi)qi.value=d.q;
     var total=document.getElementById('ymOrderQtyTotal'); if(total)total.textContent='รวม '+d.totalPrice.toLocaleString('th-TH')+' บาท';
@@ -3094,7 +3084,7 @@ document.addEventListener('click',function(e){if(e.target.id==='ymCalcPopupClose
   }
   function syncPayment(){
     /* พร้อมเติมเท่านั้น — ทั้งคำนวณปกติ/ส่วนลด/กาชาใช้ snapshot ของตัวเอง */
-    if(document.body.classList.contains('ymCalcCheckout'))return;
+    if(window.YMK_ORDER_SOURCE==='ready' || window.YMK_ORDER_SOURCE==='calc' || document.body.classList.contains('ymCalcCheckout'))return;
     if(!S.unitEcho)return;
     var d=data(),uid=document.getElementById('ymOrderUid')?.value||'-',server=document.getElementById('ymOrderServer')?.value||'-',name=document.getElementById('ymOrderName')?.value||'';
     var amt=document.getElementById('ymOrderAmount'); if(amt)amt.textContent=d.totalPrice.toLocaleString('th-TH')+' บาท';

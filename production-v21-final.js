@@ -1082,6 +1082,19 @@ function syncReadyCheckoutUI(){
     ...window.YMK_LAST_CALC
   };
 
+  // Single immutable checkout snapshot for all payment methods.
+  window.YMK_CHECKOUT_ORDER = {
+    source: 'ready',
+    item: x.item,
+    pack,
+    price: total,
+    quantity: qty,
+    productId: x.productId,
+    category: x.category,
+    orderMode: x.orderMode
+  };
+
+
   const selected=
     $('#ymOrderSelected');
 
@@ -1611,6 +1624,7 @@ window.addEventListener(
 
  
 window.YMK_ORDER_SOURCE = 'calc';
+window.YMK_CHECKOUT_ORDER = null;
 
 // ยกเลิกข้อมูลล็อกจาก Calculator รอบก่อน
 window.YMK_CALC_LOCKED_ORDER = null;
@@ -1627,6 +1641,10 @@ if (
     item: String(calcResult.item),
     pack: String(calcResult.pack || ''),
     price: num(calcResult.price)
+  };
+  window.YMK_CHECKOUT_ORDER = {
+    source: 'calc',
+    ...window.YMK_CALC_LOCKED_ORDER
   };
 } else {
   console.error(
@@ -1902,6 +1920,32 @@ function copySlipToLegacy(){
 }
 
 
+// Keep all payment tabs bound to the same current order.
+// The existing checkout controls, payment providers, and submit handlers remain unchanged.
+function showUnifiedPaymentOrder(){
+  const o = window.YMK_CHECKOUT_ORDER;
+  if (!o || !(Number(o.price) > 0)) return;
+  if (window.YMK_ORDER_SOURCE !== o.source) return;
+  const amount = $('#ymOrderAmount');
+  if (amount) amount.textContent = fmt(o.price) + ' บาท';
+  const summary = $('#ymOrderSummary');
+  if (!summary) return;
+  const uid = String($('#ymOrderUid')?.value || '').trim();
+  const server = String($('#ymOrderServer')?.value || 'Asia').trim();
+  const name = String($('#ymOrderName')?.value || '').trim();
+  summary.innerHTML = '<b>' + esc(o.item) +
+    (o.source === 'ready' && o.quantity > 1 ? ' × ' + o.quantity : '') +
+    '</b>' + (o.pack ? '<span class="ymPackLine">แพ็กที่เติม: ' + esc(o.pack) + '</span>' : '') +
+    '<br>UID: ' + esc(uid || '-') + ' • Server: ' + esc(server) +
+    (name ? '<br>ชื่อ: ' + esc(name) : '');
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest?.('[data-ym-order-pay]')) return;
+  queueMicrotask(showUnifiedPaymentOrder);
+  requestAnimationFrame(showUnifiedPaymentOrder);
+  setTimeout(showUnifiedPaymentOrder, 80);
+}, true);
+
 function activePayment(){
 
   return (
@@ -1954,25 +1998,22 @@ function prepareProductionSubmit(){
     ()=>activePayment();
 
 
-  if(
-    window.YMK_ORDER_SOURCE === 'calc' &&
-    window.YMK_CALC_LOCKED_ORDER
-  ){
-    const o=window.YMK_CALC_LOCKED_ORDER;
-    window.lastOrder={
-      item:String(o.item),
-      pack:String(o.pack||''),
-      price:fmt(num(o.price))+' บาท'
+  if (window.YMK_ORDER_SOURCE === 'calc') {
+    const order = window.YMK_CHECKOUT_ORDER;
+    if (!order || !(order.price > 0)) {
+      throw new Error('ไม่มีผล Calculator ที่ถูกต้องสำหรับสร้างออเดอร์');
+    }
+    window.lastOrder = {
+      item: order.item,
+      pack: order.pack,
+      price: fmt(order.price) + ' บาท',
+      quantity: 1
     };
-    window.YMK_LAST_CALC={
-      type:'calc',item:String(o.item),pack:String(o.pack||''),price:num(o.price)
-    };
-    window.YMK_ACTIVE_PRODUCT_ORDER=null;
+    window.YMK_LAST_CALC = { ...order };
   }
 
   if(
-    window.YMK_ORDER_SOURCE === 'ready' &&
-    readyMeta
+    readyMeta && window.YMK_ORDER_SOURCE === 'ready'
   ){
 
     const qty=

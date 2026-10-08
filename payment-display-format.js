@@ -3,6 +3,11 @@
   function format(n){n=Number(String(n??'').replace(/[^0-9.-]/g,''));return Number.isFinite(n)?n.toLocaleString('th-TH')+' บาท':'';}
   function currentPrice(){
     try{
+      const checkout = window.YMK_CHECKOUT_ORDER;
+      if (checkout && checkout.source === window.YMK_ORDER_SOURCE) {
+        const n = Number(checkout.price);
+        return Number.isFinite(n) && n > 0 ? n : 0;
+      }
      
 if (window.YMK_ORDER_SOURCE === 'calc') {
   const order = window.YMK_CALC_LOCKED_ORDER;
@@ -16,11 +21,6 @@ if (window.YMK_ORDER_SOURCE === 'calc') {
   return Number.isFinite(n) && n > 0 ? n : 0;
 }
 
-      if(window.YMK_ORDER_SOURCE === 'ready' && window.YMK_ACTIVE_PRODUCT_ORDER){
-        const total=Number(window.YMK_ACTIVE_PRODUCT_ORDER.price) *
-          Math.max(1,Number(document.getElementById('ymOrderQty')?.value)||1);
-        if(Number.isFinite(total)&&total>0)return total;
-      }
       const candidates=[
         window.YMK_SEND_ORDER_META?.total,
         window.YMK_SEND_ORDER_META?.price,
