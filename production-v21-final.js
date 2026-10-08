@@ -2158,9 +2158,7 @@ function showSubmitError(
 
 // Both checkout paths use this existing Production markup; no second design.
 window.YMK_CANONICAL_SLIP_PENDING = function(){
-  return 
-
-    '<div class="ymSlipCheck">✓</div>'+
+  return '<div class="ymSlipCheck">✓</div>'+
 
     '<div class="ymSlipTitle">ส่งสลิปเรียบร้อยแล้ว ♡</div>'+
 

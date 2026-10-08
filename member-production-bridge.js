@@ -376,6 +376,8 @@ function render(){
   // and the admin creates orders only after approval. Never substitute a
   // localStorage draft for a Firestore record or duplicate an approved order.
   const approvedReviews = new Set(orders.map(o=>String(o.sourceReviewId || '')));
+  // Always show true orders, even when an older pending slip is present.
+  // Only an exact sourceReviewId match can suppress the matching pending slip.
   const realOrders = [
     ...pendingReviews.filter(r => !approvedReviews.has(String(r.reviewId || r.id))),
     ...orders
