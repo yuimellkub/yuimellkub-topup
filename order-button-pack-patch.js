@@ -29,13 +29,12 @@
     const p=findProduct(lastOrder);if(!isTargetProduct(p))return;
     const qty=Math.max(1,Math.floor(Number(lastOrder.quantity)||1));
     const configuredUnitPrice=Math.max(0,Number(p.price)||0),configuredTotal=Math.round(configuredUnitPrice*qty);
-    const plan=planFromPrice(configuredTotal);if(!plan?.text)return;
-    lastOrder.requiredButtons=plan.received;
-    lastOrder.receivedButtons=plan.received;
-    lastOrder.packPlan=plan.text;
-    lastOrder.buttonPack=plan.received;
-    lastOrder.pack=plan.text;
-    lastOrder.packMatchedPrice=configuredTotal;
+   
+    // สินค้าจริงใช้แพ็กที่มากับออเดอร์
+    // ไม่แปลงราคาสกิน/ประดับเป็นแพ็กกระดุม
+    return;
+
+   
   }catch(e){console.warn('button pack patch failed',e);}}
   function loadProducts(){try{if(!window.firebase||!firebase.firestore)return setTimeout(loadProducts,250);if(!firebase.apps.length){if(!window.YUIMELLKUB_FIREBASE_CONFIG)return setTimeout(loadProducts,250);firebase.initializeApp(window.YUIMELLKUB_FIREBASE_CONFIG);}firebase.firestore().collection('products').onSnapshot(s=>{products=s.docs.map(d=>({id:d.id,...d.data()}));},e=>console.warn('product lookup for button pack failed',e));}catch(e){setTimeout(loadProducts,500);}}
   function install(){if(typeof window.saveOrderToDemoAdmin!=='function')return setTimeout(install,250);if(window.saveOrderToDemoAdmin.__ymkButtonPackWrapped)return;const original=window.saveOrderToDemoAdmin;async function wrapped(){patchCurrentOrder();return original.apply(this,arguments);}wrapped.__ymkButtonPackWrapped=true;window.saveOrderToDemoAdmin=wrapped;}
