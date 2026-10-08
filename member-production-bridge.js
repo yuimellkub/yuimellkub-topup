@@ -1316,8 +1316,16 @@ async function payWithCredit(btn){
 
   // Read the frozen checkout order, not an amount label that can be stale.
   const checkout = window.YMK_CHECKOUT_ORDER;
-  if (!checkout || checkout.source !== window.YMK_ORDER_SOURCE) {
+  // The Calculator's locked order is authoritative when the chosen checkout
+  // is Calculator. Do not let a stale ready-stock source reject a valid calc.
+  const calcLocked = window.YMK_CALC_LOCKED_ORDER;
+  const isCalc = checkout?.source === 'calc';
+  if (!checkout || (checkout.source !== window.YMK_ORDER_SOURCE && !isCalc)) {
     throw Error('ไม่พบข้อมูลออเดอร์ปัจจุบัน กรุณาเริ่มสั่งซื้อใหม่');
+  }
+  if (isCalc && (!calcLocked || Number(calcLocked.price) !== Number(checkout.price) ||
+    String(calcLocked.pack || '') !== String(checkout.pack || ''))) {
+    throw Error('ข้อมูล Calculator ไม่ตรงกับรายการชำระ กรุณาคำนวณใหม่');
   }
   const amount = Number(checkout.price);
   if (!Number.isSafeInteger(amount) || amount <= 0) {
@@ -1485,9 +1493,8 @@ async function payWithCredit(btn){
         );
 
       if(old < amount){
-        throw Error(
-          'เครดิตไม่เพียงพอ กรุณาเติมเครดิตก่อน'
-        );
+        console.warn('YMK credit balance check', {requiredAmount:amount, availableBalance:old, source:checkout.source});
+        throw Error('เครดิตไม่เพียงพอ กรุณาเติมเครดิตก่อน (ยอดที่ระบบตรวจ ' + amount + ' บาท)');
       }
 
       const remain =
@@ -1637,6 +1644,19 @@ async function payWithCredit(btn){
       );
     }
   );
+
+  // Confirm that the saved order is readable under the signed-in member.
+  // This checks the actual Firestore document, not a temporary UI cache.
+  try {
+    const saved = await db.collection('orders').doc(id).get({source:'server'});
+    if (!saved.exists || saved.data()?.memberId !== auth.currentUser?.uid) {
+      console.error('YMK member order verification failed',id);
+    } else {
+      console.info('YMK member order verified in Firestore',id);
+    }
+  } catch (checkError) {
+    console.warn('YMK member order verification unavailable',id,checkError);
+  }
 
   // Reuse the original production confirmation view (order number, copy, new order).
   window.dispatchEvent(new CustomEvent('ymk-credit-order-approved', {
