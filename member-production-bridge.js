@@ -1314,21 +1314,15 @@ async function payWithCredit(btn){
     );
   }
 
-  const amount =
-    Math.floor(
-      Number(
-        String(
-          q('#ymOrderAmount')
-            ?.textContent ||
-          ''
-        )
-          .replace(
-            /[^0-9.]/g,
-            ''
-          )
-      ) ||
-      0
-    );
+  // Read the frozen checkout order, not an amount label that can be stale.
+  const checkout = window.YMK_CHECKOUT_ORDER;
+  if (!checkout || checkout.source !== window.YMK_ORDER_SOURCE) {
+    throw Error('ไม่พบข้อมูลออเดอร์ปัจจุบัน กรุณาเริ่มสั่งซื้อใหม่');
+  }
+  const amount = Number(checkout.price);
+  if (!Number.isSafeInteger(amount) || amount <= 0) {
+    throw Error('ยอดชำระไม่ถูกต้องค่ะ');
+  }
 
   if(!(amount > 0)){
     throw Error(
@@ -1376,10 +1370,9 @@ async function payWithCredit(btn){
       now.getSeconds()
     );
 
-  const active =
-    window
-      .YMK_ACTIVE_PRODUCT_ORDER ||
-    {};
+  const active = checkout.source === 'ready'
+    ? (window.YMK_ACTIVE_PRODUCT_ORDER || {})
+    : {};
 
   const qty =
     Math.max(
@@ -1392,8 +1385,9 @@ async function payWithCredit(btn){
       )
     );
 
-  const item =
-    active.name
+  const item = checkout.source === 'calc'
+    ? String(checkout.item || '')
+    : active.name
       ? (
           active.name +
           (
@@ -1411,9 +1405,13 @@ async function payWithCredit(btn){
           'สินค้า'
         );
 
-  let pack = '';
+  let pack = checkout.source === 'calc'
+    ? String(checkout.pack || '')
+    : '';
 
-  if(
+  if (checkout.source === 'calc') {
+    // Keep calculator's own pack without parsing rendered HTML.
+  } else if(
     active.mode ===
     'send'
   ){

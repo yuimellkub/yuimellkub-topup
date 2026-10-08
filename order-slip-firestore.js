@@ -139,6 +139,7 @@ async function submitAutoOrder(file,draft,fallback){
   form.append('uid',draft.uid||'');
   form.append('server',draft.server||'Asia');
   form.append('name',draft.name||'');
+  if (draft.memberId) form.append('memberId',draft.memberId); // backend must verify the authenticated identity
   form.append('fallbackImageData',fallback.data||'');
   form.append('fallbackWidth',String(fallback.width||0));
   form.append('fallbackHeight',String(fallback.height||0));
@@ -191,7 +192,9 @@ window.saveOrderToDemoAdmin=async function(){
     paymentMethod:getPaymentSafe(),
     uid:(document.getElementById('orderUid')?.value||'').trim(),
     server:document.getElementById('orderServer')?.value||'Asia',
-    name:(document.getElementById('orderName')?.value||'').trim()
+    name:(document.getElementById('orderName')?.value||'').trim(),
+    memberId: (window.firebase && firebase.auth && firebase.auth().currentUser)
+      ? firebase.auth().currentUser.uid : ''
   };
 
   if(!draft.uid){showStatus('bad','ส่งออเดอร์ไม่สำเร็จ: กรุณากรอก UID');return false;}
