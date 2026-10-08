@@ -3,11 +3,19 @@
   function format(n){n=Number(String(n??'').replace(/[^0-9.-]/g,''));return Number.isFinite(n)?n.toLocaleString('th-TH')+' บาท':'';}
   function currentPrice(){
     try{
-      if(window.YMK_ORDER_SOURCE==='calc'){
-        const v=typeof lastOrder!=='undefined'&&lastOrder?lastOrder.price:null;
-        const n=Number(String(v??'').replace(/[^0-9.-]/g,''));
-        return Number.isFinite(n)&&n>0?n:0;
-      }
+     
+if (window.YMK_ORDER_SOURCE === 'calc') {
+  const order = window.YMK_CALC_LOCKED_ORDER;
+
+  if (!order) {
+    return 0;
+  }
+
+  const n = Number(order.price);
+
+  return Number.isFinite(n) && n > 0 ? n : 0;
+}
+
       const candidates=[
         window.YMK_SEND_ORDER_META?.total,
         window.YMK_SEND_ORDER_META?.price,
