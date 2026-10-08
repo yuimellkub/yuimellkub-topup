@@ -1617,7 +1617,7 @@ window.YMK_ORDER_SOURCE = 'calc';
 window.YMK_CALC_LOCKED_ORDER = null;
 
 // ใช้ผล Calculator ล่าสุดเป็นต้นทาง
-const calcResult = window.lastOrder;
+const calcResult = window.YMK_CALC_RESULT;
 
 if (
   calcResult &&
