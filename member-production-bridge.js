@@ -199,6 +199,18 @@ function pendingManualOrder(){
     return null;
   }
 }
+document.addEventListener('click', async e => {
+  const btn=e.target.closest?.('[data-member-copy-order]');
+  if (!btn) return;
+  const id=btn.getAttribute('data-member-copy-order') || '';
+  if (!/^YMK\d{6}-\d{6}$/.test(id)) return;
+  try {
+    await navigator.clipboard.writeText(id);
+    const before=btn.textContent;
+    btn.textContent='คัดลอกแล้ว ✓';
+    setTimeout(()=>{if(btn.isConnected) btn.textContent=before;},1000);
+  } catch(err) { console.warn('Unable to copy order number',err); }
+});
 function render(){
 
   const guest =
@@ -404,6 +416,8 @@ function render(){
       : (o.id || '-')
   }
 </b>
+              ${!o.pending && /^YMK\d{6}-\d{6}$/.test(String(o.id || '')) ?
+                `<button type="button" class="ymMemberCopyOrder" data-member-copy-order="${o.id}">คัดลอกเลขออเดอร์</button>` : ''}
 
               <div class="ymMini">
 

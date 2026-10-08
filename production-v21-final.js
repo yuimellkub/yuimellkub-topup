@@ -2268,6 +2268,10 @@ function showApproved(
 }
 
 
+// Share the original Production UI: no duplicate success/pending HTML.
+window.YMK_PRODUCTION_SHOW_PENDING = showPending;
+window.YMK_PRODUCTION_SHOW_APPROVED = showApproved;
+
 // Credit checkout delegates its successful order to this existing confirmation UI.
 window.addEventListener('ymk-credit-order-approved', e => {
   const id = String(e.detail?.orderId || '').trim();
