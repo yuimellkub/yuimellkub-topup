@@ -105,12 +105,7 @@ window.showNormalDone = function() {
   ]);
 };
 
-// เก็บผล Calculator แยกจากสินค้าพร้อมเติม
-window.YMK_CALC_RESULT = {
-  item: lastOrder.item,
-  pack: lastOrder.pack,
-  price: best.cost
-};
+
 
   window.showGachaDone=function(){
     currentOrderId=null;
