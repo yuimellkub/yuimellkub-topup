@@ -25,7 +25,14 @@
   function planForTarget(target){target=Math.max(1,Math.floor(Number(target)||1));const rules=window.YMK_CALCULATOR_PACK_RULES;if(rules?.findBest){const best=rules.findBest(target),text=rules.formatLargestFirst?rules.formatLargestFirst(best):'';return{target,received:best.totalEchoes,price:best.cost,text};}let best=null;for(let d=0;d<=Math.ceil(target/759)+1;d++)for(let c=0;c<=1;c++)for(let b=0;b<=2;b++)for(let a=0;a<=2;a++){const received=a*66+b*203+c*335+d*759;if(received<target)continue;const raw=a*30+b*90+c*145+d*price759(d),price=rounded(raw),count=a+b+c+d,candidate={a,b,c,d,target,received,price,extra:received-target,count};if(!best||candidate.extra<best.extra||(candidate.extra===best.extra&&candidate.price<best.price)||(candidate.extra===best.extra&&candidate.price===best.price&&candidate.count<best.count))best=candidate;}if(!best)return null;return{...best,text:textPlan(best.a,best.b,best.c,best.d)};}
   function planFromPrice(price){price=Math.max(0,Math.floor(Number(price)||0));if(!price)return null;let best=null;for(let d=0;d<=Math.ceil(price/283)+1;d++)for(let c=0;c<=1;c++)for(let b=0;b<=2;b++)for(let a=0;a<=2;a++){if(!(a+b+c+d))continue;const raw=a*30+b*90+c*145+d*price759(d),selling=rounded(raw);if(selling!==price)continue;const received=a*66+b*203+c*335+d*759,count=a+b+c+d,candidate={target:received,received,price:selling,text:textPlan(a,b,c,d),count};if(!best||received>best.received||(received===best.received&&count<best.count))best=candidate;}return best;}
   function infoFromCard(card){const btn=card?.querySelector('.ready-stock-order-btn');if(!btn)return null;const panel=card.closest('[data-stock-panel]'),visibleName=card.querySelector('.ymk-store-name,.ready-stock-topline h3,h3')?.textContent||'',name=clean(btn.dataset.ymkBaseName||btn.dataset.readyName||visibleName),cat=String(btn.dataset.readyCategory||card.dataset.readyCategory||card.dataset.category||panel?.dataset.stockPanel||'').toLowerCase().trim(),p=products.find(x=>clean(x.name)===name&&(String(x.category||'').toLowerCase()===cat||!cat))||products.find(x=>clean(x.name)===name)||null;return{name:(p&&p.name)||name,category:String((p&&p.category)||cat).toLowerCase().trim(),product:p,btn,card};}
-  function isTarget(info){return !!info&&info.category!=='echoes';}
+ 
+function isTarget(info) {
+  // ระบบนี้เป็นตัวแก้แพ็กแบบเดิม
+  // ไม่ให้แทรกแซงสินค้าจริงที่ Production
+  // มีข้อมูลสินค้า ราคา และแพ็กของตัวเองแล้ว
+  return false;
+}
+
   function rewrite(v,packText,totalText){
     v=String(v||'');
     if(!/แพ็ก(?:ที่เติม)?:|ยอดรวม:/.test(v))return v;
