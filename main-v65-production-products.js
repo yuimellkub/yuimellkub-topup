@@ -454,22 +454,17 @@ function render(
   removeAllCategory();
 
 
-  const host=
+ 
+  // เลือกพื้นที่แสดงสินค้าตามหมวดจริงเท่านั้น
+  // ห้ามกลับไปใช้หมวด echoes เมื่อเลือกหมวดอื่น
 
-    pane(active)
+  const host = pane(active);
 
-    ||
-
-    pane('echoes')
-
-    ||
-
-    $(
-      '.realProductPane[data-product-pane]'
+  if (!host) {
+    console.error(
+      '[YMK] ไม่พบพื้นที่แสดงสินค้าของหมวด:',
+      active
     );
-
-
-  if(!host){
     return;
   }
 
