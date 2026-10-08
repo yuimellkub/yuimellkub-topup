@@ -68,15 +68,41 @@
   window.findBest=ymkFindBest;
   window.YMK_CALCULATOR_PACK_RULES={price759:price759Tier,findBest:ymkFindBest,bestSmallPackFill,formatLargestFirst,roundSellingPrice};
 
-  window.showNormalDone=function(){
-    currentOrderId=null;
-    const target=Math.max(0,Math.floor(Number(document.getElementById('target').value)||0));if(!target)return;
-    const best=findBest(target),detail=formatLargestFirst(best);
-  
-lastOrder = {
-  item: best.totalEchoes.toLocaleString() + ' กระดุม',
-  pack: detail,
-  price: best.cost.toLocaleString() + ' บาท'
+
+window.showNormalDone = function() {
+  currentOrderId = null;
+
+  const target = Math.max(
+    0,
+    Math.floor(Number(
+      document.getElementById('target').value
+    ) || 0)
+  );
+
+  if (!target) return;
+
+  const best = findBest(target);
+  const detail = formatLargestFirst(best);
+
+  lastOrder = {
+    item: best.totalEchoes.toLocaleString() + ' กระดุม',
+    pack: detail,
+    price: best.cost.toLocaleString() + ' บาท'
+  };
+
+  // Source of truth ของ Calculator
+  window.YMK_CALC_RESULT = {
+    item: lastOrder.item,
+    pack: lastOrder.pack,
+    price: best.cost
+  };
+
+  openDonePopup([
+    ['ต้องการ', target.toLocaleString() + ' กระดุม'],
+    ['ได้ทั้งหมด', best.totalEchoes.toLocaleString() + ' กระดุม'],
+    ['แพ็ก', detail],
+    ['ยอดรวม', best.cost.toLocaleString() + ' บาท', 'done-price']
+  ]);
 };
 
 // เก็บผล Calculator แยกจากสินค้าพร้อมเติม
