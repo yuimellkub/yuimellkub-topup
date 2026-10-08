@@ -1610,36 +1610,31 @@ window.addEventListener(
       return;
     }
 
-  window.YMK_ORDER_SOURCE=
-  'calc';
-requestAnimationFrame(
-  ()=>{
+ 
+window.YMK_ORDER_SOURCE = 'calc';
 
-    if(
-      window.YMK_ORDER_SOURCE !==
-      'calc' ||
-      !window.lastOrder
-    ){
-      return;
-    }
+// ยกเลิกข้อมูลล็อกจาก Calculator รอบก่อน
+window.YMK_CALC_LOCKED_ORDER = null;
 
-    window.YMK_CALC_LOCKED_ORDER={
-      item:
-        window.lastOrder.item||
-        '',
+// ใช้ผล Calculator ล่าสุดเป็นต้นทาง
+const calcResult = window.lastOrder;
 
-      pack:
-        window.lastOrder.pack||
-        '',
+if (
+  calcResult &&
+  calcResult.item &&
+  num(calcResult.price) > 0
+) {
+  window.YMK_CALC_LOCKED_ORDER = {
+    item: String(calcResult.item),
+    pack: String(calcResult.pack || ''),
+    price: num(calcResult.price)
+  };
+} else {
+  console.error(
+    'YMK Calculator: ไม่พบผลคำนวณล่าสุดที่ถูกต้อง'
+  );
+}
 
-      price:
-        num(
-          window.lastOrder.price
-        )
-    };
-
-  }
-);
 readyMeta=null;
 
 /*
@@ -1811,8 +1806,10 @@ const order=
           setTimeout(
             ()=>{
 
-              const current=
-                window.lastOrder;
+              
+const current =
+  window.YMK_CALC_LOCKED_ORDER;
+  
 
               if(
                 !current ||
