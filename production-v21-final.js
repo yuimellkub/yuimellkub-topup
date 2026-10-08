@@ -951,7 +951,7 @@ function readyPackForUI(
         /(\d[\d,]*)\s*(?:กระดุม|echoes?)/i
       );
 
-  if(m){
+  if(m && /^(?:echoes?|กระดุม)$/i.test(String(x.category || '').trim())){
 
     return (
       Number(
@@ -1376,6 +1376,14 @@ overlay.classList.add(
   'show'
 );
 
+// Restore the current Ready item after the legacy Preview handlers finish.
+queueMicrotask(() => {
+  if (window.YMK_ORDER_SOURCE === 'ready' && readyMeta?.item === x.item && readyMeta?.productId === x.productId) syncReadyCheckoutUI();
+});
+setTimeout(() => {
+  if (window.YMK_ORDER_SOURCE === 'ready' && readyMeta?.item === x.item && readyMeta?.productId === x.productId) syncReadyCheckoutUI();
+}, 0);
+
 return true;
   }
 
@@ -1524,6 +1532,20 @@ window.addEventListener(
       return;
     }
 
+    const uid = String($('#ymOrderUid')?.value || '').trim();
+    if (!uid) {
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      const input = $('#ymOrderUid');
+      input?.focus();
+      const status = $('#ymOrderStatus');
+      if (status) {
+        status.className = 'ymOrderStatus show';
+        status.textContent = 'กรุณากรอก UID / ID ผู้เล่นก่อนชำระเงิน';
+      }
+      return;
+    }
     syncReadyCheckoutUI();
 
     requestAnimationFrame(
@@ -1572,6 +1594,16 @@ window.addEventListener(
     e.preventDefault();
     e.stopPropagation();
     e.stopImmediatePropagation();
+
+    if (!String($('#ymOrderUid')?.value || '').trim()) {
+      $('#ymOrderUid')?.focus();
+      const status = $('#ymOrderStatus');
+      if (status) {
+        status.className = 'ymOrderStatus show';
+        status.textContent = 'กรุณากรอก UID / ID ผู้เล่นก่อนชำระเงิน';
+      }
+      return false;
+    }
 
     syncReadyCheckoutUI();
 
@@ -1941,6 +1973,14 @@ function showUnifiedPaymentOrder(){
 }
 document.addEventListener('click', e => {
   if (!e.target.closest?.('[data-ym-order-pay]')) return;
+  // Restore the current calculator checkout data before/after legacy handlers.
+  if (window.YMK_ORDER_SOURCE === 'calc' && window.YMK_CHECKOUT_ORDER?.source === 'calc') {
+    window.lastOrder = {
+      item: window.YMK_CHECKOUT_ORDER.item,
+      pack: window.YMK_CHECKOUT_ORDER.pack,
+      price: fmt(window.YMK_CHECKOUT_ORDER.price) + ' บาท'
+    };
+  }
   queueMicrotask(showUnifiedPaymentOrder);
   requestAnimationFrame(showUnifiedPaymentOrder);
   setTimeout(showUnifiedPaymentOrder, 80);
