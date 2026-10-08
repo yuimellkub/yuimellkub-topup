@@ -1330,15 +1330,8 @@ async function payWithCredit(btn){
     );
   }
 
-  if(
-    Number(
-      profile?.credit || 0
-    ) < amount
-  ){
-    throw Error(
-      'เครดิตไม่เพียงพอ กรุณาเติมเครดิตก่อน'
-    );
-  }
+  // Do not reject from the cached profile: the transaction below
+  // reads the authoritative Firestore balance before debit.
 
   const now =
     new Date();
@@ -1645,53 +1638,16 @@ async function payWithCredit(btn){
     }
   );
 
-  const st =
-    q('#ymOrderStatus');
-
-  if(st){
-
-    const isSend =
-      active.mode ===
-      'send';
-
-    st.className =
-      'ymOrderStatus show ok ymUnifiedDone';
-
-    st.innerHTML = `
-      <div class="ymUCheck">✓</div>
-
-      <b>
-        ชำระด้วยเครดิตเรียบร้อยแล้ว ♡
-      </b>
-
-      <div style="margin-top:8px">
-        เลขออเดอร์
-        <b>${id}</b>
-      </div>
-
-      <div style="margin-top:6px">
-        สถานะ: รอเติม
-      </div>
-
-      ${
-        isSend
-          ? `
-            <div style="
-              margin-top:12px;
-              padding:12px;
-              border:1px solid #efc6d7;
-              border-radius:14px;
-              background:#fff3f8
-            ">
-              รบกวนลูกค้าทักเพจร้าน
-              พร้อมแจ้งเลขออเดอร์
-              <b>${id}</b>
-              เพื่อดำเนินการแบบส่งต่อค่ะ ♡
-            </div>
-          `
-          : ''
-      }
-    `;
+  // Reuse the existing Production approved-order UI; no new success markup.
+  if (typeof window.YMK_SHOW_APPROVED_ORDER === 'function') {
+    window.YMK_SHOW_APPROVED_ORDER(id);
+  } else {
+    console.error('YMK approved order UI unavailable after credit transaction', id);
+    const st = q('#ymOrderStatus');
+    if (st) {
+      st.className = 'ymOrderStatus show ok';
+      st.textContent = 'สร้างออเดอร์แล้ว: ' + id;
+    }
   }
 
   return true;

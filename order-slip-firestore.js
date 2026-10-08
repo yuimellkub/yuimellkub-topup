@@ -139,7 +139,13 @@ async function submitAutoOrder(file,draft,fallback){
   form.append('uid',draft.uid||'');
   form.append('server',draft.server||'Asia');
   form.append('name',draft.name||'');
-  if (draft.memberId) form.append('memberId',draft.memberId); // backend must verify the authenticated identity
+  // The memberId field is only a hint; the backend MUST validate identity.
+  if (draft.memberId) form.append('memberId',draft.memberId);
+  const signedInUser = window.firebase?.auth?.().currentUser;
+  if (signedInUser) {
+    const idToken = await signedInUser.getIdToken();
+    form.append('firebaseIdToken', idToken);
+  }
   form.append('fallbackImageData',fallback.data||'');
   form.append('fallbackWidth',String(fallback.width||0));
   form.append('fallbackHeight',String(fallback.height||0));
