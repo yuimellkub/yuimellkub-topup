@@ -3564,7 +3564,7 @@ html.ymDark #memberOrders .ymStatus[data-status="cancel"]{background:#41282f;col
  const box=document.getElementById('memberOrders'); if(!box)return;
  function kind(text){text=(text||'').trim();if(/ยกเลิก|คืนเครดิต/.test(text))return'cancel';if(/สำเร็จ|เติมแล้ว|เสร็จ/.test(text))return'done';if(/รอตรวจ|ตรวจสอบสลิป|ตรวจสอบการชำระเงิน|รอร้าน/.test(text))return'review';if(/กำลังเติม|กำลังดำเนินการ|ดำเนินการ/.test(text))return'working';if(/ชำระแล้ว|เครดิตแล้ว/.test(text))return'paid';return'review'}
  function copyText(id,btn){
-   const done=()=>{btn.textContent='คัดลอกแล้ว ✓';btn.classList.add('copied');setTimeout(()=>{btn.textContent='คัดลอก';btn.classList.remove('copied')},1400)};
+   const done=()=>{btn.textContent='คัดลอกแล้ว';btn.classList.add('copied');setTimeout(()=>{btn.textContent='คัดลอก';btn.classList.remove('copied')},1400)};
    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(id).then(done).catch(()=>fallback(id,done));else fallback(id,done);
  }
  function fallback(id,done){const t=document.createElement('textarea');t.value=id;document.body.appendChild(t);t.select();try{document.execCommand('copy')}catch(e){}t.remove();done()}
@@ -4553,7 +4553,7 @@ function renderDone(id,detailHtml,title){
  busy=true;
  st.dataset.ymUnifiedV3='1';
  st.className='ymOrderStatus show ok ymUnifiedDone';
- st.innerHTML='<div class="ymUCheck">✓</div><div class="ymUTitle">'+(title||'สร้างออเดอร์เรียบร้อยแล้ว ♡')+'</div><div class="ymUSub">สร้างออเดอร์เข้าสู่ระบบเรียบร้อยแล้ว</div><div class="ymUIdLabel">เลขออเดอร์ของคุณ</div><b class="ymUId">'+id+'</b>'+(detailHtml?'<div class="ymUDetails">'+detailHtml+'</div>':'')+'<div class="ymUActions"><button type="button" class="ymOrderNext" id="ymUnifiedNewV3">ทำรายการออเดอร์ใหม่</button><button type="button" class="ymOrderBack" id="ymUnifiedCopyV3">คัดลอกเลขออเดอร์</button></div>';
+ st.innerHTML='<div class="ymUCheck">✓</div><div class="ymUTitle">'+(title||'สร้างออเดอร์เรียบร้อยแล้ว ♡')+'</div><div class="ymUSub">สร้างออเดอร์เข้าสู่ระบบเรียบร้อยแล้ว</div><div class="ymUIdLabel">เลขออเดอร์ของคุณ</div><b class="ymUId">'+id+'</b>'+(detailHtml?'<div class="ymUDetails">'+detailHtml+'</div>':'')+'<div class="ymUActions"><button type="button" class="ymOrderBack" id="ymUnifiedCopyV3">คัดลอกเลขออเดอร์</button><button type="button" class="ymOrderNext" id="ymUnifiedNewV3">ทำรายการออเดอร์ใหม่</button></div>';
  $('#ymUnifiedCopyV3').onclick=()=>copy(id,$('#ymUnifiedCopyV3'));
  $('#ymUnifiedNewV3').onclick=resetFlow;
  $('#ymReadyApproveSlipV3')?.remove();
@@ -6245,6 +6245,70 @@ html.ymGuestSession [data-ym-order-pay="credit"]{display:none!important}
  window.addEventListener('click',function(e){
    if(e.target.closest?.('#loginBtn,#logoutBtn,#registerBtn')) setTimeout(syncCreditLogin,0);
  },true);
+})();
+</script>
+
+
+<style id="ym-order-confirmation-20261008-css">
+/* Presentation only: reuse the existing order-status and button handlers. */
+#ymOrderStatus.ymConfirmFinal2026{font:inherit!important;text-align:center!important;background:var(--ym-confirm-bg,#fff8fb)!important;color:var(--ym-confirm-text,#a65b7b)!important;border:1px solid var(--ym-confirm-border,#f3c9db)!important;border-radius:17px!important;padding:22px 15px!important}
+#ymOrderStatus.ymConfirmFinal2026 .ymUCheck{display:block!important;font-size:28px!important;line-height:1.2!important;color:var(--ym-confirm-head,#d572a0)!important;margin:0 0 9px!important}
+#ymOrderStatus.ymConfirmFinal2026 .ymUTitle{font:inherit!important;font-weight:800!important;font-size:17px!important;color:var(--ym-confirm-head,#b75b85)!important}
+#ymOrderStatus.ymConfirmFinal2026 .ymUSub{font:inherit!important;font-size:12px!important;font-weight:600!important;margin-top:7px!important}
+#ymOrderStatus.ymConfirmFinal2026 .ymUIdLabel{font-size:12px!important;margin-top:18px!important}
+#ymOrderStatus.ymConfirmFinal2026 .ymUId{font-size:17px!important;display:block!important;overflow-wrap:anywhere!important;margin:3px 0 9px!important}
+#ymOrderStatus.ymConfirmFinal2026 .ymUDetails{font:inherit!important;font-size:12px!important;line-height:1.8!important;margin:6px 0 18px!important}
+#ymOrderStatus.ymConfirmFinal2026 .ymUActions{display:flex!important;flex-direction:column!important;gap:12px!important;margin-top:18px!important}
+#ymOrderStatus.ymConfirmFinal2026 .ymUActions button{order:unset!important;width:100%!important;min-height:47px!important;margin:0!important;font:inherit!important;font-weight:800!important;border-radius:999px!important}
+#ymOrderStatus.ymConfirmFinal2026 .ymUActions .ymOrderBack{background:transparent!important;border:1px solid var(--ym-confirm-border,#f3c9db)!important;color:var(--ym-confirm-head,#b75b85)!important}
+#ymOrderStatus.ymConfirmFinal2026 .ymUActions .ymOrderNext{background:#df78a4!important;border:1px solid #df78a4!important;color:#fff!important}
+/* Member history: keep original white/pink order card, only restyle its copy button. */
+#memberOrders .ymMemberCopy,#memberOrders button[data-ym-member-copy]{background:#fff0e3!important;border:1px solid #f7cba7!important;border-radius:999px!important;color:#c87539!important;font:inherit!important;font-size:12px!important;font-weight:700!important;padding:6px 12px!important;box-shadow:none!important}
+#memberOrders .ymMemberCopy:hover,#memberOrders button[data-ym-member-copy]:hover{background:#ffe4cc!important}
+#memberOrders .ymMemberCopy.copied{background:#fff0e3!important;border-color:#f7cba7!important;color:#c87539!important}
+html.ymDark{--ym-confirm-bg:#33232b;--ym-confirm-text:#dfbaca;--ym-confirm-border:#70485b;--ym-confirm-head:#f3b4d0}
+html.ymDark #memberOrders .ymMemberCopy,html.ymDark #memberOrders button[data-ym-member-copy]{background:#5b3a2b!important;border-color:#d89a6a!important;color:#ffd7b5!important}
+html.ymDark #memberOrders .ymMemberCopy:hover{background:#704736!important}
+html.ymDark #memberOrders .ymMemberCopy.copied{background:#5b3a2b!important;border-color:#d89a6a!important;color:#ffd7b5!important}
+</style>
+<script id="ym-order-confirmation-20261008-js">
+(function(){
+ 'use strict';
+ var working=false;
+ var st=document.getElementById('ymOrderStatus');
+ function presentation(){
+  if(working)return;
+  working=true;
+  try{
+   document.querySelectorAll('#memberOrders .ymMemberCopy').forEach(function(b){
+     if((b.textContent||'').indexOf('คัดลอกแล้ว')>=0 && b.textContent!=='คัดลอกแล้ว') b.textContent='คัดลอกแล้ว';
+   });
+   if(!st)return;
+   var title=st.querySelector('.ymUTitle');
+   var text=(title?title.textContent:'')||'';
+   if(!/ชำระด้วยเครดิตสำเร็จ|ยืนยันสลิปเรียบร้อยแล้ว/.test(text))return;
+   var area=st.querySelector('.ymUActions');
+   if(!area)return; // Do not display a new success flow before its original renderer succeeds.
+   var copy=area.querySelector('#ymUnifiedCopyV3,#ymCalcCopyApproved,#ymCreditDirectCopy');
+   var next=area.querySelector('#ymUnifiedNewV3,#ymCalcNewOrder,#ymCreditDirectNew');
+   if(!copy||!next)return;
+   if(!st.classList.contains('ymConfirmFinal2026'))st.classList.add('ymConfirmFinal2026');
+   if(area.firstElementChild!==copy) area.insertBefore(copy,next);
+   // Keep slip success factual: confirmation means received, not payment approved.
+   if(/ยืนยันสลิปเรียบร้อยแล้ว/.test(text)){
+     var sub=st.querySelector('.ymUSub');
+     if(sub&&sub.textContent!=='สร้างออเดอร์เข้าสู่ระบบเรียบร้อยแล้ว')sub.textContent='สร้างออเดอร์เข้าสู่ระบบเรียบร้อยแล้ว';
+   }
+  }finally{working=false;}
+ }
+ function boot(){
+  st=document.getElementById('ymOrderStatus');
+  if(st)new MutationObserver(presentation).observe(st,{childList:true,subtree:true,characterData:true});
+  var mem=document.getElementById('memberOrders');
+  if(mem)new MutationObserver(presentation).observe(mem,{childList:true,subtree:true,characterData:true});
+  presentation();
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
 </script>
 
