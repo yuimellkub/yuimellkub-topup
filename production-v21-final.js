@@ -2156,9 +2156,24 @@ function showSubmitError(
 }
 
 
-// Both checkout paths use this existing Production markup; no second design.
-window.YMK_CANONICAL_SLIP_PENDING = function(){
-  return '<div class="ymSlipCheck">✓</div>'+
+function showPending(){
+
+  const st=
+    $('#ymOrderStatus');
+
+
+  if(!st){
+    return;
+  }
+
+
+  st.className=
+    'ymOrderStatus show ok ymCalcPendingV33';
+
+
+  st.innerHTML=
+
+    '<div class="ymSlipCheck">✓</div>'+
 
     '<div class="ymSlipTitle">ส่งสลิปเรียบร้อยแล้ว ♡</div>'+
 
@@ -2177,25 +2192,6 @@ window.YMK_CANONICAL_SLIP_PENDING = function(){
       '<a href="https://line.me/R/ti/p/@205svvxv" target="_blank" rel="noopener">ทัก LINE</a>'+
 
     '</div>';
-};
-
-function showPending(){
-
-  const st=
-    $('#ymOrderStatus');
-
-
-  if(!st){
-    return;
-  }
-
-
-  st.className=
-    'ymOrderStatus show ok ymCalcPendingV33';
-
-
-  st.innerHTML = window.YMK_CANONICAL_SLIP_PENDING();
-  window.YMK_CANONICAL_SLIP_PENDING_HTML = st.innerHTML;
 }
 
 
