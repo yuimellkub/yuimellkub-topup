@@ -4050,6 +4050,89 @@ function startProductObserver(){
 }
 
 
+
+/* Synchronize the existing Preview quantity controls after their own handlers.
+   Do not replace buttons, markup, or calculator pricing. */
+document.addEventListener('click', function(e){
+  if (!e.target.closest?.('#ymOrderQtyPlus,#ymOrderQtyMinus')) return;
+  if (window.YMK_ORDER_SOURCE !== 'ready' || !readyMeta) return;
+  const update = () => {
+    if (window.YMK_ORDER_SOURCE !== 'ready' || !readyMeta) return;
+    syncReadyCheckoutUI();
+    const qty = Math.max(1, Number($('#ymOrderQty')?.value || 1));
+    const total = Number(readyMeta.price || 0) * qty;
+    const field = $('#ymOrderQtyTotal');
+    if (field) field.textContent = qty > 1 ? 'รวม ' + fmt(total) + ' บาท' : '';
+  };
+  setTimeout(update, 0);
+  setTimeout(update, 40);
+}, true);
+
+/* The Preview calculator capture handler stops propagation before V21's
+   calculator click listener runs. Observe the actual calculator overlay state
+   and capture its authoritative YMK_LAST_CALC result instead. */
+(function bindExistingCalculatorCheckout(){
+  let pending = false;
+  let savedKey = '';
+  let checking = false;
+  function onCalculatorUIChange(){
+    if (pending || checking) return;
+    pending = true;
+    queueMicrotask(() => {
+      pending = false;
+      if (!document.body.classList.contains('ymCalcCheckout')) {
+        savedKey = '';
+        return;
+      }
+      const raw = window.YMK_LAST_CALC;
+      if (!raw || !['echoes','discount','gacha'].includes(raw.type) || !(num(raw.price)>0)) return;
+      const key = [raw.type, raw.item, raw.pack, num(raw.price)].join('|');
+      if (key !== savedKey || window.YMK_ORDER_SOURCE !== 'calc') {
+        savedKey = key;
+        readyMeta = null;
+        window.YMK_ORDER_SOURCE = 'calc';
+        window.YMK_ACTIVE_PRODUCT_ORDER = null;
+        window.YMK_SEND_SELECTION = null;
+        window.YMK_SEND_ORDER_META = null;
+        window.YMK_PENDING_ORDER_META = null;
+        window.YMK_FORCED_PACK_META = null;
+        const order = {item:String(raw.item||''),pack:String(raw.pack||''),price:num(raw.price)};
+        window.YMK_CALC_LOCKED_ORDER = {...order};
+        window.YMK_CHECKOUT_ORDER = {source:'calc',...order};
+      }
+      const order = window.YMK_CHECKOUT_ORDER;
+      if (window.YMK_ORDER_SOURCE !== 'calc' || !order || order.source !== 'calc') return;
+      if (!$('#ymProductPaymentOverlay')?.classList.contains('show')) return;
+      const amount = $('#ymOrderAmount');
+      const expected = fmt(order.price) + ' บาท';
+      checking = true;
+      try {
+        if (amount && amount.textContent !== expected) amount.textContent = expected;
+        const summary = $('#ymOrderSummary');
+        if (summary) {
+          const uid = String($('#ymOrderUid')?.value || '').trim();
+          const server = String($('#ymOrderServer')?.value || 'Asia').trim();
+          const name = String($('#ymOrderName')?.value || '').trim();
+          const html = '<b>'+esc(order.item)+'</b>'+
+            (order.pack?'<span class="ymPackLine">แพ็กที่เติม: '+esc(order.pack)+'</span>':'')+
+            '<br>UID: '+esc(uid||'-')+' • Server: '+esc(server)+
+            (name?'<br>ชื่อ: '+esc(name):'');
+          if (summary.innerHTML !== html) summary.innerHTML = html;
+        }
+      } finally { checking = false; }
+    });
+  }
+  const watch = new MutationObserver(onCalculatorUIChange);
+  watch.observe(document.body, {subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['class']});
+  document.addEventListener('click', e => {
+    if(e.target.closest?.('[data-ym-order-pay],#ymOrderNext,#ymCalcOrder,#ymCalcPopupOrder,.ymCalcOrderBtn,[data-calc-order]')) {
+      setTimeout(onCalculatorUIChange, 0);
+      setTimeout(onCalculatorUIChange, 90);
+    }
+  },true);
+  onCalculatorUIChange();
+})();
+
 function boot(){
 
   installStyle();
