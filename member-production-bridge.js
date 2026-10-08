@@ -1330,8 +1330,8 @@ async function payWithCredit(btn){
     );
   }
 
-  // Do not reject from the cached profile: the transaction below
-  // reads the authoritative Firestore balance before debit.
+  // Firestore transaction below verifies the current balance atomically.
+  // Do not reject here based on a stale cached profile.
 
   const now =
     new Date();
@@ -1638,17 +1638,10 @@ async function payWithCredit(btn){
     }
   );
 
-  // Reuse the existing Production approved-order UI; no new success markup.
-  if (typeof window.YMK_SHOW_APPROVED_ORDER === 'function') {
-    window.YMK_SHOW_APPROVED_ORDER(id);
-  } else {
-    console.error('YMK approved order UI unavailable after credit transaction', id);
-    const st = q('#ymOrderStatus');
-    if (st) {
-      st.className = 'ymOrderStatus show ok';
-      st.textContent = 'สร้างออเดอร์แล้ว: ' + id;
-    }
-  }
+  // Reuse the original production confirmation view (order number, copy, new order).
+  window.dispatchEvent(new CustomEvent('ymk-credit-order-approved', {
+    detail: {orderId: id}
+  }));
 
   return true;
 }
