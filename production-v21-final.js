@@ -1955,6 +1955,23 @@ function prepareProductionSubmit(){
 
 
   if(
+    window.YMK_ORDER_SOURCE === 'calc' &&
+    window.YMK_CALC_LOCKED_ORDER
+  ){
+    const o=window.YMK_CALC_LOCKED_ORDER;
+    window.lastOrder={
+      item:String(o.item),
+      pack:String(o.pack||''),
+      price:fmt(num(o.price))+' บาท'
+    };
+    window.YMK_LAST_CALC={
+      type:'calc',item:String(o.item),pack:String(o.pack||''),price:num(o.price)
+    };
+    window.YMK_ACTIVE_PRODUCT_ORDER=null;
+  }
+
+  if(
+    window.YMK_ORDER_SOURCE === 'ready' &&
     readyMeta
   ){
 

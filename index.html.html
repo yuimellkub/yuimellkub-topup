@@ -2595,6 +2595,16 @@ document.addEventListener('DOMContentLoaded',function(){
  }
  function qty(){const i=$('#ymOrderQty');return Math.max(1,Math.min(99,Math.floor(Number(i?.value)||1)))}
  function state(){
+   // Production selection takes precedence over Preview's initial card selection.
+   if(window.YMK_ORDER_SOURCE==='ready' && window.YMK_ACTIVE_PRODUCT_ORDER){
+     const o=window.YMK_ACTIVE_PRODUCT_ORDER;
+     const q=qty(), unit=Number(o.price)||0;
+     return {name:String(o.name||''),q,total:unit*q,pack:String(o.pack||'')};
+   }
+   if(window.YMK_ORDER_SOURCE==='calc' && window.YMK_CALC_LOCKED_ORDER){
+     const o=window.YMK_CALC_LOCKED_ORDER;
+     return {name:String(o.item||''),q:1,total:Number(o.price)||0,pack:String(o.pack||'')};
+   }
    if(!selected)return null;
    const q=qty(), total=selected.price*q;
    const pack=selected.echo?selected.echo.toLocaleString('th-TH')+' × '+q:'';

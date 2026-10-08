@@ -113,6 +113,7 @@ window.showNormalDone = function() {
     const special=Math.min(3,Math.max(0,Number(document.getElementById('specialCrystalPacks').value)||0));if(!rolls&&!special)return;
     const totalBalls=rolls+special*10,need=rolls*96+special*576,best=findBest(need),detail=formatLargestFirst(best);
     lastOrder={item:totalBalls.toLocaleString()+' ลูก (ปกติ '+rolls.toLocaleString()+' + พิเศษ '+special.toLocaleString()+' แพ็ก)',pack:detail,price:best.cost.toLocaleString()+' บาท'};
+    window.YMK_CALC_RESULT={item:lastOrder.item,pack:lastOrder.pack,price:best.cost};
     openDonePopup([['ลูกทั้งหมด',totalBalls.toLocaleString()+' ลูก'],['แพ็กพิเศษ',special.toLocaleString()+' แพ็ก'],['ใช้กระดุม',need.toLocaleString()+' กระดุม'],['แพ็ก',detail],['ยอดรวม',best.cost.toLocaleString()+' บาท','done-price']],'คำนวณกาชาเรียบร้อยแล้ว');
   };
 })();
