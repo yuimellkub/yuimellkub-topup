@@ -49,5 +49,21 @@ v21.src='production-v21-final.js?v=20';
 d.body.appendChild(v21);
 });
 </script>
+<style id="ymk-guide-style">
+#ymk-guide-open{position:fixed;right:16px;bottom:22px;z-index:2147483000;background:#db77a5;color:#fff;border:1px solid #fff8;border-radius:999px;padding:12px 18px;font:700 14px system-ui,sans-serif;box-shadow:0 5px 20px #aa467044;cursor:pointer}
+#ymk-guide-layer[hidden]{display:none!important}#ymk-guide-layer{position:fixed;inset:0;z-index:2147483001;background:#29152291;display:flex;justify-content:center;align-items:center;padding:12px;box-sizing:border-box}
+#ymk-guide-panel{width:min(900px,100%);height:min(92dvh,900px);background:#fff7fb;border-radius:20px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 12px 40px #0003}
+#ymk-guide-head{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;background:#ffe5f0;color:#81445e;font:700 17px system-ui,sans-serif}
+#ymk-guide-close{background:white;border:1px solid #edbcd1;border-radius:12px;padding:7px 12px;font-size:20px;cursor:pointer;color:#81445e}
+#ymk-guide-frame{width:100%;flex:1;border:0;background:#fff7fb}
+@media(max-width:600px){#ymk-guide-open{bottom:14px;right:12px;padding:10px 13px;font-size:12px}#ymk-guide-layer{padding:5px}#ymk-guide-panel{height:96dvh;border-radius:16px}}
+</style>
+<button id="ymk-guide-open" type="button" aria-haspopup="dialog">♡ วิธีใช้งานเว็บ</button>
+<div id="ymk-guide-layer" hidden role="dialog" aria-modal="true" aria-label="คู่มือวิธีใช้งานเว็บไซต์">
+ <div id="ymk-guide-panel"><div id="ymk-guide-head"><span>♡ วิธีใช้งานเว็บไซต์</span><button id="ymk-guide-close" type="button" aria-label="ปิดคู่มือ">×</button></div><iframe id="ymk-guide-frame" title="คู่มือวิธีใช้งาน" loading="lazy" data-src="./how-to.html"></iframe></div>
+</div>
+<script>
+(function(){const open=document.getElementById('ymk-guide-open'),layer=document.getElementById('ymk-guide-layer'),close=document.getElementById('ymk-guide-close'),frame=document.getElementById('ymk-guide-frame');let prior=null;function show(){prior=document.activeElement;if(!frame.src)frame.src=frame.dataset.src;layer.hidden=false;document.body.style.overflow='hidden';close.focus()}function hide(){layer.hidden=true;document.body.style.overflow='';if(prior&&prior.focus)prior.focus()}open.addEventListener('click',show);close.addEventListener('click',hide);layer.addEventListener('click',e=>{if(e.target===layer)hide()});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!layer.hidden)hide()})})();
+</script>
 </body>
 </html>
