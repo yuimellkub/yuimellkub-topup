@@ -2156,115 +2156,151 @@ function showSubmitError(
 }
 
 
-function showPending(){
-
-  const st=
-    $('#ymOrderStatus');
 
 
-  if(!st){
-    return;
+function showPending() {
+  const st = document.querySelector('#ymOrderStatus');
+  if (!st) return;
+
+  // ซ่อนปุ่มชำระเงินเดิมเฉพาะตอนแสดงผลรับสลิป
+  if (!document.querySelector('#ymkPendingButtonsStyle')) {
+    const style = document.createElement('style');
+    style.id = 'ymkPendingButtonsStyle';
+    style.textContent = `
+      body:has(#ymOrderStatus.ymCalcPendingV33)
+      #ymOrderSubmit,
+      body:has(#ymOrderStatus.ymCalcPendingV33)
+      #ymOrderSubmitProdV21,
+      body:has(#ymOrderStatus.ymCalcPendingV33)
+      #ymOrderBack {
+        display: none !important;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  // ใช้ลิงก์ LINE ร้านที่มีอยู่ในเว็บไซต์
+  const lineLink = document.querySelector(
+    'a[href*="lin.ee/"], a[href*="line.me/R/ti/p/"], a[href*="line.me/ti/p/"]'
+  );
+
+  const lineUrl = lineLink?.href ||
+    'https://linktr.ee/Yuimellkub';
+
+  st.className = 'ymOrderStatus show ok ymCalcPendingV33';
+st.setAttribute('data-ymk-slip-flow', 'shared');
+
+
+  st.innerHTML = `
+    <div class="ymSlipCheck">✓</div>
+
+    <div class="ymSlipTitle">
+      ส่งสลิปเรียบร้อยแล้ว ♡
+    </div>
+
+    <div class="ymSlipSub">
+      กำลังรอร้านตรวจสอบสลิป
+    </div>
+
+    <div class="ymSlipReceived">
+     เราได้รับสลิปในระบบแล้ว ไม่ต้องส่งซ้ำนะคะ ♡
+    </div>
+
+    <div class="ymSlipReceived" style="margin-top:10px">
+      หลังตรวจสอบเรียบร้อย ระบบจะแสดงเลขออเดอร์
+      สำหรับติดตามสถานะตามปกติ
+    </div>
+
+    <div class="ymSlipNote">
+      <strong>หมายเหตุ ♡</strong>
+      <div>
+        หากรอตรวจสอบเกินประมาณ
+        <strong>5–10 นาที</strong>
+        สามารถทักเพจหรือ LINE
+        เพื่อแจ้งแอดมินตรวจสอบได้นะคะ ♡
+      </div>
+    </div>
+
+    <div class="ymSlipContacts">
+      <a
+        href="https://m.me/yuimellkubtopup"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        ทักเพจ
+      </a>
+
+      <a
+        href="${lineUrl}"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        ทัก LINE
+      </a>
+    </div>
+  `;
+  const note = st.querySelector('.ymSlipNote');
+  if (note) {
+    note.style.cssText = `
+      display: block;
+      margin: 16px 0 12px;
+      padding: 14px;
+      border: 1px solid #f3d79d;
+      border-radius: 15px;
+      background: #fff9ee;
+      color: #a17c61;
+      text-align: left;
+      line-height: 1.65;
+    `;
+  }
+
+  const contacts = st.querySelector('.ymSlipContacts');
+  if (contacts) {
+    contacts.style.marginTop = '12px';
   }
 
 
-  st.className=
-    'ymOrderStatus show ok ymCalcPendingV33';
-
-
-  st.innerHTML=
-
-    '<div class="ymSlipCheck">✓</div>'+
-
-    '<div class="ymSlipTitle">ส่งสลิปเรียบร้อยแล้ว ♡</div>'+
-
-    '<div class="ymSlipSub">กำลังรอร้านตรวจสอบสลิป</div>'+
-
-    '<div class="ymSlipReceived">ร้านได้รับสลิปในระบบแล้ว ไม่ต้องส่งซ้ำนะคะ ♡</div>'+
-
-    '<div class="ymSlipReceived" style="margin-top:8px">หลังตรวจสอบเรียบร้อย ระบบจะแสดงเลขออเดอร์สำหรับติดตามสถานะตามปกติ</div>'+
-
-    '<div class="ymSlipNote"><b>หมายเหตุ ♡</b><br>หากรอตรวจสอบเกินประมาณ <b>5–10 นาที</b> สามารถทักเพจหรือ LINE เพื่อแจ้งแอดมินตรวจสอบได้นะคะ ♡</div>'+
-
-    '<div class="ymSlipContacts">'+
-
-      '<a href="https://m.me/yuimellkubtopup" target="_blank" rel="noopener">ทักเพจ</a>'+
-
-      '<a href="https://line.me/R/ti/p/@205svvxv" target="_blank" rel="noopener">ทัก LINE</a>'+
-
-    '</div>';
+  // เปิดมุมมองการยืนยันด้านบน
+  st.scrollIntoView({
+    behavior: 'smooth',
+    block: 'nearest'
+  });
 }
 
 
-function showApproved(
-  id
-){
+function showApproved(id, paymentDetails) {
+  const orderId = String(id || '').trim();
 
-  const st=
-    $('#ymOrderStatus');
+  if (!/^YMK\d{6}-\d{6}$/.test(orderId)) return false;
 
-
-  if(!st){
-    return;
+  if (typeof window.YMK_RENDER_ORDER_CONFIRMATION !== 'function') {
+    return false;
   }
 
+  const details = paymentDetails || {};
+  const isCredit = details.paymentMethod === 'credit';
+  const order = window.YMK_CHECKOUT_ORDER ||
+                window.YMK_CALC_LOCKED_ORDER ||
+                window.lastOrder || {};
 
-  st.className=
-    'ymOrderStatus show ok ymSlipApprovedDone';
+  const result = window.YMK_RENDER_ORDER_CONFIRMATION({
+    orderId,
+    paymentMethod: isCredit ? 'credit' : 'slip',
+    pack: details.pack || order.pack || '',
+    amount: details.amount ?? order.price ?? order.total ?? '',
+    remainingCredit: details.remainingCredit,
+    isSend: details.isSend === true || order.orderMode === 'send'
+  });
 
+  if (result) {
+    ['#ymOrderSubmit', '#ymOrderSubmitProdV21', '#ymOrderBack']
+      .forEach(selector => {
+        const btn = document.querySelector(selector);
+        if (btn) btn.style.display = 'none';
+      });
+  }
 
-  const isSend=
-
-    readyMeta
-      ?.orderMode ===
-      'send'
-
-    ||
-
-    window
-      .YMK_SEND_SELECTION
-      ?.mode ===
-      'send'
-
-    ||
-
-    window.lastOrder
-      ?.orderMode ===
-      'send';
-
-
-  st.innerHTML=
-
-    '<div class="ymSlipCheck">✓</div>'+
-
-    '<div class="ymSlipTitle">ยืนยันสลิปเรียบร้อยแล้ว ♡</div>'+
-
-    '<div class="ymSlipSub">สร้างออเดอร์เข้าสู่ระบบเรียบร้อยแล้ว</div>'+
-
-    '<div class="ymUIdLabel">เลขออเดอร์ของคุณ</div>'+
-
-    '<b class="ymUId">'+
-      esc(id)+
-    '</b>'+
-
-    (
-      isSend
-
-      ? '<div class="ymSlipReceived" style="margin-top:11px">รบกวนลูกค้าทักเพจร้าน พร้อมแจ้งเลขออเดอร์ <b>'+
-        esc(id)+
-        '</b> เพื่อให้ทางร้านดำเนินการแบบส่งต่อค่ะ ♡</div>'
-
-      : ''
-    )+
-
-    '<div class="ymUActions">'+
-
-      '<button type="button" class="ymOrderBack" data-v21-copy="'+
-        esc(id)+
-      '">คัดลอกเลขออเดอร์</button>'+
-
-      '<button type="button" class="ymOrderNext" data-v21-new>ทำรายการออเดอร์ใหม่</button>'+
-
-    '</div>';
+  return result;
 }
 
 
@@ -2276,7 +2312,12 @@ window.YMK_PRODUCTION_SHOW_APPROVED = showApproved;
 window.addEventListener('ymk-credit-order-approved', e => {
   const id = String(e.detail?.orderId || '').trim();
   if (!/^YMK\d{6}-\d{6}$/.test(id)) return;
-  showApproved(id);
+  showApproved(id, {
+    paymentMethod: 'credit',
+    pack: e.detail?.pack,
+    amount: e.detail?.amount,
+    remainingCredit: e.detail?.remainingCredit
+  });
 });
 
 window.addEventListener(
@@ -2316,7 +2357,7 @@ window.addEventListener(
 
     const btn=
       e.target.closest?.(
-        '#ymOrderSubmitProdV21'
+        '#ymOrderSubmitProdV21,#ymOrderSubmit'
       );
 
 
@@ -2324,6 +2365,9 @@ window.addEventListener(
       return;
     }
 
+    if(activePayment()==='credit'){
+      return;
+    }
 
     e.preventDefault();
 
@@ -2420,7 +2464,12 @@ window.addEventListener(
       }
 
 
-      showPending();
+      const orderId = String(window.currentOrderId || '').trim();
+      if (/^YMK\d{6}-\d{6}$/.test(orderId)) {
+        showApproved(orderId);
+      } else {
+        showPending();
+      }
 
     }catch(err){
 
@@ -2676,7 +2725,7 @@ document.addEventListener(
 
 
         copy.textContent=
-          'คัดลอกแล้ว ✓';
+          'คัดลอกแล้ว';
 
 
         setTimeout(
@@ -2724,9 +2773,38 @@ document.addEventListener(
 
       lastStatusText=
         '';
+const submitButton =
+  document.getElementById('ymOrderSubmit') ||
+  document.getElementById('ymOrderSubmitProdV21');
+
+if (submitButton) {
+  submitButton.style.removeProperty('display');
+  submitButton.disabled = false;
+}
+
+const orderStatus = document.getElementById('ymOrderStatus');
+
+if (orderStatus) {
+  orderStatus.classList.remove(
+    'ymCalcPendingV33',
+    'ymConfirmFinal2026'
+  );
+}
+
+try {
+  localStorage.removeItem('ymk_last_approved_order');
+} catch (e) {
+  console.warn('ไม่สามารถล้างข้อมูลหน้าต่างออเดอร์เดิมได้', e);
+}
+
+window.currentOrderId = null;
+
 
 
       window.lastOrder=
+        null;
+
+      window.__ymkLastVerifiedAutoOrder=
         null;
 
 
@@ -4012,53 +4090,69 @@ window.addEventListener(
    START
    ========================================================= */
 
-function startProductObserver(){
 
-  const root=
-    $('#products');
+function startProductObserver() {
+  let queued = false;
+  let observedRoot = null;
+  let productObserver = null;
 
+  function refreshSendButtons() {
+    if (queued) return;
+    queued = true;
 
-  if(!root){
-    return;
+    requestAnimationFrame(() => {
+      queued = false;
+      decorateCards();
+    });
   }
 
+  function attachObserver() {
+    const root = document.getElementById('products');
 
-  let queued=
-    false;
+    if (!root || root === observedRoot) return;
 
-
-  new MutationObserver(
-    ()=>{
-
-      if(queued){
-        return;
-      }
-
-
-      queued=
-        true;
-
-
-      requestAnimationFrame(
-        ()=>{
-
-          queued=
-            false;
-
-
-          decorateCards();
-        }
-      );
-
+    if (productObserver) {
+      productObserver.disconnect();
     }
-  ).observe(
-    root,
-    {
-      childList:true,
-      subtree:true
-    }
+
+    observedRoot = root;
+
+    productObserver = new MutationObserver(() => {
+      refreshSendButtons();
+    });
+
+    productObserver.observe(root, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: [
+        'data-send-enabled',
+        'data-send-price'
+      ]
+    });
+
+    refreshSendButtons();
+  }
+
+  // รองรับกรณีหมวดสินค้ายังโหลดไม่เสร็จ
+  const pageObserver = new MutationObserver(() => {
+    if (!document.getElementById('products')) return;
+    attachObserver();
+  });
+
+  pageObserver.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+
+  attachObserver();
+
+  document.addEventListener(
+    'ymk-storefront-products-rendered',
+    refreshSendButtons
   );
 }
+
 
 
 

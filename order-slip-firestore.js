@@ -144,7 +144,9 @@ async function submitAutoOrder(file,draft,fallback){
   const signedInUser = window.firebase?.auth?.().currentUser;
   if (signedInUser) {
     const idToken = await signedInUser.getIdToken();
-    form.append('firebaseIdToken', idToken);
+  
+form.append('memberToken', idToken);
+
   }
   form.append('fallbackImageData',fallback.data||'');
   form.append('fallbackWidth',String(fallback.width||0));
