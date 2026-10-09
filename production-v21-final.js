@@ -4087,6 +4087,202 @@ window.addEventListener(
 
 
 /* =========================================================
+   MOBILE TRACK ORDER FIX
+   - mobile only
+   - keep desktop unchanged
+   ========================================================= */
+(function installMobileTrackFix(){
+  const style=document.createElement('style');
+  style.textContent=`
+    @media (max-width:699px){
+      #orderPopupOverlay,
+      .orderPopupOverlay{
+        padding:
+          max(12px,env(safe-area-inset-top))
+          12px
+          max(12px,env(safe-area-inset-bottom))!important;
+        align-items:center!important;
+        justify-content:center!important;
+        overflow-y:auto!important;
+        box-sizing:border-box!important;
+      }
+
+      #orderPopupOverlay > div,
+      .orderPopupOverlay > div,
+      #orderPopupModal,
+      .orderPopupModal,
+      .orderPopupCard{
+        width:calc(100vw - 24px)!important;
+        max-width:430px!important;
+        max-height:calc(100dvh - 24px)!important;
+        margin:auto!important;
+        overflow-y:auto!important;
+        overscroll-behavior:contain!important;
+        box-sizing:border-box!important;
+        border-radius:22px!important;
+      }
+
+      #orderPopupInput,
+      #orderPopupSubmit,
+      #orderPopupSubmitProdV21{
+        font-size:16px!important;
+      }
+
+      #orderPopupResult{
+        max-height:42dvh!important;
+        overflow-y:auto!important;
+        -webkit-overflow-scrolling:touch!important;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+
+  if(!window.matchMedia('(max-width:699px)').matches){
+    return;
+  }
+
+  async function mobileResolveOrder(raw){
+    const store=db();
+
+    if(!store){
+      throw new Error(
+        'เชื่อมระบบออเดอร์ไม่ได้'
+      );
+    }
+
+    const input=String(raw||'')
+      .trim()
+      .toUpperCase()
+      .replace(/^#/,'')
+      .replace(/\s+/g,'');
+
+    if(!input){
+      throw new Error(
+        'กรุณากรอกเลขออเดอร์'
+      );
+    }
+
+    let id=input;
+    let orderData=null;
+
+    if(/^YMK\d{6}-\d{6}$/.test(input)){
+      const orderSnap=await store
+        .collection('orders')
+        .doc(input)
+        .get();
+
+      if(orderSnap.exists){
+        orderData={
+          id:orderSnap.id,
+          ...orderSnap.data()
+        };
+      }
+    }
+
+    /*
+      Mobile fallback:
+      some completed orders can be readable through order_status
+      even when the order document is not returned to the client.
+    */
+    let statusSnap=null;
+
+    if(/^YMK\d{6}-\d{6}$/.test(id)){
+      statusSnap=await store
+        .collection('order_status')
+        .doc(id)
+        .get();
+    }
+
+    if(!orderData && !statusSnap?.exists){
+      return null;
+    }
+
+    const statusData=
+      statusSnap?.exists
+        ? statusSnap.data()
+        : {};
+
+    return {
+      ...(orderData||{}),
+      ...statusData,
+      id,
+      proof:proofImages(statusData)
+    };
+  }
+
+  window.addEventListener(
+    'click',
+    async e=>{
+      const btn=e.target.closest?.(
+        '#orderPopupSubmit,'+
+        '#orderPopupSubmitProdV21'
+      );
+
+      if(!btn){
+        return;
+      }
+
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+
+      stopRealtimeTrack();
+
+      const result=$('#orderPopupResult');
+      const input=$('#orderPopupInput');
+
+      if(result){
+        result.classList.add('show');
+        result.textContent=
+          'กำลังตรวจสอบออเดอร์…';
+      }
+
+      btn.disabled=true;
+
+      try{
+        const order=await mobileResolveOrder(
+          input?.value||''
+        );
+
+        renderTracked(order);
+
+        if(order?.id){
+          startRealtimeTrack(
+            order.id,
+            order
+          );
+        }
+      }catch(err){
+        console.error(
+          'mobile track order failed',
+          err
+        );
+
+        if(result){
+          result.classList.add('show');
+          result.textContent=
+            err?.message||
+            'ตรวจสอบออเดอร์ไม่สำเร็จ';
+        }
+      }
+
+      btn.disabled=false;
+
+      if(
+        btn.id ===
+        'orderPopupSubmitProdV21'
+      ){
+        btn.id='orderPopupSubmit';
+      }
+
+      return false;
+    },
+    true
+  );
+})();
+
+
+/* =========================================================
    START
    ========================================================= */
 
