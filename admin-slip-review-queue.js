@@ -11,14 +11,42 @@
   function ensureRoot(){let root=document.getElementById('ymkSlipReviewQueue');if(root)return root;const orders=document.getElementById('orders');if(!orders)return null;root=document.createElement('section');root.id='ymkSlipReviewQueue';root.className='reviewQueueWrap';root.innerHTML='<div class="reviewQueueTitle">♡ สลิปรอร้านตรวจสอบ</div><div class="reviewQueueGrid"></div>';orders.parentNode.insertBefore(root,orders);return root;}
   function notifyPending(d,id){try{if(!('Notification'in window)||Notification.permission!=='granted')return;const n=new Notification('Yuimellkub • มีสลิปรอตรวจสอบ 🔔',{body:(d.item||'รายการใหม่')+(d.price?' • '+d.price:'')+'\n'+id,tag:'review-'+id});n.onclick=()=>{window.focus();n.close();};}catch(e){}}
 
-  async function sendApprovedOrderDiscord(orderId,data){
-    try{
-      const url='https://yuimellkub-slip.yuimellkubtopup.workers.dev/discord-notify';
-      const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({allowed_mentions:{parse:[]},embeds:[{title:'🎀 NEW ORDER • มีออเดอร์ใหม่',description:'ชำระแล้ว • รอดำเนินการ ♡',color:15107242,fields:[{name:'เลขออเดอร์',value:String(orderId||'-'),inline:false},{name:'สินค้า',value:String(data.item||'-'),inline:true},{name:'แพ็ก',value:String(data.pack||'-'),inline:true},{name:'ยอดชำระ',value:String(data.price||'-'),inline:true},{name:'UID',value:String(data.uid||'-'),inline:true},{name:'Server',value:String(data.server||'Asia'),inline:true}],timestamp:new Date().toISOString(),footer:{text:'Yuimellkub Top-up ♡'}}]})});
-      if(!r.ok)throw new Error('Discord '+r.status);
-      return true;
-    }catch(e){console.warn('Discord approved order notice failed',e);return false;}
+ 
+async function sendApprovedOrderDiscord(orderId, data) {
+  try {
+  const user =
+  window.firebase?.auth?.().currentUser ||
+  (typeof auth !== 'undefined' ? auth.currentUser : null);
+    if (!user) throw new Error('ADMIN_LOGIN_REQUIRED');
+
+    const memberToken = await user.getIdToken();
+
+    const response = await fetch(
+      'https://yuimellkub-slip.yuimellkubtopup.workers.dev/discord-notify',
+      {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          id: orderId,
+          memberToken
+        })
+      }
+    );
+
+   
+if (!response.ok) {
+  const details = await response.text();
+  console.warn('Discord Worker response:', response.status, details);
+  throw new Error('Discord ' + response.status);
+}
+
+
+    return true;
+  } catch (error) {
+    console.warn('Discord approved order notice failed', error);
+    return false;
   }
+}
 
   async function sendApprovedOrderEmail(orderId,data){
     const c=window.YUIMELLKUB_EMAILJS||{};

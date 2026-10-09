@@ -1,6 +1,67 @@
 (function(){
 'use strict';
 
+const memberCopyStyle = document.createElement('style');
+memberCopyStyle.textContent = `
+  .ymMemberCopyOrder {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+   gap: 5px;
+   padding: 5px 11px;
+    border: 1px solid #F1AA89;
+    border-radius: 999px;
+    background: transparent;
+    color: #F1AA89;
+   font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background .2s ease;
+  }
+
+  .ymMemberCopyOrder svg {
+     width: 14px;
+  height: 14px;
+    flex-shrink: 0;
+  }
+
+  .ymMemberCopyOrder:hover {
+    background: rgba(241, 170, 137, .12);
+  }
+`;
+document.head.appendChild(memberCopyStyle);
+
+async function notifyMemberDiscord(type, id) {
+  const user = firebase.auth().currentUser;
+  if (!user || !id) return false;
+
+  const memberToken = await user.getIdToken();
+
+  const response = await fetch(
+    'https://yuimellkub-slip.yuimellkubtopup.workers.dev/member-discord-notify',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        type,
+        id,
+        memberToken
+      })
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error('Discord notification failed: ' + response.status);
+  }
+
+  return true;
+}
+
+
+
 let auth = null;
 let db = null;
 let profile = null;
@@ -199,18 +260,40 @@ function pendingManualOrder(){
     return null;
   }
 }
+
 document.addEventListener('click', async e => {
-  const btn=e.target.closest?.('[data-member-copy-order]');
+  const btn = e.target.closest?.('[data-member-copy-order]');
   if (!btn) return;
-  const id=btn.getAttribute('data-member-copy-order') || '';
+
+  const id = btn.getAttribute('data-member-copy-order') || '';
   if (!/^YMK\d{6}-\d{6}$/.test(id)) return;
-  try {
-    await navigator.clipboard.writeText(id);
-    const before=btn.textContent;
-    btn.textContent='คัดลอกแล้ว ✓';
-    setTimeout(()=>{if(btn.isConnected) btn.textContent=before;},1000);
-  } catch(err) { console.warn('Unable to copy order number',err); }
+
+  
+try {
+  await navigator.clipboard.writeText(id);
+
+  const label = btn.querySelector('span');
+  if (!label) return;
+
+  label.textContent = 'คัดลอกแล้ว ✓';
+  btn.title = 'คัดลอกแล้ว ✓';
+  btn.setAttribute('aria-label', 'คัดลอกแล้ว');
+
+  clearTimeout(btn._ymCopyTimer);
+  btn._ymCopyTimer = setTimeout(() => {
+    if (!btn.isConnected) return;
+
+    label.textContent = 'คัดลอก';
+    btn.title = 'คัดลอกเลขออเดอร์';
+    btn.setAttribute('aria-label', 'คัดลอกเลขออเดอร์');
+  }, 1200);
+
+
+  } catch (err) {
+    console.warn('Unable to copy order number', err);
+  }
 });
+
 function render(){
 
   const guest =
@@ -416,8 +499,23 @@ function render(){
       : (o.id || '-')
   }
 </b>
-              ${!o.pending && /^YMK\d{6}-\d{6}$/.test(String(o.id || '')) ?
-                `<button type="button" class="ymMemberCopyOrder" data-member-copy-order="${o.id}">คัดลอกเลขออเดอร์</button>` : ''}
+              ${!o.pending && /^YMK\d{6}-\d{6}$/.test(String(o.id || '')) ? `
+                
+<button type="button"
+  class="ymMemberCopyOrder"
+  data-member-copy-order="${o.id}"
+  title="คัดลอกเลขออเดอร์"
+  aria-label="คัดลอกเลขออเดอร์">
+  <svg width="15" height="15" viewBox="0 0 24 24"
+    fill="none" stroke="currentColor"
+    stroke-width="1.9" stroke-linecap="round"
+    stroke-linejoin="round" aria-hidden="true">
+    <rect x="8" y="8" width="12" height="12" rx="2"/>
+    <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>
+  </svg>
+  <span>คัดลอก</span>
+</button>
+ ` : ''}
 
               <div class="ymMini">
 
@@ -1326,11 +1424,10 @@ async function submitCredit(btn){
     });
 
   }catch(err){
-
-    throw creditWriteError(
-      err
-    );
+    throw creditWriteError(err);
   }
+  notifyMemberDiscord('credit-review', ref.id)
+    .catch(err => console.warn('Credit Discord notice failed', err));
 }
 
 
@@ -1495,6 +1592,7 @@ async function payWithCredit(btn){
 
   btn.disabled = true;
 
+  let remainingCredit = null;
   await db.runTransaction(
     async tx => {
 
@@ -1537,6 +1635,7 @@ async function payWithCredit(btn){
 
       const remain =
         old - amount;
+      remainingCredit = remain;
 
       const orderRef =
         db
@@ -1698,8 +1797,16 @@ async function payWithCredit(btn){
 
   // Reuse the original production confirmation view (order number, copy, new order).
   window.dispatchEvent(new CustomEvent('ymk-credit-order-approved', {
-    detail: {orderId: id}
+    detail: {
+      orderId: id,
+      pack,
+      amount,
+      remainingCredit
+    }
   }));
+
+notifyMemberDiscord('credit-order', id)
+  .catch(err => console.warn('Credit order Discord notice failed', err));
 
   return true;
 }
