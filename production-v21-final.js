@@ -3193,96 +3193,189 @@ async function saveProofs(
 }
 
 
+async function resolveOrder(raw){
+
+  const store=
+    db();
 
 
-async function resolveOrder(raw) {
-  const store = db();
+  if(!store){
 
-  if (!store) {
-    throw new Error('เชื่อมระบบออเดอร์ไม่ได้');
+    throw new Error(
+      'เชื่อมระบบออเดอร์ไม่ได้'
+    );
   }
 
-  const input = String(raw || '')
-    .trim()
-    .toUpperCase()
-    .replace(/^#/, '')
-    .replace(/\s+/g, '');
 
-  if (!input) {
-    throw new Error('กรุณากรอกเลขออเดอร์');
+  const input=
+    String(
+      raw||
+      ''
+    )
+      .trim()
+      .replace(
+        /^#/,
+        ''
+      );
+
+
+  if(!input){
+
+    throw new Error(
+      'กรุณากรอกเลขออเดอร์'
+    );
   }
 
-  let id = input;
-  let orderData = null;
 
-  if (/^YMK\d{6}-\d{6}$/.test(input)) {
-    const snap = await store
-      .collection('orders')
-      .doc(input)
-      .get();
+  let orderSnap=
+    null;
 
-    if (snap.exists) {
-      orderData = {
-        id: snap.id,
-        ...snap.data()
-      };
+
+  let id=
+    input;
+
+
+  if(
+    /^YMK\d{6}-\d{6}$/
+      .test(input)
+  ){
+
+    orderSnap=
+      await store
+        .collection(
+          'orders'
+        )
+        .doc(
+          input
+        )
+        .get();
+
+  }else{
+
+    const snap=
+      await store
+        .collection(
+          'orders'
+        )
+        .limit(
+          300
+        )
+        .get();
+
+
+    const digits=
+      input.replace(
+        /\D/g,
+        ''
+      );
+
+
+    const hit=
+      snap.docs
+        .find(
+          doc=>{
+
+            const full=
+              String(
+                doc.id
+              );
+
+
+            const only=
+              full.replace(
+                /\D/g,
+                ''
+              );
+
+
+            return (
+
+              full ===
+              input
+
+              ||
+
+              only.endsWith(
+                digits
+              )
+
+              ||
+
+              full.endsWith(
+                input
+              )
+            );
+          }
+        );
+
+
+    if(hit){
+
+      id=
+        hit.id;
+
+
+      orderSnap=
+        hit;
     }
-  } else {
-    const digits = input.replace(/\D/g, '');
-
-    if (!digits) {
-      return null;
-    }
-
-    const snap = await store
-      .collection('orders')
-      .limit(300)
-      .get();
-
-    const hit = snap.docs.find(doc => {
-      const full = doc.id.toUpperCase();
-      const onlyDigits = full.replace(/\D/g, '');
-
-      return full === input ||
-        onlyDigits.endsWith(digits) ||
-        full.endsWith(input);
-    });
-
-    if (hit) {
-      id = hit.id;
-      orderData = {
-        id: hit.id,
-        ...hit.data()
-      };
-    }
   }
 
-  let statusSnap = null;
 
-  if (/^YMK\d{6}-\d{6}$/.test(id)) {
-    statusSnap = await store
-      .collection('order_status')
-      .doc(id)
-      .get();
-  }
+  if(
+    !orderSnap
 
-  if (!orderData && !statusSnap?.exists) {
+    ||
+
+    !orderSnap.exists
+  ){
+
     return null;
   }
 
-  const statusData = statusSnap?.exists
-    ? statusSnap.data()
-    : {};
+
+  const order={
+
+    id,
+
+    ...orderSnap.data()
+  };
+
+
+  const statusSnap=
+
+    await store
+      .collection(
+        'order_status'
+      )
+      .doc(
+        id
+      )
+      .get();
+
+
+  const statusData=
+
+    statusSnap.exists
+
+      ? statusSnap.data()
+
+      : {};
+
 
   return {
-    ...(orderData || {}),
+
+    ...order,
+
     ...statusData,
+
     id,
-    proof: proofImages(statusData)
+
+    proof:
+      proofImages(
+        statusData
+      )
   };
 }
-
-
 
 
 
