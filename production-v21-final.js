@@ -3193,189 +3193,96 @@ async function saveProofs(
 }
 
 
-async function resolveOrder(raw){
-
-  const store=
-    db();
 
 
-  if(!store){
+async function resolveOrder(raw) {
+  const store = db();
 
-    throw new Error(
-      'เชื่อมระบบออเดอร์ไม่ได้'
-    );
+  if (!store) {
+    throw new Error('เชื่อมระบบออเดอร์ไม่ได้');
   }
 
+  const input = String(raw || '')
+    .trim()
+    .toUpperCase()
+    .replace(/^#/, '')
+    .replace(/\s+/g, '');
 
-  const input=
-    String(
-      raw||
-      ''
-    )
-      .trim()
-      .replace(
-        /^#/,
-        ''
-      );
-
-
-  if(!input){
-
-    throw new Error(
-      'กรุณากรอกเลขออเดอร์'
-    );
+  if (!input) {
+    throw new Error('กรุณากรอกเลขออเดอร์');
   }
 
+  let id = input;
+  let orderData = null;
 
-  let orderSnap=
-    null;
+  if (/^YMK\d{6}-\d{6}$/.test(input)) {
+    const snap = await store
+      .collection('orders')
+      .doc(input)
+      .get();
 
+    if (snap.exists) {
+      orderData = {
+        id: snap.id,
+        ...snap.data()
+      };
+    }
+  } else {
+    const digits = input.replace(/\D/g, '');
 
-  let id=
-    input;
+    if (!digits) {
+      return null;
+    }
 
+    const snap = await store
+      .collection('orders')
+      .limit(300)
+      .get();
 
-  if(
-    /^YMK\d{6}-\d{6}$/
-      .test(input)
-  ){
+    const hit = snap.docs.find(doc => {
+      const full = doc.id.toUpperCase();
+      const onlyDigits = full.replace(/\D/g, '');
 
-    orderSnap=
-      await store
-        .collection(
-          'orders'
-        )
-        .doc(
-          input
-        )
-        .get();
+      return full === input ||
+        onlyDigits.endsWith(digits) ||
+        full.endsWith(input);
+    });
 
-  }else{
-
-    const snap=
-      await store
-        .collection(
-          'orders'
-        )
-        .limit(
-          300
-        )
-        .get();
-
-
-    const digits=
-      input.replace(
-        /\D/g,
-        ''
-      );
-
-
-    const hit=
-      snap.docs
-        .find(
-          doc=>{
-
-            const full=
-              String(
-                doc.id
-              );
-
-
-            const only=
-              full.replace(
-                /\D/g,
-                ''
-              );
-
-
-            return (
-
-              full ===
-              input
-
-              ||
-
-              only.endsWith(
-                digits
-              )
-
-              ||
-
-              full.endsWith(
-                input
-              )
-            );
-          }
-        );
-
-
-    if(hit){
-
-      id=
-        hit.id;
-
-
-      orderSnap=
-        hit;
+    if (hit) {
+      id = hit.id;
+      orderData = {
+        id: hit.id,
+        ...hit.data()
+      };
     }
   }
 
+  let statusSnap = null;
 
-  if(
-    !orderSnap
+  if (/^YMK\d{6}-\d{6}$/.test(id)) {
+    statusSnap = await store
+      .collection('order_status')
+      .doc(id)
+      .get();
+  }
 
-    ||
-
-    !orderSnap.exists
-  ){
-
+  if (!orderData && !statusSnap?.exists) {
     return null;
   }
 
-
-  const order={
-
-    id,
-
-    ...orderSnap.data()
-  };
-
-
-  const statusSnap=
-
-    await store
-      .collection(
-        'order_status'
-      )
-      .doc(
-        id
-      )
-      .get();
-
-
-  const statusData=
-
-    statusSnap.exists
-
-      ? statusSnap.data()
-
-      : {};
-
+  const statusData = statusSnap?.exists
+    ? statusSnap.data()
+    : {};
 
   return {
-
-    ...order,
-
+    ...(orderData || {}),
     ...statusData,
-
     id,
-
-    proof:
-      proofImages(
-        statusData
-      )
+    proof: proofImages(statusData)
   };
 }
+
+
 
 
 
