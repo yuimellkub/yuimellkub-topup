@@ -1358,10 +1358,34 @@ if(qty){
   qty.value='1';
 }
 
+
 syncReadyCheckoutUI();
+
+// คืนสถานะปุ่มเมื่อเริ่มออเดอร์ใหม่
+['#ymOrderSubmit', '#ymOrderSubmitProdV21', '#ymOrderBack']
+  .forEach(selector => {
+    const btn = document.querySelector(selector);
+    if (btn) {
+      btn.style.removeProperty('display');
+      btn.disabled = false;
+    }
+  });
+
+// ล้างเฉพาะหน้าสถานะยืนยันออเดอร์เก่า
+const status = $('#ymOrderStatus');
+if (status) {
+  status.classList.remove(
+    'ymConfirmFinal2026',
+    'ymCalcPendingV33',
+    'ymCreditPaidDone'
+  );
+  status.innerHTML = '';
+  status.removeAttribute('data-ymk-confirmation-key');
+}
 
 const overlay=
   $('#ymProductOrderOverlay');
+
 
 if(!overlay){
 
@@ -2773,23 +2797,26 @@ document.addEventListener(
 
       lastStatusText=
         '';
-const submitButton =
-  document.getElementById('ymOrderSubmit') ||
-  document.getElementById('ymOrderSubmitProdV21');
+const submitButtons = document.querySelectorAll(
+  '#ymOrderSubmit, #ymOrderSubmitProdV21'
+);
 
-if (submitButton) {
-  submitButton.style.removeProperty('display');
-  submitButton.disabled = false;
-}
+submitButtons.forEach(btn => {
+  btn.style.removeProperty('display');
+  btn.disabled = false;
+});
 
 const orderStatus = document.getElementById('ymOrderStatus');
 
 if (orderStatus) {
   orderStatus.classList.remove(
     'ymCalcPendingV33',
-    'ymConfirmFinal2026'
+    'ymConfirmFinal2026',
+    'ymCreditPaidDone'
   );
+  orderStatus.removeAttribute('data-ymk-confirmation-key');
 }
+
 
 try {
   localStorage.removeItem('ymk_last_approved_order');

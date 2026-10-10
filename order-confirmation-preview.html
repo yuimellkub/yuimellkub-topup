@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ตัวอย่าง UI ยืนยันออเดอร์ | Yuimellkub Top-up</title>
+  <style>
+    :root{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#8e526a;background:#fff6fa}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px}
+    main{width:min(100%,460px)}
+    h1{margin:0 0 8px;text-align:center;font-size:21px;color:#a65574}
+    .notice{margin:0 0 20px;text-align:center;font-size:13px;line-height:1.7}
+    .switcher{display:flex;gap:8px;margin-bottom:14px}
+    .switcher button{flex:1;border:1px solid #efcad8;border-radius:999px;background:#fff;color:#a65574;padding:10px;font:inherit;font-weight:700;cursor:pointer}
+    .switcher button[aria-pressed="true"]{background:#df78a4;border-color:#df78a4;color:#fff}
+    #ymOrderStatus{display:block}
+    html.ymDark{background:#261d22;color:#dfbaca}
+    html.ymDark h1{color:#f3b4d0}
+    html.ymDark .switcher button{background:#33232b;border-color:#70485b;color:#f3b4d0}
+    html.ymDark .switcher button[aria-pressed="true"]{background:#df78a4;color:#fff}
+    .theme-toggle{display:block;margin:16px auto 0;border:0;background:none;color:inherit;text-decoration:underline;font:inherit;cursor:pointer}
+    .local-only{display:none;text-align:center;padding:20px;border:1px solid #efcad8;border-radius:16px;background:#fff}
+    html:not(.ymk-local-preview) main{display:none}
+    html:not(.ymk-local-preview) .local-only{display:block}
+  </style>
+</head>
+<body>
+  <main>
+    <h1>ตัวอย่างหน้าต่างยืนยันออเดอร์</h1>
+    <p class="notice">ตัวอย่างนี้ทำงานบน localhost เท่านั้น<br>ใช้ข้อมูลตัวอย่าง ไม่สร้างออเดอร์ ไม่บันทึกข้อมูล และไม่เชื่อม Firebase หรือ Worker</p>
+    <div class="switcher" aria-label="เลือกหมวดตัวอย่าง">
+      <button type="button" data-category="ready" aria-pressed="true">Ready Stock</button>
+      <button type="button" data-category="calc" aria-pressed="false">Calculator</button>
+    </div>
+    <div id="ymOrderStatus" class="ymOrderStatus"></div>
+    <button type="button" class="theme-toggle">เปลี่ยน Light / Dark</button>
+  </main>
+  <div class="local-only">หน้านี้แสดงตัวอย่างได้เฉพาะบน localhost</div>
+  <script src="order-confirmation-ui.js"></script>
+  <script>
+    (function () {
+      'use strict';
+      var localHost = ['localhost', '127.0.0.1', '::1'].indexOf(location.hostname) !== -1;
+      if (!localHost) return;
+      document.documentElement.classList.add('ymk-local-preview');
+      var selected = new URLSearchParams(location.search).get('category') === 'calc'
+        ? 'calc'
+        : 'ready';
+      var examples = {
+        ready: {pack: 'Echo 100 × 1', amount: 145},
+        calc: {pack: '335 กระดุม', amount: 299}
+      };
+      function renderExample() {
+        var sample = examples[selected];
+        window.YMK_RENDER_ORDER_CONFIRMATION({
+          containerId: 'ymOrderStatus',
+          demo: true,
+          orderId: 'DEMO ONLY',
+          pack: sample.pack,
+          amount: sample.amount
+        });
+        document.querySelectorAll('[data-category]').forEach(function (button) {
+          button.setAttribute('aria-pressed', String(button.dataset.category === selected));
+        });
+      }
+      document.querySelectorAll('[data-category]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          selected = button.dataset.category;
+          renderExample();
+        });
+      });
+      document.querySelector('.theme-toggle').addEventListener('click', function () {
+        document.documentElement.classList.toggle('ymDark');
+      });
+      document.addEventListener('ymk-confirm-demo-reset', renderExample);
+      renderExample();
+    })();
+  </script>
+</body>
+</html>

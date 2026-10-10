@@ -2151,6 +2151,7 @@ document.getElementById('calcBtn')?.addEventListener('click', () => {
  const shade=document.getElementById('orderModalShade'), close=document.getElementById('orderModalClose');
  const input=document.getElementById('orderPopupInput'), submit=document.getElementById('orderPopupSubmit');
  const result=document.getElementById('orderPopupResult');
+ let stopStatusWatch = null;
  function openModal(e){if(e)e.preventDefault();shade.classList.add('open');shade.setAttribute('aria-hidden','false');setTimeout(()=>input.focus(),120)}
  function closeModal(){shade.classList.remove('open');shade.setAttribute('aria-hidden','true')}
  document.querySelectorAll('a[href="#order-check"],a[href="#track"],a[href="#status"]').forEach(el=>el.addEventListener('click',openModal));

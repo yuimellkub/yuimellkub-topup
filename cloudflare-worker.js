@@ -1,19 +1,35 @@
 let oauthCache={token:'',exp:0};
 
-function corsHeaders(){
+
+const ALLOWED_ORIGINS = new Set([
+  'https://yuimellkub.github.io',
+  'http://127.0.0.1:3000',
+  'http://localhost:3000'
+]);
+
+function corsHeaders(request) {
+  const origin = request?.headers.get('Origin') || '';
   return {
-    'Access-Control-Allow-Origin':'https://yuimellkub.github.io',
-    'Access-Control-Allow-Methods':'POST, OPTIONS',
-    'Access-Control-Allow-Headers':'Content-Type'
+    'Access-Control-Allow-Origin':
+      ALLOWED_ORIGINS.has(origin)
+        ? origin
+        : 'https://yuimellkub.github.io',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Vary': 'Origin'
   };
 }
 
-function json(data,status=200){
-  return new Response(JSON.stringify(data),{
+function json(data, status = 200, request) {
+  return new Response(JSON.stringify(data), {
     status,
-    headers:{...corsHeaders(),'Content-Type':'application/json'}
+    headers: {
+      ...corsHeaders(request),
+      'Content-Type': 'application/json'
+    }
   });
 }
+
 
 function b64url(input){
   const bytes=typeof input==='string'?new TextEncoder().encode(input):input;
@@ -170,15 +186,15 @@ async function notifyAdmins(env,review){
 
 async function handleManualSlip(request,env){
   let body={};
-  try{body=await request.json();}catch(e){return json({ok:false,error:'INVALID_JSON'},400);}
+ try{body=await request.json();}catch(e){return json({ok:false,error:'INVALID_JSON'},400,request);}
   try{
     const saved=await saveManualSlip(env,body);
-    if(!saved.ok)return json({ok:false,error:saved.error},saved.status);
+   if(!saved.ok)return json({ok:false,error:saved.error},saved.status,request);
     await notifyAdmins(env,{...body,reviewId:saved.reviewId});
-    return json({ok:true,reviewId:saved.reviewId});
+  return json({ok:true,reviewId:saved.reviewId},200,request);
   }catch(e){
     console.log('manual slip failed',e?.message||e);
-    return json({ok:false,error:'SERVER_ERROR'},500);
+   return json({ok:false,error:'SERVER_ERROR'},500,request);
   }
 }
 
@@ -186,9 +202,9 @@ async function handleEasySlip(request,env){
   try{
     const formData=await request.formData();
     const image=formData.get('image');
-    if(!image||typeof image==='string')return json({success:false,message:'กรุณาเลือกรูปสลิป'},400);
-    if(!String(image.type||'').startsWith('image/'))return json({success:false,message:'ไฟล์ต้องเป็นรูปภาพเท่านั้น'},400);
-    if(image.size>4*1024*1024)return json({success:false,message:'รูปสลิปต้องมีขนาดไม่เกิน 4MB'},400);
+   if(!image||typeof image==='string')return json({success:false,message:'กรุณาเลือกรูปสลิป'},400,request);
+  if(!String(image.type||'').startsWith('image/'))return json({success:false,message:'ไฟล์ต้องเป็นรูปภาพเท่านั้น'},400,request);
+if(image.size>4*1024*1024)return json({success:false,message:'รูปสลิปต้องมีขนาดไม่เกิน 4MB'},400,request);
     const bytes=new Uint8Array(await image.arrayBuffer());
     let binary='';
     const chunkSize=0x8000;
@@ -200,16 +216,22 @@ async function handleEasySlip(request,env){
       body:JSON.stringify({base64,checkDuplicate:true})
     });
     const result=await response.json();
-    return json(result,response.status);
+  return json(result,response.status,request);
   }catch(e){
-    return json({success:false,message:'ระบบตรวจสลิปเกิดข้อผิดพลาด'},500);
+   return json({success:false,message:'ระบบตรวจสลิปเกิดข้อผิดพลาด'},500,request);
   }
 }
 
 export default {
   async fetch(request,env){
-    if(request.method==='OPTIONS')return new Response(null,{status:204,headers:corsHeaders()});
-    if(request.method!=='POST')return json({success:false,message:'Method not allowed'},405);
+    
+if(request.method==='OPTIONS')
+  return new Response(null,{
+    status:204,
+    headers:corsHeaders(request)
+  });
+
+    if(request.method!=='POST')return json({success:false,message:'Method not allowed'},405,request);
     const url=new URL(request.url);
     if(url.pathname==='/manual-slip')return handleManualSlip(request,env);
     return handleEasySlip(request,env);
