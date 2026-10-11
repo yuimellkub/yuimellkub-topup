@@ -35,10 +35,10 @@ document.getElementById('site').addEventListener('load',function(){
       if(!heart){heart=d.createElement('span');heart.className='ym-toast-single-heart';heart.textContent='♡';heart.setAttribute('aria-hidden','true');} heart.style.setProperty('color','#e879ad','important');heart.style.setProperty('-webkit-text-fill-color','#e879ad','important');
       /* Force the glyph size directly on iPad/desktop; leave mobile untouched. */
    if (w.innerWidth >= 761) {
-  heart.style.setProperty('font-size', '60px', 'important');
+  heart.style.setProperty('font-size', '45px', 'important');
   const innerHeart = heart.querySelector('.ym-system-heart');
   if (innerHeart) {
-    innerHeart.style.setProperty('font-size', '60px', 'important');
+    innerHeart.style.setProperty('font-size', '45px', 'important');
     innerHeart.style.setProperty('line-height', '1', 'important');
   }
 } else {
