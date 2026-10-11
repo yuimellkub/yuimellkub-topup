@@ -28,7 +28,7 @@ document.getElementById('site').addEventListener('load',function(){
     if(!toast)return;
     toast.querySelectorAll('.ymToastIcon').forEach(icon=>{
       let heart=icon.querySelector('.ym-toast-single-heart');
-      if(!heart){heart=d.createElement('span');heart.className='ym-toast-single-heart';heart.textContent='♡';heart.setAttribute('aria-hidden','true');}
+      if(!heart){heart=d.createElement('span');heart.className='ym-toast-single-heart';heart.textContent='♡';heart.setAttribute('aria-hidden','true');} heart.style.setProperty('color','#e879ad','important');heart.style.setProperty('-webkit-text-fill-color','#e879ad','important');
       [...icon.childNodes].forEach(node=>{if(node!==heart)node.remove()});
       if(heart.parentNode!==icon)icon.appendChild(heart);
     });
