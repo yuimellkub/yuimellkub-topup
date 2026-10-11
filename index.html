@@ -34,21 +34,29 @@ document.getElementById('site').addEventListener('load',function(){
       let heart=icon.querySelector('.ym-toast-single-heart');
       if(!heart){heart=d.createElement('span');heart.className='ym-toast-single-heart';heart.textContent='♡';heart.setAttribute('aria-hidden','true');} heart.style.setProperty('color','#e879ad','important');heart.style.setProperty('-webkit-text-fill-color','#e879ad','important');
       /* Force the glyph size directly on iPad/desktop; leave mobile untouched. */
-   if (w.innerWidth >= 761) {
-  heart.style.setProperty('font-size', '45px', 'important');
+ 
+if (w.innerWidth >= 761) {
+  heart.style.setProperty('font-size', '40px', 'important');
+
   const innerHeart = heart.querySelector('.ym-system-heart');
   if (innerHeart) {
-    innerHeart.style.setProperty('font-size', '45px', 'important');
+    innerHeart.style.setProperty('font-size', '40px', 'important');
     innerHeart.style.setProperty('line-height', '1', 'important');
+    innerHeart.style.setProperty('display', 'block', 'important');
+    innerHeart.style.setProperty('transform', 'translateY(-4px)', 'important');
   }
 } else {
   heart.style.removeProperty('font-size');
+
   const innerHeart = heart.querySelector('.ym-system-heart');
   if (innerHeart) {
     innerHeart.style.removeProperty('font-size');
     innerHeart.style.removeProperty('line-height');
+    innerHeart.style.removeProperty('display');
+    innerHeart.style.removeProperty('transform');
   }
 }
+
       [...icon.childNodes].forEach(node=>{if(node!==heart)node.remove()});
       if(heart.parentNode!==icon)icon.appendChild(heart);
     });
