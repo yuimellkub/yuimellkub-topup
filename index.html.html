@@ -561,14 +561,15 @@ a.icon svg{width:22px!important;height:22px!important;display:block}
   transform:translate(-50%,-50%) scale(1) !important;
   filter:blur(0);
 }
-#ymMemberToast.ym-leaving{
-  opacity:0 !important;
-  transform:translate(-50%,-51%) scale(.99) !important;
-  filter:blur(2px);
+#ymMemberToast.ym-leaving {
+  opacity: 0 !important;
+  transform: translate(-50%, -65%) !important;
+  filter: blur(2px) !important;
+  pointer-events: none !important;
   transition:
-    opacity .38s ease,
-    transform .42s ease,
-    filter .32s ease !important;
+    opacity 0.4s ease,
+    transform 0.4s ease,
+    filter 0.4s ease !important;
 }
 </style>
 
@@ -2474,10 +2475,13 @@ document.addEventListener('DOMContentLoaded',function(){
     }));
 
     timer=setTimeout(()=>{
-      toast.classList.remove('show');
-      toast.classList.add('ym-leaving');
-      cleanup=setTimeout(()=>toast.classList.remove('ym-leaving'),450);
-    },3000);
+  toast.classList.add('ym-leaving');
+  toast.classList.remove('show');
+
+  cleanup=setTimeout(()=>{
+    toast.classList.remove('ym-leaving');
+  },450);
+},3000);
   };
 });
 </script>
@@ -6373,17 +6377,12 @@ document.addEventListener('DOMContentLoaded',function(){
     // Invalid login: block every older/demo login handler before it can show "เข้าสู่ระบบสำเร็จ".
     e.preventDefault();
     e.stopImmediatePropagation();
-    alert('อีเมลหรือรหัสผ่านไม่ถูกต้องค่ะ');
-  },true);
-
-  // Also prevent Enter/submit from falling through to any legacy demo success flow.
-  document.addEventListener('submit',function(e){
-    if(!e.target?.closest?.('#loginPane') && !e.target?.querySelector?.('#loginBtn')) return;
-    const v=validatePreviewLogin();
-    if(v.ok) return;
-    e.preventDefault();
-    e.stopImmediatePropagation();
-    alert('อีเมลหรือรหัสผ่านไม่ถูกต้องค่ะ');
+  if (typeof window.ymMemberToast === 'function') {
+  window.ymMemberToast(
+    'เข้าสู่ระบบไม่สำเร็จ',
+    'อีเมลหรือรหัสผ่านไม่ถูกต้องค่ะ'
+  );
+}
   },true);
 })();
 </script>

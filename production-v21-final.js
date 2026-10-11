@@ -4168,74 +4168,7 @@ window.addEventListener(
     return;
   }
 
-  async function mobileResolveOrder(raw){
-    const store=db();
 
-    if(!store){
-      throw new Error(
-        'เชื่อมระบบออเดอร์ไม่ได้'
-      );
-    }
-
-    const input=String(raw||'')
-      .trim()
-      .toUpperCase()
-      .replace(/^#/,'')
-      .replace(/\s+/g,'');
-
-    if(!input){
-      throw new Error(
-        'กรุณากรอกเลขออเดอร์'
-      );
-    }
-
-    let id=input;
-    let orderData=null;
-
-    if(/^YMK\d{6}-\d{6}$/.test(input)){
-      const orderSnap=await store
-        .collection('orders')
-        .doc(input)
-        .get();
-
-      if(orderSnap.exists){
-        orderData={
-          id:orderSnap.id,
-          ...orderSnap.data()
-        };
-      }
-    }
-
-    /*
-      Mobile fallback:
-      some completed orders can be readable through order_status
-      even when the order document is not returned to the client.
-    */
-    let statusSnap=null;
-
-    if(/^YMK\d{6}-\d{6}$/.test(id)){
-      statusSnap=await store
-        .collection('order_status')
-        .doc(id)
-        .get();
-    }
-
-    if(!orderData && !statusSnap?.exists){
-      return null;
-    }
-
-    const statusData=
-      statusSnap?.exists
-        ? statusSnap.data()
-        : {};
-
-    return {
-      ...(orderData||{}),
-      ...statusData,
-      id,
-      proof:proofImages(statusData)
-    };
-  }
 
   window.addEventListener(
     'click',
@@ -4267,18 +4200,19 @@ window.addEventListener(
       btn.disabled=true;
 
       try{
-        const order=await mobileResolveOrder(
-          input?.value||''
-        );
+const api = window.YMK_ORDER_TRACKING;
 
-        renderTracked(order);
+if (!api || typeof api.lookup !== 'function') {
+  throw new Error('ระบบติดตามออเดอร์ยังเชื่อมไม่สำเร็จ');
+}
 
-        if(order?.id){
-          startRealtimeTrack(
-            order.id,
-            order
-          );
-        }
+const order = await api.lookup(input?.value || '');
+
+api.render(order);
+
+if (order?.id && typeof api.watch === 'function') {
+  api.watch(order.id, order);
+}
       }catch(err){
         console.error(
           'mobile track order failed',
