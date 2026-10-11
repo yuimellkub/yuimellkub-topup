@@ -36,7 +36,7 @@ document.getElementById('site').addEventListener('load',function(){
       /* Force the glyph size directly on iPad/desktop; leave mobile untouched. */
  
 if (w.innerWidth >= 761) {
-  heart.style.setProperty('font-size', '30px', 'important');
+  heart.style.setProperty('font-size', '40px', 'important');
 
   const innerHeart = heart.querySelector('.ym-system-heart');
   if (innerHeart) {
@@ -53,7 +53,7 @@ if (w.innerWidth >= 761) {
     innerHeart.style.removeProperty('font-size');
     innerHeart.style.removeProperty('line-height');
     innerHeart.style.removeProperty('display');
-    innerHeart.style.setProperty('transform', 'translateY(1px)', 'important');
+    innerHeart.style.setProperty('transform', 'translateY(-2px)', 'important');
   }
 }
 
