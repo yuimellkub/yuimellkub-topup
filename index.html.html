@@ -2146,27 +2146,97 @@ document.getElementById('calcBtn')?.addEventListener('click', () => {
 </div>
 
 
+
+
 <script id="ym-order-popup-js">
 (function(){
- const shade=document.getElementById('orderModalShade'), close=document.getElementById('orderModalClose');
- const input=document.getElementById('orderPopupInput'), submit=document.getElementById('orderPopupSubmit');
- const result=document.getElementById('orderPopupResult');
- let stopStatusWatch = null;
- function openModal(e){if(e)e.preventDefault();shade.classList.add('open');shade.setAttribute('aria-hidden','false');setTimeout(()=>input.focus(),120)}
- function closeModal(){shade.classList.remove('open');shade.setAttribute('aria-hidden','true')}
- document.querySelectorAll('a[href="#order-check"],a[href="#track"],a[href="#status"]').forEach(el=>el.addEventListener('click',openModal));
- document.querySelectorAll('button').forEach(el=>{if(/ติดตามออเดอร์|ตรวจสอบออเดอร์/.test(el.textContent.trim()) && el!==submit)el.addEventListener('click',openModal)});
- close.addEventListener('click',closeModal);
- shade.addEventListener('click',e=>{if(e.target===shade)closeModal()});
- document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
- function lookup(){
-   const n=input.value.trim().replace(/^#/,'');
-   result.classList.add('show');
-   if(!n){result.textContent='กรุณากรอกเลขออเดอร์';input.focus();return}
-   result.innerHTML='ออเดอร์ <b>#'+n.padStart(4,'0')+'</b><br>ตอนอัปขึ้นจริง จุดนี้จะดึงสถานะจากระบบออเดอร์เดิมของร้าน';
- }
- submit.addEventListener('click',lookup);
- input.addEventListener('keydown',e=>{if(e.key==='Enter')lookup()});
+  const shade = document.getElementById('orderModalShade');
+  const close = document.getElementById('orderModalClose');
+  const input = document.getElementById('orderPopupInput');
+  const submit = document.getElementById('orderPopupSubmit');
+  const result = document.getElementById('orderPopupResult');
+
+  if (!shade || !close || !input || !submit || !result) return;
+
+  function openModal(e){
+    if(e) e.preventDefault();
+    shade.classList.add('open');
+    shade.setAttribute('aria-hidden','false');
+    setTimeout(()=>input.focus(),120);
+  }
+
+  function closeModal(){
+    shade.classList.remove('open');
+    shade.setAttribute('aria-hidden','true');
+  }
+
+  document.querySelectorAll(
+    'a[href="#order-check"],a[href="#track"],a[href="#status"]'
+  ).forEach(el=>el.addEventListener('click',openModal));
+
+  close.addEventListener('click',closeModal);
+
+  shade.addEventListener('click',e=>{
+    if(e.target===shade) closeModal();
+  });
+
+  document.addEventListener('keydown',e=>{
+    if(e.key==='Escape') closeModal();
+  });
+
+  async function lookup(){
+    const n = input.value.trim().replace(/^#/,'');
+    result.classList.add('show');
+
+    if(!n){
+      result.textContent='กรุณากรอกเลขออเดอร์';
+      input.focus();
+      return;
+    }
+
+    // ใช้ฟังก์ชันจริงที่ Production V21 เปิดให้เรียก
+    const api = window.YMK_ORDER_TRACKING;
+
+    if(!api || typeof api.lookup !== 'function'){
+      result.textContent='ระบบติดตามออเดอร์ยังเชื่อมไม่สำเร็จ';
+      console.error('YMK_ORDER_TRACKING.lookup is unavailable');
+      return;
+    }
+
+    submit.disabled=true;
+    result.textContent='กำลังตรวจสอบออเดอร์…';
+
+    try{
+      if(typeof api.stop === 'function') api.stop();
+
+      const order = await api.lookup(n);
+
+      if(!order){
+        result.textContent='ไม่พบออเดอร์นี้ กรุณาตรวจสอบเลขออเดอร์';
+        return;
+      }
+
+      api.render(order);
+
+      if(order.id && typeof api.watch === 'function'){
+        api.watch(order.id,order);
+      }
+    }catch(err){
+      console.error('Order lookup failed:',err);
+      result.textContent='ตรวจสอบออเดอร์ไม่สำเร็จ กรุณาลองใหม่';
+    }finally{
+      submit.disabled=false;
+    }
+  }
+
+  submit.addEventListener('click',lookup);
+
+  input.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){
+      e.preventDefault();
+      lookup();
+    }
+  });
 })();
 </script>
 
