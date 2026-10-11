@@ -33,6 +33,8 @@ document.getElementById('site').addEventListener('load',function(){
     toast.querySelectorAll('.ymToastIcon').forEach(icon=>{
       let heart=icon.querySelector('.ym-toast-single-heart');
       if(!heart){heart=d.createElement('span');heart.className='ym-toast-single-heart';heart.textContent='♡';heart.setAttribute('aria-hidden','true');} heart.style.setProperty('color','#e879ad','important');heart.style.setProperty('-webkit-text-fill-color','#e879ad','important');
+      /* Force the glyph size directly on iPad/desktop; leave mobile untouched. */
+      if(w.innerWidth>=761)heart.style.setProperty('font-size','120px','important');else heart.style.removeProperty('font-size');
       [...icon.childNodes].forEach(node=>{if(node!==heart)node.remove()});
       if(heart.parentNode!==icon)icon.appendChild(heart);
     });
