@@ -19,6 +19,22 @@ document.getElementById('site').addEventListener('load',function(){
     '@media(max-width:1024px){.ym-system-heart,.ym-decorative-unicode-heart,.ym-all-heart-glyphs,#ymMemberToast .ymToastIcon,#ymMemberToast .ymToastIcon span,#ymMemberToast .ymToastIcon svg{font-family:system-ui,sans-serif!important;font-weight:600!important;font-style:normal!important;font-size:22px!important;line-height:1!important}#ymMemberToast .ymToastIcon{display:flex!important;align-items:center!important;justify-content:center!important}#ymMemberToast .ymToastIcon svg{display:none!important}#ymMemberToast .ymToastIcon:before{content:"♡"!important;display:block!important;font-family:system-ui,sans-serif!important;font-size:22px!important;font-weight:700!important;line-height:1!important;color:#d56b9b!important}}';
   d.head.appendChild(heartFix);
 
+  /* Keep exactly one centered heart in the login-success toast on every device. */
+  const singleToastHeart=d.createElement('style');
+  singleToastHeart.textContent='#ymMemberToast .ymToastIcon{position:relative!important;display:flex!important;align-items:center!important;justify-content:center!important;box-sizing:border-box!important}#ymMemberToast .ymToastIcon>*{display:none!important}#ymMemberToast .ymToastIcon .ym-toast-single-heart{display:block!important;position:static!important;margin:0!important;padding:0!important;width:1em!important;height:1em!important;font-family:system-ui,sans-serif!important;font-size:30px!important;font-weight:500!important;font-style:normal!important;line-height:1!important;text-align:center!important;color:#d56b9b!important;transform:none!important}';
+  d.head.appendChild(singleToastHeart);
+  function normalizeToastHeart(){
+    const toast=d.getElementById('ymMemberToast');
+    if(!toast)return;
+    toast.querySelectorAll('.ymToastIcon').forEach(icon=>{
+      let heart=icon.querySelector('.ym-toast-single-heart');
+      if(!heart){heart=d.createElement('span');heart.className='ym-toast-single-heart';heart.textContent='♡';heart.setAttribute('aria-hidden','true');}
+      [...icon.childNodes].forEach(node=>{if(node!==heart)node.remove()});
+      if(heart.parentNode!==icon)icon.appendChild(heart);
+    });
+  }
+  normalizeToastHeart();
+  new MutationObserver(normalizeToastHeart).observe(d.body,{childList:true,subtree:true});
   function convertHeartSvgs(root){
     /* Keep the requested heart font/conversion limited to phones and tablets. */
     if(!w.matchMedia('(max-width:1024px)').matches)return;
