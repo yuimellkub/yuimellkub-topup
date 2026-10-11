@@ -543,6 +543,19 @@ a.icon svg{width:22px!important;height:22px!important;display:block}
 #ymMemberToast .ymToastIcon{
   width:46px !important;height:46px !important;flex-basis:46px !important;
 }
+
+
+/* รูปแบบหัวใจมาตรฐานทั้งเว็บไซต์ */
+.ym-system-heart,
+.ym-decorative-unicode-heart {
+  font-family: system-ui, sans-serif !important;
+  font-weight: 700 !important;
+  font-style: normal !important;
+  font-size: 14px;
+  line-height: 1;
+}
+
+
 </style>
 
 
@@ -628,6 +641,12 @@ a.icon svg{width:22px!important;height:22px!important;display:block}
 }
 </style>
 
+
+/* ป้องกันหัวใจตกแต่งซ้ำภายในป๊อปอัป
+   โดยเก็บหัวใจหลักในวงกลมไว้ */
+#ymMemberToast .ym-decorative-unicode-heart {
+  display: none !important;
+}
 
 <style id="ym-popup-final-fix">
 /* backdrop แยกจาก popup: ไม่เบลอ/ซีดตัว popup เอง */
