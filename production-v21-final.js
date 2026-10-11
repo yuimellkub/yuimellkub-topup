@@ -4459,6 +4459,7 @@ document.addEventListener('click', function(e){
     }
   },true);
   onCalculatorUIChange();
+  
 })();
 
 function boot(){
@@ -4501,4 +4502,10 @@ if(
   boot();
 }
 
+window.YMK_ORDER_TRACKING = {
+  lookup: resolveOrder,
+  render: renderTracked,
+  stop: stopRealtimeTrack,
+  watch: startRealtimeTrack
+};
 })();
