@@ -17,8 +17,8 @@ document.getElementById('site').addEventListener('load',function(){
   const heartFix=d.createElement('style');
   heartFix.id='ym-heart-font-and-toast-fix';
   heartFix.textContent=
-    '.ym-system-heart,.ym-decorative-unicode-heart{font-family:system-ui,sans-serif!important;font-weight:700!important;font-style:normal!important;line-height:1!important}' +
-    '#ymMemberToast .ymToastIcon{font-family:system-ui,sans-serif!important;font-weight:700!important}';
+    '.ym-system-heart,.ym-decorative-unicode-heart{font-family:system-ui,sans-serif!important;font-weight:700!important;font-style:normal!important;font-size:14px!important;line-height:1!important}' +
+    '#ymMemberToast .ymToastIcon{font-family:system-ui,sans-serif!important;font-size:14px!important;font-weight:700!important;font-style:normal!important;line-height:1!important}';
   d.head.appendChild(heartFix);
   function removeExtraToastHeart(){
     const toast=d.getElementById('ymMemberToast');
