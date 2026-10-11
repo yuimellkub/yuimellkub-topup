@@ -29,7 +29,7 @@ document.getElementById('site').addEventListener('load',function(){
   toastHeartMobileOnly.textContent =
     '@media (max-width:760px) {' +
     '#ymMemberToast .ymToastIcon .ym-toast-single-heart {' +
-    'transform:translate(-50%,calc(-50% - 2px))!important;' +
+    'transform:translate(-50%,calc(-50% - -4px))!important;' +
     '}' +
     '}';
   d.head.appendChild(toastHeartMobileOnly);
@@ -47,7 +47,7 @@ document.getElementById('site').addEventListener('load',function(){
       /* Force the glyph size directly on iPad/desktop; leave mobile untouched. */
  
 if (w.innerWidth >= 761) {
-  heart.style.setProperty('font-size', '30px', 'important');
+  heart.style.setProperty('font-size', '40px', 'important');
 
   const innerHeart = heart.querySelector('.ym-system-heart');
   if (innerHeart) {
