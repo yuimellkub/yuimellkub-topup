@@ -16,7 +16,7 @@ document.getElementById('site').addEventListener('load',function(){
   const heartFix=d.createElement('style');
   heartFix.id='ym-heart-font-and-toast-fix';
   heartFix.textContent=
-    '@media(max-width:1024px){.ym-system-heart,.ym-decorative-unicode-heart,.ym-all-heart-glyphs,#ymMemberToast .ymToastIcon,#ymMemberToast .ymToastIcon span,#ymMemberToast .ymToastIcon svg{font-family:system-ui,sans-serif!important;font-weight:700!important;font-style:normal!important;font-size:22px!important;line-height:1!important}#ymMemberToast .ymToastIcon{display:flex!important;align-items:center!important;justify-content:center!important}#ymMemberToast .ymToastIcon svg{display:none!important}#ymMemberToast .ymToastIcon:before{content:"♡"!important;display:block!important;font-family:system-ui,sans-serif!important;font-size:22px!important;font-weight:700!important;line-height:1!important;color:#d56b9b!important}}';
+    '@media(max-width:1024px){.ym-system-heart,.ym-decorative-unicode-heart,.ym-all-heart-glyphs,#ymMemberToast .ymToastIcon,#ymMemberToast .ymToastIcon span,#ymMemberToast .ymToastIcon svg{font-family:system-ui,sans-serif!important;font-weight:600!important;font-style:normal!important;font-size:22px!important;line-height:1!important}#ymMemberToast .ymToastIcon{display:flex!important;align-items:center!important;justify-content:center!important}#ymMemberToast .ymToastIcon svg{display:none!important}#ymMemberToast .ymToastIcon:before{content:"♡"!important;display:block!important;font-family:system-ui,sans-serif!important;font-size:22px!important;font-weight:700!important;line-height:1!important;color:#d56b9b!important}}';
   d.head.appendChild(heartFix);
 
   function convertHeartSvgs(root){
@@ -37,10 +37,11 @@ document.getElementById('site').addEventListener('load',function(){
       heart.setAttribute('aria-hidden','true');
       heart.style.color=stroke&&stroke!=='none'&&stroke!=='rgb(0, 0, 0)'?stroke:color;
       heart.style.display='inline-block';
-      heart.style.width='14px';
-      heart.style.height='14px';
-      heart.style.fontSize='14px';
-      heart.style.lineHeight='14px';
+      heart.style.width='22px';
+      heart.style.height='22px';
+      heart.style.fontSize='22px';
+      heart.style.fontWeight='600';
+      heart.style.lineHeight='22px';
       heart.style.textAlign='center';
       svg.dataset.ymHeartFontDone='1';
       svg.replaceWith(heart);
