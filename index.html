@@ -11,6 +11,32 @@
 <script>
 document.getElementById('site').addEventListener('load',function(){
   const w=this.contentWindow,d=this.contentDocument;if(!d)return;
+
+  /* Normalize heart typography and remove only the extra standalone heart
+     inside the member toast; preserve the heart inside its icon circle. */
+  const heartFix=d.createElement('style');
+  heartFix.id='ym-heart-font-and-toast-fix';
+  heartFix.textContent=
+    '.ym-system-heart,.ym-decorative-unicode-heart{font-family:system-ui,sans-serif!important;font-weight:700!important;font-style:normal!important;line-height:1!important}' +
+    '#ymMemberToast .ymToastIcon{font-family:system-ui,sans-serif!important;font-weight:700!important}';
+  d.head.appendChild(heartFix);
+  function removeExtraToastHeart(){
+    const toast=d.getElementById('ymMemberToast');
+    if(!toast)return;
+    const walker=d.createTreeWalker(toast,NodeFilter.SHOW_TEXT);
+    const nodes=[];
+    while(walker.nextNode())nodes.push(walker.currentNode);
+    nodes.forEach(node=>{
+      if(node.nodeValue.trim()!=='♡')return;
+      if(node.parentElement&&node.parentElement.closest('.ymToastIcon'))return;
+      node.remove();
+    });
+    toast.querySelectorAll('.ym-decorative-unicode-heart').forEach(el=>{
+      if(!el.closest('.ymToastIcon'))el.remove();
+    });
+  }
+  removeExtraToastHeart();
+  new MutationObserver(removeExtraToastHeart).observe(d.body,{childList:true,subtree:true,characterData:true});
   const mobileFix=d.createElement('style');mobileFix.textContent='html,body{background:#fff6fa!important;overscroll-behavior-y:auto!important;overscroll-behavior-x:none!important;overflow-x:hidden!important;overflow-y:auto!important;width:100%!important;max-width:100%!important;touch-action:pan-y!important}body{min-height:100%!important}.done-actions .order-btn{grid-column:1/-1!important;width:100%!important}.ymk-white-cart{display:inline-block;width:22px;height:22px;vertical-align:-5px;margin-right:8px;color:#fff}.ymk-white-cart svg{display:block;width:100%;height:100%;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}@media(max-width:699px){.ready-stock-card .ymk-qty-wrap{position:static!important;left:auto!important;right:auto!important;transform:none!important;overflow:visible!important}.ready-stock-card .ymk-qty-wrap>div:first-child{position:static!important;left:auto!important;right:auto!important;transform:none!important;width:100%!important;max-width:100%!important;margin:0 auto!important;padding:0!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:8px!important;box-sizing:border-box!important}.ready-stock-card .ymk-qty-wrap>div:first-child>span{position:static!important;left:auto!important;right:auto!important;transform:none!important;display:inline-block!important;flex:0 0 auto!important;width:auto!important;min-width:max-content!important;margin:0!important;padding:0!important;white-space:nowrap!important}.ready-stock-card .ymk-confirm-order{margin-left:auto!important;margin-right:auto!important}}';d.head.appendChild(mobileFix);
 
   const heroMobile=d.createElement('style');heroMobile.id='ym-mobile-hero-fit-20261010';heroMobile.textContent=`@media(max-width:760px){.hero{position:relative!important;display:block!important;box-sizing:border-box!important;min-height:0!important;height:auto!important;aspect-ratio:2048/800!important;background-size:100% 100%!important;background-position:center center!important;background-repeat:no-repeat!important;overflow:hidden!important}.hero::before{display:block!important;content:""!important;position:absolute!important;inset:0!important;pointer-events:none!important;z-index:0!important;background:linear-gradient(90deg,rgba(255,249,252,.58) 0%,rgba(255,249,252,.25) 35%,rgba(255,249,252,0) 65%)!important}.hero .copy{position:relative!important;z-index:2!important;box-sizing:border-box!important;width:62%!important;max-width:62%!important;margin:0!important;padding:10px 6px 9px 13px!important;background:transparent!important;transform:none!important}.hero .kicker{font-size:clamp(7px,1.7vw,11px)!important;letter-spacing:1px!important}.hero .brand{font-size:clamp(19px,6.2vw,38px)!important;line-height:.9!important;margin:5px 0!important;letter-spacing:0!important}.hero .brand span{font-size:.55em!important;letter-spacing:2px!important}.hero .tag{font-size:clamp(8px,2vw,12px)!important;line-height:1.2!important;margin:3px 0!important}.hero .chips{gap:3px!important;margin:5px 0!important}.hero .chip{font-size:clamp(6px,1.5vw,9px)!important;padding:3px 5px!important;backdrop-filter:none!important}.hero .copy button,.hero .copy .btn,.hero .copy a.btn{font-size:clamp(7px,1.8vw,11px)!important;padding:6px 9px!important;min-height:0!important;margin-top:4px!important}.hero .art{display:none!important}}`;d.head.appendChild(heroMobile);
