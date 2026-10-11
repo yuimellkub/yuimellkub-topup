@@ -147,14 +147,15 @@ backgroundHeartFont.textContent = `
       heart.textContent = '♡';
       heart.setAttribute('aria-hidden', 'true');
 
-      heart.style.width = Math.max(r.width, 36) + 'px';
-      heart.style.height = Math.max(r.height, 36) + 'px';
+      heart.style.width = r.width + 'px';
+      heart.style.height = r.height + 'px';
       heart.style.fontSize = '36px';
       heart.style.lineHeight = '1';
       heart.style.display = 'inline-flex';
       heart.style.alignItems = 'center';
       heart.style.justifyContent = 'center';
       heart.style.verticalAlign = 'middle';
+      heart.style.overflow = 'visible';
       heart.style.color =
         stroke && stroke !== 'none' &&
         stroke !== 'rgb(0, 0, 0)'
