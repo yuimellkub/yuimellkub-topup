@@ -2263,6 +2263,30 @@ document.getElementById('calcBtn')?.addEventListener('click', () => {
   #ymHeroImagePicker{right:10px;bottom:10px}
   #ymHeroImagePicker label,#ymHeroImagePicker button{padding:7px 10px;font-size:11px}
 }
+
+#ymMemberToast .ymToastIcon {
+  width: 48px !important;
+  height: 48px !important;
+  flex: 0 0 48px !important;
+  box-sizing: border-box !important;
+  display: grid !important;
+  place-items: center !important;
+  margin: 0 0 14px !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  background: #fff4f8 !important;
+  border: 1px solid #f0cedb !important;
+  color: #d66f98 !important;
+  line-height: 1 !important;
+}
+
+#ymMemberToast .ymToastIcon svg {
+  display: block !important;
+  width: 23px !important;
+  height: 23px !important;
+  flex: none !important;
+}
+
 </style>
 
 <script id="ym-hero-image-picker-script">
@@ -2421,7 +2445,16 @@ document.addEventListener('DOMContentLoaded', function(){
 
 <div id="ymPopupBackdrop" aria-hidden="true"></div>
 <div id="ymMemberToast" role="status" aria-live="polite">
- <div class="ymToastIcon">♡</div>
+ 
+<div class="ymToastIcon" aria-hidden="true">
+  <svg viewBox="0 0 24 24" width="23" height="23"
+       fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"
+      stroke="currentColor" stroke-width="1.7"
+      stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+</div>
+
  <div><b id="ymToastTitle">สำเร็จ</b><span id="ymToastText"></span></div>
 </div>
 
