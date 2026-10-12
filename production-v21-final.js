@@ -4200,18 +4200,12 @@ window.addEventListener(
       btn.disabled=true;
 
       try{
-const api = window.YMK_ORDER_TRACKING;
+const order = await resolveOrder(input?.value || '');
 
-if (!api || typeof api.lookup !== 'function') {
-  throw new Error('ระบบติดตามออเดอร์ยังเชื่อมไม่สำเร็จ');
-}
+renderTracked(order);
 
-const order = await api.lookup(input?.value || '');
-
-api.render(order);
-
-if (order?.id && typeof api.watch === 'function') {
-  api.watch(order.id, order);
+if (order?.id) {
+  startRealtimeTrack(order.id, order);
 }
       }catch(err){
         console.error(
