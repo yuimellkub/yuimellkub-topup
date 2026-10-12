@@ -152,8 +152,13 @@ html[data-theme="dark"] .orderRows b {
 .orderPopupInputWrap{display:flex;align-items:center;border:1px solid #ebc8d5;border-radius:14px;background:#fff;overflow:hidden}
 .orderPopupInputWrap span{padding-left:13px;color:#c47a96;font-weight:900}.orderPopupInputWrap input{flex:1;min-width:0;border:0;outline:0;padding:12px 10px;background:transparent;color:#704455}
 .orderPopupSubmit{width:100%;margin-top:10px;border:0;border-radius:14px;padding:12px;background:linear-gradient(135deg,#e689aa,#d76e98);color:#fff;font-weight:900;cursor:pointer;box-shadow:0 8px 18px rgba(216,111,153,.18)}
-.orderPopupResult{display:none;margin-top:11px;padding:11px;border-radius:13px;background:#fff5f8;text-align:center;color:#9a5c74;font-size:10px}
+.orderPopupResult{display:none;margin-top:11px;padding:11px;border-radius:13px;background:#fff5f8;text-align:center;color:#9a5c74;font-size:10px;opacity:0;transform:translateY(7px);transition:opacity .28s ease,transform .28s cubic-bezier(.22,1,.36,1)}
 .orderPopupResult.show{display:block}
+.orderPopupResult.ym-result-visible{opacity:1;transform:translateY(0)}
+#orderModalShade .orderPopupSubmit{transition:opacity .2s ease,transform .2s ease,filter .2s ease}
+#orderModalShade .orderPopupSubmit:active{transform:scale(.985)}
+#orderModalShade .orderPopupSubmit:disabled{opacity:.72;cursor:wait;filter:saturate(.82)}
+@media(prefers-reduced-motion:reduce){.orderPopupResult,#orderModalShade .orderPopupSubmit{transition:none!important}}
 </style>
 
 
@@ -1847,9 +1852,445 @@ body.ymDark .ymContactQuickCards.section{
 #ymOrderStatus[data-ymk-slip-flow="shared"] .ymSlipContacts {
   margin-top: 12px !important;
 }
+
 </style>
 
+<style id="ym-howto-popup-css">
+#ymHowtoOverlay{position:fixed;inset:0;z-index:100001;display:none;align-items:center;justify-content:center;padding:12px;box-sizing:border-box;background:rgba(87,49,65,.22);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);overflow:hidden;will-change:opacity}
+#ymHowtoOverlay.open{display:flex}
+#ymHowtoOverlay .ymHowtoBox{position:relative;width:min(460px,calc(100vw - 24px));max-width:calc(100vw - 24px);max-height:calc(100dvh - 24px);box-sizing:border-box;overflow:hidden;padding:20px;border:1px solid #f0c7d6;border-radius:24px;background:#fffafd;color:#75495b;box-shadow:0 20px 60px rgba(84,39,59,.20);transition:width .34s cubic-bezier(.22,1,.36,1),max-width .34s ease,padding .34s ease,border-radius .34s ease}
+#ymHowtoOverlay .ymHowtoTop{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 18px;padding-right:36px}
+#ymHowtoOverlay .ymHowtoBrand{display:flex;align-items:center;gap:10px;text-align:left}
+#ymHowtoOverlay .ymHowtoBrandIcon{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:#dceeff;color:#679ed0;font-size:21px}
+#ymHowtoOverlay .ymHowtoBrandName{font-weight:800;font-size:15px;line-height:1.25;color:inherit}
+#ymHowtoOverlay .ymHowtoBrandSub{font-size:11px;color:#b0788e;margin-top:3px}
+#ymHowtoOverlay .ymHowtoTheme{display:grid;place-items:center;position:absolute;right:48px;top:12px;width:34px;height:34px;border:0;border-radius:50%;background:#fff0f5;color:#ad5b7a;cursor:pointer;font-size:17px}
+#ymHowtoOverlay .ymHowtoClose{position:absolute;top:12px;right:10px;z-index:2;width:34px;height:34px;border:0;border-radius:50%;background:#ffeaf2;color:#ad5b7a;font-size:23px;line-height:1;cursor:pointer}
+#ymHowtoOverlay .ymHowtoMenu{text-align:center}
+#ymHowtoOverlay .ymHowtoMenuMark{font-size:32px;color:#df7da3;line-height:1.2}
+#ymHowtoOverlay h2{margin:8px 0;color:#ad5b7a;font-size:23px;text-align:center}
+#ymHowtoOverlay .ymHowtoSub{margin:0 0 18px;color:#b0788e;font-size:13px;line-height:1.6;text-align:center}
+#ymHowtoOverlay .ymHowtoTopic{display:flex;align-items:center;gap:12px;width:100%;margin-top:12px;padding:14px 13px;border:1px solid #f0c7d6;border-radius:16px;background:#fff0f5;color:#ad5b7a;font:inherit;font-weight:700;text-align:left;cursor:pointer;transition:background .18s,transform .18s}
+#ymHowtoOverlay .ymHowtoTopic:hover{background:#ffe4ee;transform:translateY(-1px)}
+#ymHowtoOverlay .ymHowtoTopicIcon{display:grid;place-items:center;flex:0 0 44px;width:44px;height:44px;border-radius:12px;background:#f9d8e5;color:#bd648b;font-size:21px}
+#ymHowtoOverlay .ymHowtoTopicText{flex:1;min-width:0}
+#ymHowtoOverlay .ymHowtoTopicTitle{display:block;font-size:14px}
+#ymHowtoOverlay .ymHowtoTopicHint{display:block;margin-top:4px;font-size:11px;font-weight:400;color:#b0788e}
+#ymHowtoOverlay .ymHowtoArrow{font-size:21px;color:#cb7e9d}
+#ymHowtoOverlay .ymHowtoFooter{margin:18px 0 0!important;font-size:11px!important}
+#ymHowtoOverlay .ymHowtoViewer{display:none;width:100%;max-width:100%;min-width:0;box-sizing:border-box;overflow:hidden;text-align:center}
+#ymHowtoOverlay .ymHowtoViewer.show{display:flex;flex-direction:column;align-items:center;gap:10px}
+#ymHowtoOverlay .ymHowtoMenu.hide{display:none}
+#ymHowtoOverlay.viewing-guide .ymHowtoBox{width:min(900px,calc(100vw - 24px));max-width:calc(100vw - 24px);padding:20px 16px 16px;border-radius:24px}
+#ymHowtoOverlay .ymHowtoImage{display:block;width:auto;height:auto;max-width:100%;max-height:calc(100dvh - 180px);margin:0 auto;object-fit:contain;object-position:center;flex:0 1 auto;border-radius:10px}
+#ymHowtoOverlay .ymHowtoImage[hidden]{display:none!important}
+
+#ymHowtoOverlay .ymHowtoBack {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  visibility: visible;
+  opacity: 1;
+  position: relative;
+  z-index: 5;
+  margin: 10px auto 0;
+  border: 1px solid #f0c7d6;
+  border-radius: 999px;
+  padding: 10px 18px;
+  background: #fff0f5;
+  color: #ad5b7a;
+  font: inherit;
+  cursor: pointer;
+}
+
+#ymHowtoOverlay .ymHowtoBack:hover {
+  background: #ffe4ee;
+}
+
+html.ymDark #ymHowtoOverlay .ymHowtoBox{background:#33232b;color:#f0d9e3;border-color:#70485b}
+html.ymDark #ymHowtoOverlay h2{color:#f3b4d0}
+html.ymDark #ymHowtoOverlay .ymHowtoSub,html.ymDark #ymHowtoOverlay .ymHowtoBrandSub,html.ymDark #ymHowtoOverlay .ymHowtoTopicHint{color:#d5aabd}
+html.ymDark #ymHowtoOverlay .ymHowtoTopic,html.ymDark #ymHowtoOverlay .ymHowtoBack,html.ymDark #ymHowtoOverlay .ymHowtoTheme{background:#49313e;color:#ffd9e8;border-color:#70485b}
+html.ymDark #ymHowtoOverlay .ymHowtoTopic:hover,html.ymDark #ymHowtoOverlay .ymHowtoBack:hover{background:#5b3b4c}
+html.ymDark #ymHowtoOverlay .ymHowtoClose{background:#5b3a4b;color:#ffd9e8}
+html.ymDark #ymHowtoOverlay .ymHowtoTopicIcon{background:#5b3b4c;color:#ffd9e8}
+@media(max-width:600px){#ymHowtoOverlay .ymHowtoBox{padding:18px 16px}#ymHowtoOverlay.viewing-guide .ymHowtoBox{width:calc(100vw - 24px);padding:20px 10px 12px}#ymHowtoOverlay .ymHowtoImage{max-height:calc(100dvh - 165px)}#ymHowtoOverlay h2{font-size:22px}}
+
+
+/* Fix guide viewer layout and keep the back button visible */
+#ymHowtoOverlay .ymHowtoBox {
+  display: flex;
+  flex-direction: column;
+}
+
+#ymHowtoOverlay .ymHowtoViewer.show {
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  min-height: 0;
+  overflow-y: auto !important;
+  overflow-x: hidden;
+}
+
+#ymHowtoOverlay #ymHowtoBack {
+  display: inline-flex !important;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  margin: 12px auto 4px;
+  padding: 10px 18px;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative;
+  z-index: 10;
+font-weight: 700 !important;
+
+}
+
+/* Smooth interaction for the How-to popup */
+#ymHowtoOverlay .ymHowtoTopic,
+#ymHowtoOverlay .ymHowtoBack,
+#ymHowtoOverlay .ymHowtoClose {
+  transition:
+    background-color .22s ease,
+    border-color .22s ease,
+    color .22s ease,
+    transform .22s ease,
+    box-shadow .22s ease,
+    opacity .22s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#ymHowtoOverlay .ymHowtoTopic:active,
+#ymHowtoOverlay .ymHowtoBack:active {
+  transform: scale(.97);
+}
+
+#ymHowtoOverlay .ymHowtoTopic:hover,
+#ymHowtoOverlay .ymHowtoBack:hover {
+  box-shadow: 0 4px 12px rgba(189, 100, 139, .12);
+}
+
+/* Smooth popup entrance */
+#ymHowtoOverlay.open {
+  animation: ymHowtoFadeIn .32s ease both;
+}
+
+#ymHowtoOverlay.open .ymHowtoBox {
+  animation: ymHowtoBoxIn .38s cubic-bezier(.22, 1, .36, 1) both;
+}
+
+/* Keep the overlay visible while its closing fade plays. */
+#ymHowtoOverlay.closing {
+  display: flex !important;
+  pointer-events: none;
+  animation: ymHowtoFadeOut .28s ease both;
+}
+
+#ymHowtoOverlay.closing .ymHowtoBox {
+  animation: ymHowtoBoxOut .25s ease both;
+}
+
+@keyframes ymHowtoFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes ymHowtoBoxIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes ymHowtoFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes ymHowtoBoxOut {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(8px) scale(.985); }
+}
+
+
+/* Smoothly resize the same popup when switching from the two-topic menu to the guide image. */
+#ymHowtoOverlay .ymHowtoMenu,
+#ymHowtoOverlay .ymHowtoViewer {
+  will-change: opacity, transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  #ymHowtoOverlay .ymHowtoBox { transition: none !important; }
+}
+
+/* Fade the guide screen in smoothly when a guide is selected. */
+#ymHowtoOverlay .ymHowtoViewer.show .ymHowtoImage {
+  animation: ymGuideImageIn .36s ease both;
+}
+@keyframes ymGuideScreenIn {
+  from { opacity: 0; transform: translateY(7px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Smooth guide image appearance */
+#ymHowtoOverlay .ymHowtoImage { opacity: 0; transform: translateY(6px); }
+#ymHowtoOverlay .ymHowtoImage.ym-image-fade-in { animation: ymGuideImageIn .38s cubic-bezier(.22, 1, .36, 1) both; }
+
+@keyframes ymGuideImageIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #ymHowtoOverlay .ymHowtoTopic,
+  #ymHowtoOverlay .ymHowtoBack,
+  #ymHowtoOverlay .ymHowtoClose,
+  #ymHowtoOverlay .ymHowtoImage,
+  #ymHowtoOverlay .ymHowtoViewer.show,
+  #ymHowtoOverlay.open,
+  #ymHowtoOverlay.open .ymHowtoBox {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+</style>
+
+
+
 </head>
+
+<div id="ymHowtoOverlay" role="dialog" aria-modal="true" aria-labelledby="ymHowtoTitle">
+  <section class="ymHowtoBox">
+    <button type="button" class="ymHowtoTheme" id="ymHowtoTheme" aria-label="สลับโหมดมืด" title="สลับโหมดมืด">☾</button>
+    <button type="button" class="ymHowtoClose" id="ymHowtoClose" aria-label="ปิด">×</button>
+    <div class="ymHowtoTop">
+      <div class="ymHowtoBrand">
+        <span class="ymHowtoBrandIcon" aria-hidden="true">☁</span>
+        <div><div class="ymHowtoBrandName">Yuimellkub</div><div class="ymHowtoBrandSub">Identity V Top-up</div></div>
+      </div>
+    </div>
+    <div class="ymHowtoMenu" id="ymHowtoMenu">
+      <div class="ymHowtoMenuMark" aria-hidden="true">♡</div>
+      <h2 id="ymHowtoTitle">วิธีการใช้งาน</h2>
+      <p class="ymHowtoSub">เลือกคู่มือที่ต้องการดูได้เลยน้า ♡</p>
+      <button type="button" class="ymHowtoTopic" data-ym-guide="topup">
+        <span class="ymHowtoTopicIcon" aria-hidden="true"<span class="ymHowtoTopicIcon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 9h18M8 4v5M16 4v5M8 13h3M8 16h6"/></svg></span><span class="ymHowtoTopicText"><span class="ymHowtoTopicTitle">วิธีเติมเกมผ่านเว็บ</span><span class="ymHowtoTopicHint">ดูขั้นตอนการสั่งซื้อสินค้า</span></span><span class="ymHowtoArrow" aria-hidden="true">›</span>
+      </button>
+      <button type="button" class="ymHowtoTopic" data-ym-guide="order">
+        <span class="ymHowtoTopicIcon" aria-hidden="true">▤</span><span class="ymHowtoTopicText"><span class="ymHowtoTopicTitle">วิธีเช็กออเดอร์</span><span class="ymHowtoTopicHint">ดูวิธีตรวจสอบรายการสั่งซื้อ</span></span><span class="ymHowtoArrow" aria-hidden="true">›</span>
+      </button>
+      <p class="ymHowtoSub ymHowtoFooter"></p>
+    </div>
+    <div class="ymHowtoViewer" id="ymHowtoViewer">
+      <h2 id="ymHowtoViewerTitle"></h2>
+      <img id="ymHowtoImage" class="ymHowtoImage" alt="รูปคู่มือการใช้งาน" hidden>
+      <p id="ymHowtoEmpty" class="ymHowtoSub" hidden>ยังไม่พบรูปคู่มือ กรุณาตรวจสอบไฟล์ในโฟลเดอร์ guide-images</p>
+      <button type="button" class="ymHowtoBack" id="ymHowtoBack">← กลับไปเลือกคู่มือ</button>
+    </div>
+  </section>
+</div>
+
+<script id="ym-howto-popup-js">
+(() => {
+  function initHowtoPopup() {
+    const overlay = document.getElementById('ymHowtoOverlay');
+    const menu = document.getElementById('ymHowtoMenu');
+    const viewer = document.getElementById('ymHowtoViewer');
+    const title = document.getElementById('ymHowtoViewerTitle');
+    const img = document.getElementById('ymHowtoImage');
+    const empty = document.getElementById('ymHowtoEmpty');
+    const close = document.getElementById('ymHowtoClose');
+    const back = document.getElementById('ymHowtoBack');
+    const popupTheme = document.getElementById('ymHowtoTheme');
+    if (!overlay || !menu || !viewer || !title || !img || !empty || !close || !back) return;
+    let previousOverflow = '';
+    let previousPaddingRight = '';
+    let previousFocus = null;
+    
+function openPopup(event) {
+  if (event) event.preventDefault();
+
+  previousFocus = document.activeElement;
+  previousOverflow = document.body.style.overflow;
+  previousPaddingRight = document.body.style.paddingRight;
+
+  // เริ่มจากสถานะปิดก่อน
+  if (closeAnimationTimer) {
+    clearTimeout(closeAnimationTimer);
+    closeAnimationTimer = null;
+  }
+  overlay.classList.remove('closing');
+  overlay.classList.remove('open', 'viewing-guide');
+  menu.classList.remove('hide');
+  viewer.classList.remove('show');
+
+  // ซ่อน scrollbar โดยชดเชยความกว้างไว้ เพื่อไม่ให้หน้าเว็บกระตุก/เลื่อนด้านข้าง
+  const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+  if (scrollbarWidth > 0) {
+    const currentPadding = parseFloat(getComputedStyle(document.body).paddingRight) || 0;
+    document.body.style.paddingRight = (currentPadding + scrollbarWidth) + 'px';
+  }
+  document.body.style.overflow = 'hidden';
+
+  // ให้เบราว์เซอร์วาดสถานะเริ่มต้นก่อนเปิด
+  requestAnimationFrame(() => {
+    overlay.classList.add('open');
+
+    requestAnimationFrame(() => {
+      close.focus();
+    });
+  });
+}
+
+      
+    let closeAnimationTimer = null;
+    function closePopup() {
+      if (!overlay.classList.contains('open')) return;
+      // Keep the current view state during the fade-out; removing
+      // viewing-guide here makes the selection menu flash behind the viewer.
+      overlay.classList.remove('open');
+      overlay.classList.add('closing');
+      if (closeAnimationTimer) clearTimeout(closeAnimationTimer);
+      closeAnimationTimer = setTimeout(() => {
+        overlay.classList.remove('closing');
+        closeAnimationTimer = null;
+        // Reset internal view only after the overlay is fully hidden.
+        menu.classList.remove('hide');
+        viewer.classList.remove('show');
+        overlay.classList.remove('viewing-guide');
+        img.hidden = true;
+        img.removeAttribute('src');
+        empty.hidden = true;
+        // Restore scrolling only after the fade finishes, preventing a sideways page jump.
+        document.body.style.overflow = previousOverflow;
+        document.body.style.paddingRight = previousPaddingRight;
+      }, 300);
+      // Keep the current screen (guide viewer or menu) unchanged during the fade.
+      // Reset to the selection menu only after the popup has fully closed, so it
+      // cannot flash into view while closing from a guide.
+      if (previousFocus && typeof previousFocus.focus === 'function') previousFocus.focus();
+    }
+    let screenTransitionTimer = null;
+    function showGuide(key) {
+      const guides = {
+        topup: { title: 'วิธีเติมเกมผ่านเว็บ', src: 'guide-images/topup.png' },
+        order: { title: 'วิธีเช็กออเดอร์', src: 'guide-images/order.png' }
+      };
+      const guide = guides[key];
+      if (!guide || viewer.classList.contains('show')) return;
+      if (screenTransitionTimer) clearTimeout(screenTransitionTimer);
+
+      title.textContent = guide.title;
+      img.hidden = true;
+      img.classList.remove('ym-image-fade-in');
+      img.removeAttribute('src');
+      empty.hidden = true;
+
+      /* Fade the topic menu out, then fade the selected guide screen in. */
+      menu.style.transition = 'opacity .24s ease, transform .24s ease';
+      menu.style.opacity = '0';
+      menu.style.transform = 'translateY(-6px)';
+      screenTransitionTimer = setTimeout(() => {
+        menu.classList.add('hide');
+        menu.style.removeProperty('transition');
+        menu.style.removeProperty('opacity');
+        menu.style.removeProperty('transform');
+
+        overlay.classList.add('viewing-guide');
+        viewer.classList.add('show');
+        /* Use CSS transitions only; avoid competing with the viewer's CSS animation. */
+        viewer.style.animation = 'none';
+        viewer.style.transition = 'none';
+        viewer.style.opacity = '0';
+        viewer.style.transform = 'translateY(8px)';
+        void viewer.offsetWidth;
+        viewer.style.transition = 'opacity .32s ease, transform .32s cubic-bezier(.22, 1, .36, 1)';
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          viewer.style.opacity = '1';
+          viewer.style.transform = 'translateY(0)';
+        }));
+        screenTransitionTimer = null;
+      }, 240);
+
+      img.onload = () => {
+        img.hidden = false;
+        empty.hidden = true;
+        img.classList.remove('ym-image-fade-in');
+        void img.offsetWidth;
+        img.classList.add('ym-image-fade-in');
+      };
+      img.onerror = () => { img.hidden = true; empty.hidden = false; };
+      img.src = guide.src;
+    }
+    document.addEventListener('click', event => {
+      const link = event.target.closest && event.target.closest('a[href="#howto-popup"]');
+      if (link) openPopup(event);
+    }, true);
+    document.querySelectorAll('[data-ym-guide]').forEach(button => {
+      button.addEventListener('click', () => showGuide(button.dataset.ymGuide));
+    });
+    if (popupTheme) popupTheme.addEventListener('click', () => {
+      const mainTheme = document.getElementById('ymThemeToggle');
+      if (mainTheme) mainTheme.click();
+      else document.documentElement.classList.toggle('ymDark');
+    });
+    close.addEventListener('click', closePopup);
+    back.addEventListener('click', () => {
+      if (!viewer.classList.contains('show')) return;
+      if (screenTransitionTimer) clearTimeout(screenTransitionTimer);
+
+      /* Fade the guide screen out, then fade the two-topic menu back in. */
+      viewer.style.transition = 'opacity .24s ease, transform .24s ease';
+      viewer.style.opacity = '0';
+      viewer.style.transform = 'translateY(6px)';
+      screenTransitionTimer = setTimeout(() => {
+        viewer.classList.remove('show');
+        viewer.style.removeProperty('transition');
+        viewer.style.removeProperty('opacity');
+        viewer.style.removeProperty('transform');
+        viewer.style.removeProperty('animation');
+        overlay.classList.remove('viewing-guide');
+        menu.classList.remove('hide');
+        menu.style.transition = 'none';
+        menu.style.opacity = '0';
+        menu.style.transform = 'translateY(-6px)';
+        void menu.offsetWidth;
+        menu.style.transition = 'opacity .32s ease, transform .32s cubic-bezier(.22, 1, .36, 1)';
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          menu.style.opacity = '1';
+          menu.style.transform = 'translateY(0)';
+        }));
+        screenTransitionTimer = setTimeout(() => {
+          menu.style.removeProperty('transition');
+          menu.style.removeProperty('opacity');
+          menu.style.removeProperty('transform');
+          screenTransitionTimer = null;
+        }, 340);
+        img.hidden = true;
+        img.removeAttribute('src');
+        empty.hidden = true;
+      }, 180);
+    });
+    overlay.addEventListener('click', event => { if (event.target === overlay) closePopup(); });
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && overlay.classList.contains('open')) {
+        if (viewer.classList.contains('show')) back.click(); else closePopup();
+      }
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initHowtoPopup, { once: true });
+  else initHowtoPopup();
+})();
+</script>
+
+
 <body>
 <div id="ymBgDecor" aria-hidden="true">
 <span class="glow1"></span><span class="glow2"></span>
@@ -1858,7 +2299,7 @@ body.ymDark .ymContactQuickCards.section{
 <span class="h2">♡</span><span class="x1">✦</span><span class="h3">♡</span>
 <span class="s3">✧</span><span class="x2">✦</span>
 </div>
-<header><div class="nav"><div class="logo">Yuimellkub</div><nav class="menu"><a href="#home">⌂ หน้าหลัก</a><a href="#categories">▦ หมวดหมู่สินค้า</a><a href="#products">🛒 สั่งซื้อสินค้า</a><a href="#how">▤ วิธีใช้งาน</a><a href="#order-check">⌕ ตรวจสอบออเดอร์</a><a href="#news">♡ ข่าวสาร IDV</a></nav><div class="actions">
+<header><div class="nav"><div class="logo">Yuimellkub</div><nav class="menu"><a href="#home">⌂ หน้าหลัก</a><a href="#categories">▦ หมวดหมู่สินค้า</a><a href="#products">🛒 สั่งซื้อสินค้า</a><a href="#howto-popup">▤ วิธีใช้งาน</a><a href="#order-check">⌕ ตรวจสอบออเดอร์</a><a href="#news">♡ ข่าวสาร IDV</a></nav><div class="actions">
 <button class="ymTopTool" id="ymThemeToggle" type="button" aria-label="สลับโหมดมืด" title="โหมดมืด">☾</button>
 <button class="ymTopTool" id="ymSoundToggle" type="button" aria-pressed="true" aria-label="เปิดปิดเสียง" title="เสียง">🔊</button>
 <a class="icon" href="https://discord.gg/WGgxesvvWr" target="_blank" aria-label="Discord"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.5 5.3A16.3 16.3 0 0 0 15.4 4l-.5 1a15 15 0 0 0-5.8 0l-.5-1a16.4 16.4 0 0 0-4.1 1.3C1.9 9.2 1.2 13 1.5 16.8A16.8 16.8 0 0 0 6.6 19l1.2-1.6a10.8 10.8 0 0 1-1.9-.9l.5-.4c3.7 1.7 7.7 1.7 11.3 0l.5.4c-.6.4-1.3.7-1.9.9l1.2 1.6a16.8 16.8 0 0 0 5.1-2.2c.4-4.4-.7-8.1-3.1-11.5Z"/></svg></a><button class="memberBtn" id="memberOpen">♡ <span>สมาชิก</span></button></div></div></header>
@@ -1951,7 +2392,7 @@ body.ymDark .ymContactQuickCards.section{
 
 <section class="section panel news" id="news"><div class="newsArt">IDV</div><div><b>อัปเดตข่าวสาร Identity V</b><div style="font-size:11px;margin-top:5px;color:#a86b82">สกินใหม่ • กิจกรรม • ข่าวจากร้าน</div></div></section>
 <section class="section cards ymContactQuickCards"><div class="quick"><a href="https://m.me/yuimellkubtopup" target="_blank" rel="noopener">Messenger<small>ทักเพจร้าน</small></a></div><div class="quick"><a href="https://line.me/R/ti/p/@205svvxv" target="_blank" rel="noopener">LINE<small>ติดต่อร้านทางไลน์</small></a></div><div class="quick"><a href="https://discord.gg/WGgxesvvWr" target="_blank" rel="noopener">◉ Discord Community<small>พูดคุยและติดตามข่าวสาร</small></a></div></section>
-</main><footer>♡ Yuimellkub Top-up ♡</footer>
+</main><footer></footer>
 
 
 
@@ -2190,6 +2631,15 @@ document.getElementById('calcBtn')?.addEventListener('click', () => {
     shade.setAttribute('aria-hidden','true');
   }
 
+  function setResult(message){
+    result.classList.remove('ym-result-visible');
+    result.classList.add('show');
+    result.textContent=message;
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      result.classList.add('ym-result-visible');
+    }));
+  }
+
   document.querySelectorAll(
     'a[href="#order-check"],a[href="#track"],a[href="#status"]'
   ).forEach(el=>el.addEventListener('click',openModal));
@@ -2206,10 +2656,8 @@ document.getElementById('calcBtn')?.addEventListener('click', () => {
 
   async function lookup(){
     const n = input.value.trim().replace(/^#/,'');
-    result.classList.add('show');
-
     if(!n){
-      result.textContent='กรุณากรอกเลขออเดอร์';
+      setResult('กรุณากรอกเลขออเดอร์');
       input.focus();
       return;
     }
@@ -2218,13 +2666,14 @@ document.getElementById('calcBtn')?.addEventListener('click', () => {
     const api = window.YMK_ORDER_TRACKING;
 
     if(!api || typeof api.lookup !== 'function'){
-      result.textContent='ระบบติดตามออเดอร์ยังเชื่อมไม่สำเร็จ';
+      setResult('ระบบติดตามออเดอร์ยังเชื่อมไม่สำเร็จ');
       console.error('YMK_ORDER_TRACKING.lookup is unavailable');
       return;
     }
 
     submit.disabled=true;
-    result.textContent='กำลังตรวจสอบออเดอร์…';
+    submit.textContent='กำลังตรวจสอบ…';
+    setResult('กำลังตรวจสอบออเดอร์…');
 
     try{
       if(typeof api.stop === 'function') api.stop();
@@ -2232,7 +2681,7 @@ document.getElementById('calcBtn')?.addEventListener('click', () => {
       const order = await api.lookup(n);
 
       if(!order){
-        result.textContent='ไม่พบออเดอร์นี้ กรุณาตรวจสอบเลขออเดอร์';
+        setResult('ไม่พบออเดอร์นี้ กรุณาตรวจสอบเลขออเดอร์');
         return;
       }
 
@@ -2243,9 +2692,10 @@ document.getElementById('calcBtn')?.addEventListener('click', () => {
       }
     }catch(err){
       console.error('Order lookup failed:',err);
-      result.textContent='ตรวจสอบออเดอร์ไม่สำเร็จ กรุณาลองใหม่';
+      setResult('ตรวจสอบออเดอร์ไม่สำเร็จ กรุณาลองใหม่');
     }finally{
       submit.disabled=false;
+      submit.textContent='ตรวจสอบออเดอร์';
     }
   }
 
@@ -6514,6 +6964,7 @@ html.ymDark{--ym-confirm-bg:#33232b;--ym-confirm-text:#dfbaca;--ym-confirm-borde
 html.ymDark #memberOrders .ymMemberCopy,html.ymDark #memberOrders button[data-ym-member-copy]{background:#5b3a2b!important;border-color:#d89a6a!important;color:#ffd7b5!important}
 html.ymDark #memberOrders .ymMemberCopy:hover{background:#704736!important}
 html.ymDark #memberOrders .ymMemberCopy.copied{background:#5b3a2b!important;border-color:#d89a6a!important;color:#ffd7b5!important}
+
 </style>
 <script src="order-confirmation-ui.js?v=2"></script>
 
