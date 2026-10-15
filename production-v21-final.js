@@ -3266,10 +3266,10 @@ async function resolveOrder(raw){
   let id=input;
   let statusSnap=null;
 
-  if(/^YMK\\d{6}-\\d{6}$/.test(input)){
+  if(/^YMK\d{6}-\d{6}$/.test(input)){
     statusSnap=await store.collection('order_status').doc(input).get();
   }else{
-    const digits=input.replace(/\\D/g,'');
+    const digits=input.replace(/\D/g,'');
     if(digits.length<4){
       throw new Error('กรุณากรอกเลขออเดอร์อย่างน้อย 4 ตัวท้าย');
     }
@@ -3277,7 +3277,7 @@ async function resolveOrder(raw){
     const statusList=await store.collection('order_status').limit(500).get();
     const hit=statusList.docs.find(doc=>{
       const full=String(doc.id||'').toUpperCase();
-      const only=full.replace(/\\D/g,'');
+      const only=full.replace(/\D/g,'');
       return full===input || only.endsWith(digits) || full.endsWith(input);
     });
 
@@ -3400,7 +3400,7 @@ function startRealtimeTrack(id,initialOrder){
 
   stopRealtimeTrack();
 
-  if(!id || !/^YMK\\d{6}-\\d{6}$/.test(id)){
+  if(!id || !/^YMK\d{6}-\d{6}$/.test(id)){
     return;
   }
 
