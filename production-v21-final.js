@@ -951,32 +951,22 @@ function readyPackForUI(
         /(\d[\d,]*)\s*(?:กระดุม|echoes?)/i
       );
 
-  if(m && /^(?:echoes?|กระดุม)$/i.test(String(x.category || '').trim())){
+  const category = String(x.category || '').trim();
+  const isButtonTopup = /^(?:echoes?|กระดุม|เติมกระดุม)$/i.test(category);
 
+  /*
+    หมวดเติมกระดุม: คงรูปแบบจำนวนกระดุม × จำนวนสินค้าไว้เหมือนเดิม
+    หมวดสินค้าแบบเติมอื่น ๆ: แสดงรายละเอียดชุดแพ็กจริงจากกฎ Calculator
+  */
+  if (m && isButtonTopup) {
     return (
-      Number(
-        m[1]
-          .replace(
-            /,/g,
-            ''
-          )
-      )
-      .toLocaleString(
-        'th-TH'
-      )
-      +
-      ' × '
-      +
-      qty
+      Number(m[1].replace(/,/g, '')).toLocaleString('th-TH')
+      + ' × '
+      + Math.max(1, Number(qty) || 1)
     );
   }
 
-  /*
-    Ready-stock items that specify an Echoes amount must show the actual
-    pack breakdown, not repeat the product title as the pack.
-    Use the same calculator rules as the Calculator page.
-  */
-  if (m) {
+  if (m && !isButtonTopup) {
     const target = Number(m[1].replace(/,/g, '')) * Math.max(1, Number(qty) || 1);
     const rules = window.YMK_CALCULATOR_PACK_RULES;
     if (target > 0 && rules?.findBest && rules?.formatLargestFirst) {
