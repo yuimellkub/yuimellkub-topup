@@ -208,18 +208,29 @@ function render(arr){
 async function syncPublicStatus(o){
   if(!db || !o?.id) return;
   try{
-    // Public tracking exposes only the fields needed to identify the order.
-    // Never copy customer name, memberId, slip images, or payment proof here.
+    // Publish only the minimum fields needed by public order tracking.
+    // Never copy customer name, memberId, slip images, or payment proof.
+    const ref=db.collection('order_status').doc(o.id);
+    const existingSnap=await ref.get();
+    const existing=existingSnap.exists?(existingSnap.data()||{}):{};
+    const firstText=(...values)=>{
+      for(const value of values){
+        if(value!==undefined && value!==null && String(value).trim()!==''){
+          return String(value).trim();
+        }
+      }
+      return '';
+    };
     const publicData={
-      status:o.shopStatus||o.paymentStatus||'รอตรวจสอบการชำระเงิน',
-      paymentStatus:o.paymentStatus||'',
-      item:o.item||'',
-      pack:o.pack||'',
-      uid:o.uid||'',
-      server:o.server||'',
+      status:firstText(o.shopStatus,o.status,o.paymentStatus,existing.status,existing.paymentStatus,'รอตรวจสอบการชำระเงิน'),
+      paymentStatus:firstText(o.paymentStatus,existing.paymentStatus),
+      item:firstText(o.item,o.productName,o.product,o.itemName,o.nameOfItem,existing.item,existing.productName),
+      pack:firstText(o.pack,o.package,o.packName,o.productPack,o.bundle,existing.pack,existing.package),
+      uid:firstText(o.uid,o.playerUid,o.playerID,o.playerId,o.gameUid,o.gameUID,existing.uid,existing.playerUid),
+      server:firstText(o.server,o.gameServer,o.region,o.gameRegion,existing.server,existing.gameServer),
       updatedAt:firebase.firestore.FieldValue.serverTimestamp()
     };
-    await db.collection('order_status').doc(o.id).set(publicData,{merge:true});
+    await ref.set(publicData,{merge:true});
   }catch(e){
     console.warn('status sync failed',e);
   }
