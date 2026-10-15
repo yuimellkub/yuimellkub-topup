@@ -379,12 +379,16 @@ if(initFirebase()){
         const ctx=c.getContext('2d');
         ctx.clearRect(0,0,w,h);
         ctx.drawImage(img,0,0,w,h);
-        /* Keep PNG transparency: JPEG flattens transparent pixels to black in some browsers. */
+        /* Keep transparent PNGs losslessly; do not flatten them to JPEG. */
+        if(file.type==='image/png'){
+          resolve(c.toDataURL('image/png'));
+          return;
+        }
         const webp=c.toDataURL('image/webp',quality);
         if(webp.startsWith('data:image/webp;')){
           resolve(webp);
         }else{
-          /* Fallback only for browsers without WebP encoding support. */
+          /* JPEG fallback uses a light background rather than black. */
           ctx.globalCompositeOperation='destination-over';
           ctx.fillStyle='#fff7fa';
           ctx.fillRect(0,0,w,h);
