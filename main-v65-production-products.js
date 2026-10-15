@@ -256,15 +256,10 @@ function card(p){
       </b>
 
 
-      <div class="ymk-store-desc">
-        ${esc(p.name==='สกินA+ประดับS 40%'?'แพ็กที่เติม: 759 × 3 + 66 × 1':(p.description||''))}
-      </div>
-
-
       <div class="ymk-store-bottom">
 
         <div class="price ready-stock-price ymk-store-price">
-          ฿${Number(p.name==='สกินA+ประดับS 40%'?900:(p.price||0)).toLocaleString('th-TH')}
+          ฿${Number(p.price||0).toLocaleString('th-TH')}
         </div>
 
 
