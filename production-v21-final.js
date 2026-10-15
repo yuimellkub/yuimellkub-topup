@@ -3244,188 +3244,44 @@ async function saveProofs(
 
 async function resolveOrder(raw){
 
-  const store=
-    db();
-
+  const store=db();
 
   if(!store){
-
-    throw new Error(
-      'เชื่อมระบบออเดอร์ไม่ได้'
-    );
+    throw new Error('เชื่อมระบบออเดอร์ไม่ได้');
   }
 
-
-  const input=
-    String(
-      raw||
-      ''
-    )
-      .trim()
-      .replace(
-        /^#/,
-        ''
-      );
-
+  const input=String(raw||'')
+    .trim()
+    .replace(/^#/,'')
+    .toUpperCase();
 
   if(!input){
-
-    throw new Error(
-      'กรุณากรอกเลขออเดอร์'
-    );
+    throw new Error('กรุณากรอกเลขออเดอร์');
   }
 
-
-  let orderSnap=
-    null;
-
-
-  let id=
-    input;
-
-
-  if(
-    /^YMK\d{6}-\d{6}$/
-      .test(input)
-  ){
-
-    orderSnap=
-      await store
-        .collection(
-          'orders'
-        )
-        .doc(
-          input
-        )
-        .get();
-
-  }else{
-
-    const snap=
-      await store
-        .collection(
-          'orders'
-        )
-        .limit(
-          300
-        )
-        .get();
-
-
-    const digits=
-      input.replace(
-        /\D/g,
-        ''
-      );
-
-
-    const hit=
-      snap.docs
-        .find(
-          doc=>{
-
-            const full=
-              String(
-                doc.id
-              );
-
-
-            const only=
-              full.replace(
-                /\D/g,
-                ''
-              );
-
-
-            return (
-
-              full ===
-              input
-
-              ||
-
-              only.endsWith(
-                digits
-              )
-
-              ||
-
-              full.endsWith(
-                input
-              )
-            );
-          }
-        );
-
-
-    if(hit){
-
-      id=
-        hit.id;
-
-
-      orderSnap=
-        hit;
-    }
+  // Public tracking must read only the public status document.
+  // The orders collection contains private customer data and is owner/admin-only.
+  if(!/^YMK\\d{6}-\\d{6}$/.test(input)){
+    throw new Error('กรุณากรอกเลขออเดอร์แบบเต็ม เช่น YMK261015-160214');
   }
 
+  const statusSnap=await store
+    .collection('order_status')
+    .doc(input)
+    .get();
 
-  if(
-    !orderSnap
-
-    ||
-
-    !orderSnap.exists
-  ){
-
+  if(!statusSnap.exists){
     return null;
   }
 
-
-  const order={
-
-    id,
-
-    ...orderSnap.data()
-  };
-
-
-  const statusSnap=
-
-    await store
-      .collection(
-        'order_status'
-      )
-      .doc(
-        id
-      )
-      .get();
-
-
-  const statusData=
-
-    statusSnap.exists
-
-      ? statusSnap.data()
-
-      : {};
-
+  const statusData=statusSnap.data()||{};
 
   return {
-
-    ...order,
-
     ...statusData,
-
-    id,
-
-    proof:
-      proofImages(
-        statusData
-      )
+    id:input,
+    proof:proofImages(statusData)
   };
 }
-
 
 
 let activeTrackStop=
@@ -3523,103 +3379,40 @@ function renderRealtimeTrack(){
 }
 
 
-function startRealtimeTrack(
-  id,
-  initialOrder
-){
+function startRealtimeTrack(id,initialOrder){
 
   stopRealtimeTrack();
 
-  if(
-    !id ||
-    !/^YMK\d{6}-\d{6}$/.test(id)
-  ){
+  if(!id || !/^YMK\\d{6}-\\d{6}$/.test(id)){
     return;
   }
 
-  const store=
-    db();
-
+  const store=db();
   if(!store){
     return;
   }
 
-  activeTrackId=
-    id;
+  activeTrackId=id;
+  activeTrackOrder=initialOrder ? {...initialOrder,id} : {id};
+  activeTrackStatus=initialOrder||{};
 
-  activeTrackOrder=
-    initialOrder
-      ? {
-          ...initialOrder,
-          id
-        }
-      : null;
-
-  let offOrder=
-    null;
-
-  let offStatus=
-    null;
-
-  offOrder=
-    store
-      .collection('orders')
-      .doc(id)
-      .onSnapshot(
-        snap=>{
-
-          if(!snap.exists){
-            return;
-          }
-
-          activeTrackOrder={
-            id:
-              snap.id,
-            ...snap.data()
-          };
-
-          renderRealtimeTrack();
-        },
-        err=>
-          console.warn(
-            'realtime order watch failed',
-            err
-          )
-      );
-
-  offStatus=
-    store
-      .collection(
-        'order_status'
-      )
-      .doc(id)
-      .onSnapshot(
-        snap=>{
-
-          activeTrackStatus=
-            snap.exists
-              ? snap.data()
-              : {};
-
-          renderRealtimeTrack();
-        },
-        err=>
-          console.warn(
-            'realtime status watch failed',
-            err
-          )
-      );
+  const offStatus=store
+    .collection('order_status')
+    .doc(id)
+    .onSnapshot(
+      snap=>{
+        activeTrackStatus=snap.exists ? (snap.data()||{}) : {};
+        activeTrackOrder={id};
+        renderRealtimeTrack();
+      },
+      err=>console.warn('realtime status watch failed',err)
+    );
 
   activeTrackStop=()=>{
-
-    try{
-      offOrder?.();
-    }catch(_){}
-
-    try{
-      offStatus?.();
-    }catch(_){}
+    try{offStatus?.();}catch(_){}
   };
+
+  renderRealtimeTrack();
 }
 
 
