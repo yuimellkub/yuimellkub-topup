@@ -7,7 +7,12 @@ service cloud.firestore {
   function orderPath(id){return /databases/$(database)/documents/orders/$(id);}
   match /products/{id}{allow read:if true;allow write:if admin();}
   match /orders/{id}{
-   allow read,update,delete:if admin() || (signed() && resource.data.memberId==request.auth.uid);
+   // A member checkout transaction reads the generated order ID before creating it.
+   // Permit authenticated get requests for a missing order only; existing orders
+   // remain private to their owner (or admin).
+   allow get:if admin() || (signed() && (!exists(orderPath(id)) || resource.data.memberId==request.auth.uid));
+   allow list:if admin() || (signed() && resource.data.memberId==request.auth.uid);
+   allow update,delete:if admin() || (signed() && resource.data.memberId==request.auth.uid);
    allow create:if admin() || request.resource.data.paymentMethod!='เครดิต' || (
     signed() &&
     request.resource.data.memberId==request.auth.uid &&
