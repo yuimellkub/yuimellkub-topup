@@ -940,8 +940,16 @@ function readyPackForUI(
     return 'แบบส่ง';
   }
 
-  const itemText = String(x.item || '');
+  const itemText = String(x.item || '').trim();
   const category = String(x.category || '').trim();
+
+  // แก้เฉพาะแพ็ก "สกินA+ประดับS ลด 40%": รายการยังเป็นชื่อแพ็กเดิม
+  // แต่บรรทัด "แพ็กที่เติม" ต้องแสดงชุดกระดุมที่ลูกค้าจะได้รับ
+  const normalizedItem = itemText.replace(/[\s＋+]/g, '').toLowerCase();
+  if (/สกินaประดับs(?:ลด)?40%/.test(normalizedItem)) {
+    return '759 × 3 + 66 × 1';
+  }
+
   const isButtonTopup = /^(?:echoes?|กระดุม|เติมกระดุม)$/i.test(category);
 
   // Prefer an explicit button/echo amount. Otherwise, only read a number
