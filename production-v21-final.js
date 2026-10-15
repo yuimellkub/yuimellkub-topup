@@ -942,17 +942,15 @@ function readyPackForUI(
     return 'แบบส่ง';
   }
 
-  const m=
-    String(
-      x.item||
-      ''
-    )
-      .match(
-        /(\d[\d,]*)\s*(?:กระดุม|echoes?)/i
-      );
-
+  const itemText = String(x.item || '');
   const category = String(x.category || '').trim();
   const isButtonTopup = /^(?:echoes?|กระดุม|เติมกระดุม)$/i.test(category);
+
+  // For non-button top-up products, amounts may appear anywhere in the item
+  // title (e.g. "สกินทอง 2888"), not only before the word "กระดุม".
+  const m = isButtonTopup
+    ? itemText.match(/(\d[\d,]*)\s*(?:กระดุม|echoes?)/i)
+    : itemText.match(/(\d[\d,]*)/);
 
   /*
     หมวดเติมกระดุม: คงรูปแบบจำนวนกระดุม × จำนวนสินค้าไว้เหมือนเดิม
