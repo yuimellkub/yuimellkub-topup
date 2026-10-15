@@ -376,8 +376,20 @@ if(initFirebase()){
         let w=img.naturalWidth,h=img.naturalHeight;
         const scale=Math.min(1,max/Math.max(w,h)); w=Math.round(w*scale); h=Math.round(h*scale);
         const c=document.createElement('canvas'); c.width=w;c.height=h;
-        c.getContext('2d').drawImage(img,0,0,w,h);
-        resolve(c.toDataURL('image/jpeg',quality));
+        const ctx=c.getContext('2d');
+        ctx.clearRect(0,0,w,h);
+        ctx.drawImage(img,0,0,w,h);
+        /* Keep PNG transparency: JPEG flattens transparent pixels to black in some browsers. */
+        const webp=c.toDataURL('image/webp',quality);
+        if(webp.startsWith('data:image/webp;')){
+          resolve(webp);
+        }else{
+          /* Fallback only for browsers without WebP encoding support. */
+          ctx.globalCompositeOperation='destination-over';
+          ctx.fillStyle='#fff7fa';
+          ctx.fillRect(0,0,w,h);
+          resolve(c.toDataURL('image/jpeg',quality));
+        }
       }; img.onerror=reject; img.src=r.result;};
       r.onerror=reject; r.readAsDataURL(file);
     });
