@@ -2067,13 +2067,36 @@ function prepareProductionSubmit(){
     if (!order || !(order.price > 0)) {
       throw new Error('ไม่มีผล Calculator ที่ถูกต้องสำหรับสร้างออเดอร์');
     }
+
+    // Calculator pack rules are the source of truth for the pack breakdown.
+    // Restore it immediately before saving so stale item/name text cannot overwrite it.
+    const calcResult = window.YMK_CALC_RESULT;
+    const realPack = String(calcResult?.pack || order.pack || '').trim();
+    const realItem = String(calcResult?.item || order.item || '').trim();
+    const realPrice = num(calcResult?.price) > 0 ? num(calcResult.price) : num(order.price);
+    if (!realPack || !(realPrice > 0)) {
+      throw new Error('ไม่พบรายละเอียดแพ็กจาก Calculator กรุณาคำนวณใหม่อีกครั้ง');
+    }
+
+    window.YMK_CHECKOUT_ORDER = {
+      ...order,
+      source: 'calc',
+      item: realItem,
+      pack: realPack,
+      price: realPrice
+    };
+    window.YMK_CALC_LOCKED_ORDER = {
+      item: realItem,
+      pack: realPack,
+      price: realPrice
+    };
     window.lastOrder = {
-      item: order.item,
-      pack: order.pack,
-      price: fmt(order.price) + ' บาท',
+      item: realItem,
+      pack: realPack,
+      price: fmt(realPrice) + ' บาท',
       quantity: 1
     };
-    window.YMK_LAST_CALC = { ...order };
+    window.YMK_LAST_CALC = { ...window.YMK_CHECKOUT_ORDER };
   }
 
   if(
