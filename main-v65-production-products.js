@@ -582,6 +582,13 @@ function style(){
     /*
       จำกัดเฉพาะรูปจริงไม่ให้ล้นการ์ด
     */
+    /* PNG ที่มีพื้นหลังโปร่งใสต้องไม่รับพื้นหลังสีเข้มจากกรอบ .gem */
+    .ymk-production-image{
+      background:transparent!important;
+      background-color:transparent!important;
+      box-shadow:none!important;
+    }
+
     .ymk-production-image img{
       display:block;
       width:auto;
@@ -590,6 +597,8 @@ function style(){
       max-height:66px;
       margin:0 auto;
       object-fit:contain;
+      background:transparent!important;
+      mix-blend-mode:normal;
     }
 
     .ymk-production-card button:disabled{
