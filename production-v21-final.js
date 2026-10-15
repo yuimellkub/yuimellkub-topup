@@ -656,23 +656,21 @@ function startMemberSync(){
 
   const start=()=>{
 
+    // The storefront wrapper loads Firebase scripts/config asynchronously.
+    // Wait until firebase-config.js has initialized the DEFAULT app before
+    // calling firebase.auth(); the namespace alone is not enough.
     if(
       !window.firebase
-
       ||
-
-      !firebase.auth
+      typeof firebase.auth !== 'function'
+      ||
+      !Array.isArray(firebase.apps)
+      ||
+      !firebase.apps.some(app => app.name === '[DEFAULT]')
     ){
-
-      setTimeout(
-        start,
-        120
-      );
-
-
+      setTimeout(start, 120);
       return;
     }
-
 
     firebase
       .auth()
