@@ -66,9 +66,17 @@ function firebaseReady(){
 
 function initFirebase(){
   if(!firebaseReady()) return false;
-  if(!firebase.apps.length) firebase.initializeApp(window.YUIMELLKUB_FIREBASE_CONFIG);
-  auth=firebase.auth();
-  db=firebase.firestore();
+
+  // ใช้ Firebase app แยกชื่อสำหรับหลังบ้าน เพื่อไม่แชร์สถานะล็อกอิน
+  // กับหน้าเว็บร้านที่ใช้ Firebase default app
+  const adminAppName='yuimellkub-admin-session';
+  let adminApp=firebase.apps.find(app=>app.name===adminAppName);
+  if(!adminApp){
+    adminApp=firebase.initializeApp(window.YUIMELLKUB_FIREBASE_CONFIG,adminAppName);
+  }
+
+  auth=adminApp.auth();
+  db=adminApp.firestore();
   online=true;
   return true;
 }
