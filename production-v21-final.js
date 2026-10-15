@@ -946,11 +946,14 @@ function readyPackForUI(
   const category = String(x.category || '').trim();
   const isButtonTopup = /^(?:echoes?|กระดุม|เติมกระดุม)$/i.test(category);
 
-  // For non-button top-up products, amounts may appear anywhere in the item
-  // title (e.g. "สกินทอง 2888"), not only before the word "กระดุม".
+  // Prefer an explicit button/echo amount. Otherwise, only read a number
+  // that is NOT a percentage (e.g. ignore "40%" in skin names).
   const m = isButtonTopup
     ? itemText.match(/(\d[\d,]*)\s*(?:กระดุม|echoes?)/i)
-    : itemText.match(/(\d[\d,]*)/);
+    : (
+        itemText.match(/(\d[\d,]*)\s*(?:กระดุม|echoes?)/i)
+        || itemText.match(/(\d[\d,]*)(?![\d,])\s*(?!%)/)
+      );
 
   /*
     หมวดเติมกระดุม: คงรูปแบบจำนวนกระดุม × จำนวนสินค้าไว้เหมือนเดิม
