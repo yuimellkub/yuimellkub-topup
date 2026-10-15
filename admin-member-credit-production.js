@@ -37,19 +37,23 @@ function ready(){
       return false;
     }
 
-    if(!firebase.apps.length){
+    if(!window.YUIMELLKUB_FIREBASE_CONFIG){
+      return false;
+    }
 
-      if(!window.YUIMELLKUB_FIREBASE_CONFIG){
-        return false;
-      }
-
-      firebase.initializeApp(
-        window.YUIMELLKUB_FIREBASE_CONFIG
+    // ให้ส่วนจัดการสมาชิก/เครดิตใช้ session เดียวกับหน้าแอดมิน
+    // และไม่แตะ default Firebase Auth ของหน้าร้าน
+    const adminAppName='yuimellkub-admin-session';
+    let adminApp=firebase.apps.find(app=>app.name===adminAppName);
+    if(!adminApp){
+      adminApp=firebase.initializeApp(
+        window.YUIMELLKUB_FIREBASE_CONFIG,
+        adminAppName
       );
     }
 
-    db=firebase.firestore();
-    auth=firebase.auth();
+    db=adminApp.firestore();
+    auth=adminApp.auth();
 
     return true;
 
