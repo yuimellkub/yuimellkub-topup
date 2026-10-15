@@ -3259,18 +3259,32 @@ async function resolveOrder(raw){
     throw new Error('กรุณากรอกเลขออเดอร์');
   }
 
-  // Public tracking must read only the public status document.
-  // The orders collection contains private customer data and is owner/admin-only.
-  if(!/^YMK\\d{6}-\\d{6}$/.test(input)){
-    throw new Error('กรุณากรอกเลขออเดอร์แบบเต็ม เช่น YMK261015-160214');
+  // Read only public status records; never query private customer orders.
+  let id=input;
+  let statusSnap=null;
+
+  if(/^YMK\\d{6}-\\d{6}$/.test(input)){
+    statusSnap=await store.collection('order_status').doc(input).get();
+  }else{
+    const digits=input.replace(/\\D/g,'');
+    if(digits.length<4){
+      throw new Error('กรุณากรอกเลขออเดอร์อย่างน้อย 4 ตัวท้าย');
+    }
+
+    const statusList=await store.collection('order_status').limit(500).get();
+    const hit=statusList.docs.find(doc=>{
+      const full=String(doc.id||'').toUpperCase();
+      const only=full.replace(/\\D/g,'');
+      return full===input || only.endsWith(digits) || full.endsWith(input);
+    });
+
+    if(hit){
+      id=hit.id;
+      statusSnap=hit;
+    }
   }
 
-  const statusSnap=await store
-    .collection('order_status')
-    .doc(input)
-    .get();
-
-  if(!statusSnap.exists){
+  if(!statusSnap || !statusSnap.exists){
     return null;
   }
 
@@ -3278,7 +3292,7 @@ async function resolveOrder(raw){
 
   return {
     ...statusData,
-    id:input,
+    id,
     proof:proofImages(statusData)
   };
 }
