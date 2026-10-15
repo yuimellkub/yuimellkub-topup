@@ -208,10 +208,18 @@ function render(arr){
 async function syncPublicStatus(o){
   if(!db || !o?.id) return;
   try{
-    await db.collection('order_status').doc(o.id).set({
+    // Public tracking exposes only the fields needed to identify the order.
+    // Never copy customer name, memberId, slip images, or payment proof here.
+    const publicData={
       status:o.shopStatus||o.paymentStatus||'รอตรวจสอบการชำระเงิน',
+      paymentStatus:o.paymentStatus||'',
+      item:o.item||'',
+      pack:o.pack||'',
+      uid:o.uid||'',
+      server:o.server||'',
       updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-    },{merge:true});
+    };
+    await db.collection('order_status').doc(o.id).set(publicData,{merge:true});
   }catch(e){
     console.warn('status sync failed',e);
   }
@@ -265,11 +273,11 @@ function startOnline(){
 async function updateStatus(id,status){
   if(!online || !db) return;
   try{
-    await db.collection('orders').doc(id).update({shopStatus:status});
-    await db.collection('order_status').doc(id).set({
-      status,
-      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-    },{merge:true});
+    const orderRef=db.collection('orders').doc(id);
+    await orderRef.update({shopStatus:status});
+    const snap=await orderRef.get();
+    if(!snap.exists) throw new Error('ไม่พบออเดอร์ต้นฉบับ');
+    await syncPublicStatus({...snap.data(),id,status,shopStatus:status});
   }catch(e){
     alert('อัปเดตสถานะไม่สำเร็จ: '+e.message);
   }
