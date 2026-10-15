@@ -972,13 +972,24 @@ function readyPackForUI(
   }
 
   /*
-    สกิน / ประดับ / แพ็ก / สัตว์เลี้ยง / ห้อง:
-    ห้ามดึงแพ็กคำนวณเก่ามาปน
+    Ready-stock items that specify an Echoes amount must show the actual
+    pack breakdown, not repeat the product title as the pack.
+    Use the same calculator rules as the Calculator page.
   */
+  if (m) {
+    const target = Number(m[1].replace(/,/g, '')) * Math.max(1, Number(qty) || 1);
+    const rules = window.YMK_CALCULATOR_PACK_RULES;
+    if (target > 0 && rules?.findBest && rules?.formatLargestFirst) {
+      const best = rules.findBest(target);
+      const detail = rules.formatLargestFirst(best);
+      if (detail) return detail;
+    }
+  }
+
   return (
-    x.item||
-    x.pack||
-    ''
+    x.orderMode === 'send'
+      ? 'แบบส่ง'
+      : (x.item || x.pack || '')
   );
 }
 
