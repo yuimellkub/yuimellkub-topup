@@ -270,6 +270,9 @@ function startOnline(){
         return {...o,id:o.id||d.id,createdAtText:dt?dt.toLocaleString('th-TH'):''};
       });
       render(arr);
+      // Publish the minimal tracking fields from the private order feed
+      // into the public order_status document consumed by the storefront.
+      arr.forEach(o=>{syncPublicStatus(o);});
       arr.forEach(o=>{const s=publicOrderStatusCache.get(o.id);if(s)applyPublicOrderStatus(o.id,s);});
       if(!initialOrdersLoaded){
         snap.docs.forEach(d=>seenOrderIds.add(d.id));
