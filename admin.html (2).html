@@ -305,6 +305,7 @@ async function updateStatus(id,status){
     batch.set(db.collection('orders').doc(id),{shopStatus:status,updatedAt:now},{merge:true});
     batch.set(db.collection('order_status').doc(id),{
       status,
+      shopStatus:status,
       updatedAt:now
     },{merge:true});
     await batch.commit();
