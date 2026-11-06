@@ -48,6 +48,7 @@ const $=s=>document.querySelector(s);
 let online=false, db=null, auth=null, unsubscribe=null, statusUnsubscribe=null;
 let initialOrdersLoaded=false;
 const seenOrderIds=new Set();
+const publicOrderStatusCache=new Map();
 let notificationsEnabled=localStorage.getItem('ymk_admin_notify')==='1';
 let audioCtx=null;
 
@@ -269,6 +270,7 @@ function startOnline(){
         return {...o,id:o.id||d.id,createdAtText:dt?dt.toLocaleString('th-TH'):''};
       });
       render(arr);
+      arr.forEach(o=>{const s=publicOrderStatusCache.get(o.id);if(s)applyPublicOrderStatus(o.id,s);});
       if(!initialOrdersLoaded){
         snap.docs.forEach(d=>seenOrderIds.add(d.id));
         initialOrdersLoaded=true;
@@ -287,8 +289,10 @@ function startOnline(){
   // slip-verification Worker appear in the admin without requiring an orders write.
   statusUnsubscribe=db.collection('order_status').onSnapshot(snap=>{
     snap.docChanges().forEach(change=>{
-      if(change.type==='removed') return;
-      applyPublicOrderStatus(change.doc.id,change.doc.data()||{});
+      if(change.type==='removed'){publicOrderStatusCache.delete(change.doc.id);return;}
+      const data=change.doc.data()||{};
+      publicOrderStatusCache.set(change.doc.id,data);
+      applyPublicOrderStatus(change.doc.id,data);
     });
   },err=>console.warn('order_status listener failed',err));
 }
