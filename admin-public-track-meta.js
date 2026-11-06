@@ -23,8 +23,8 @@
 
   function orderId(card){
     const direct=String(card.dataset.id||'').trim();
-    if(/^YMK\\d{6}-\\d{6}$/i.test(direct)) return direct.toUpperCase();
-    const match=String(card.textContent||'').match(/YMK\\d{6}-\\d{6}/i);
+    if(/^YMK\d{6}-\d{6}$/i.test(direct)) return direct.toUpperCase();
+    const match=String(card.textContent||'').match(/YMK\d{6}-\d{6}/i);
     return match ? match[0].toUpperCase() : '';
   }
 
