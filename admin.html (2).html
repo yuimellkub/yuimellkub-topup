@@ -45,7 +45,7 @@
 const KEY='yuimellkub_admin_orders_v1';
 const $=s=>document.querySelector(s);
 
-let online=false, db=null, auth=null, unsubscribe=null;
+let online=false, db=null, auth=null, unsubscribe=null, statusUnsubscribe=null;
 let initialOrdersLoaded=false;
 const seenOrderIds=new Set();
 let notificationsEnabled=localStorage.getItem('ymk_admin_notify')==='1';
@@ -236,59 +236,74 @@ async function syncPublicStatus(o){
   }
 }
 
+function applyPublicOrderStatus(id,data){
+  const card=document.querySelector('#orders .card[data-id="'+CSS.escape(id)+'"]');
+  if(!card || !data) return;
+  const status=String(data.status||data.shopStatus||'').trim();
+  const payment=String(data.paymentStatus||'').trim();
+  const select=card.querySelector('.shopStatus');
+  const pill=card.querySelector('.pill');
+  if(select && status && Array.from(select.options).some(o=>o.value===status||o.textContent===status)){
+    select.value=status;
+  }
+  if(pill && payment) pill.textContent=payment;
+}
+
 function startOnline(){
   if(!db) return;
   if(unsubscribe) unsubscribe();
+  if(statusUnsubscribe) statusUnsubscribe();
 
   initialOrdersLoaded=false;
   seenOrderIds.clear();
 
+  // Orders feed supplies order details only. Do not mirror stale order fields
+  // back into order_status: the latter is the public tracking source of truth.
   unsubscribe=db.collection('orders')
     .orderBy('createdAt','desc')
     .limit(100)
-    .onSnapshot(async snap=>{
+    .onSnapshot(snap=>{
       const arr=snap.docs.map(d=>{
         const o=d.data();
         const dt=o.createdAt?.toDate?.();
-        return {
-          ...o,
-          id:o.id||d.id,
-          createdAtText:dt?dt.toLocaleString('th-TH'):''
-        };
+        return {...o,id:o.id||d.id,createdAtText:dt?dt.toLocaleString('th-TH'):''};
       });
-
       render(arr);
-
-      for(const o of arr){
-        syncPublicStatus(o);
-      }
-
       if(!initialOrdersLoaded){
         snap.docs.forEach(d=>seenOrderIds.add(d.id));
         initialOrdersLoaded=true;
         return;
       }
-
       snap.docChanges().forEach(change=>{
-        if(change.type!=='added') return;
-        if(seenOrderIds.has(change.doc.id)) return;
+        if(change.type!=='added' || seenOrderIds.has(change.doc.id)) return;
         seenOrderIds.add(change.doc.id);
-        const o={...change.doc.data(),id:change.doc.id};
-        notifyNewOrder(o);
+        notifyNewOrder({...change.doc.data(),id:change.doc.id});
       });
     },err=>{
       $('#orders').innerHTML='<div class="empty">โหลดออเดอร์ออนไลน์ไม่ได้: '+esc(err.message)+'</div>';
     });
+
+  // Listen to status documents independently so changes made by the automatic
+  // slip-verification Worker appear in the admin without requiring an orders write.
+  statusUnsubscribe=db.collection('order_status').onSnapshot(snap=>{
+    snap.docChanges().forEach(change=>{
+      if(change.type==='removed') return;
+      applyPublicOrderStatus(change.doc.id,change.doc.data()||{});
+    });
+  },err=>console.warn('order_status listener failed',err));
 }
 
 async function updateStatus(id,status){
   if(!online || !db) return;
   try{
-    const orderRef=db.collection('orders').doc(id);
-    await orderRef.update({shopStatus:status});
-    const snap=await orderRef.get();
-    if(!snap.exists) throw new Error('ไม่พบออเดอร์ต้นฉบับ');
-    await syncPublicStatus({...snap.data(),id,status,shopStatus:status});
+    const now=firebase.firestore.FieldValue.serverTimestamp();
+    const batch=db.batch();
+    batch.set(db.collection('orders').doc(id),{shopStatus:status,updatedAt:now},{merge:true});
+    batch.set(db.collection('order_status').doc(id),{
+      status,
+      updatedAt:now
+    },{merge:true});
+    await batch.commit();
   }catch(e){
     alert('อัปเดตสถานะไม่สำเร็จ: '+e.message);
   }
@@ -355,6 +370,7 @@ if(initFirebase()){
     }else{
       if(user && user.uid!==allowedUid) auth.signOut();
       if(unsubscribe){ unsubscribe(); unsubscribe=null; }
+      if(statusUnsubscribe){ statusUnsubscribe(); statusUnsubscribe=null; }
       $('#orders').innerHTML='<div class="empty">เข้าสู่ระบบบัญชีร้านเพื่อดูออเดอร์ออนไลน์ ♡</div>';
     }
   });
