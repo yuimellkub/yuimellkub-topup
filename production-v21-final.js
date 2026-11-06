@@ -3310,6 +3310,9 @@ async function resolveOrder(raw){
 let activeTrackStop=
   null;
 
+let activeTrackPoll=
+  null;
+
 let activeTrackId=
   '';
 
@@ -3334,6 +3337,11 @@ function stopRealtimeTrack(){
 
   activeTrackStop=
     null;
+
+  if(activeTrackPoll){
+    clearInterval(activeTrackPoll);
+    activeTrackPoll=null;
+  }
 
   activeTrackId=
     '';
@@ -3434,6 +3442,20 @@ function startRealtimeTrack(id,initialOrder){
   activeTrackStop=()=>{
     try{offStatus?.();}catch(_){}
   };
+
+  // Server-read fallback: keep the visible tracking card fresh even if the
+  // browser's Firestore realtime stream is suspended or delayed.
+  activeTrackPoll=setInterval(async()=>{
+    try{
+      const latest=await store.collection('order_status').doc(id).get({source:'server'});
+      if(!latest.exists) return;
+      activeTrackStatus=latest.data()||{};
+      activeTrackOrder={id};
+      renderRealtimeTrack();
+    }catch(err){
+      console.warn('tracking refresh fallback failed',err);
+    }
+  },2500);
 
   renderRealtimeTrack();
 }
