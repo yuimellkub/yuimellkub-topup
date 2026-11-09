@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Yuimellkub Admin</title>
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#fff6fa;color:#6f4658}.wrap{max-width:920px;margin:auto;padding:24px 16px 60px}.head{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}.title{font-weight:900;font-size:25px;color:#8f4f68}.sub{color:#a16b80;font-size:13px;margin-top:4px}.notice{margin:16px 0;padding:13px 14px;border:1px solid #f1c7d8;border-radius:14px;background:#fff0f6;font-size:12px;line-height:1.6}.actions{display:flex;gap:8px;flex-wrap:wrap}.btn{border:0;border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer}.btn.primary{background:#e889ad;color:#fff}.btn.soft{background:#fff0f6;color:#92566e;border:1px solid #efc8d7}.grid{display:grid;gap:14px}.card{background:#fff;border:1px solid #f2ccdc;border-radius:18px;padding:16px;box-shadow:0 8px 24px rgba(190,105,145,.08)}.cardTop{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.oid{font-weight:900;color:#8f4f68}.time{font-size:11px;color:#af8193;margin-top:2px}.price{font-weight:900;font-size:20px;color:#d96f9a}.rows{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;margin-top:12px}.row{font-size:12px;line-height:1.5}.row b{display:block;color:#8f5d71;font-size:11px}.slip{margin-top:12px}.slip img{max-width:280px;width:100%;border:1px solid #f2ccdc;border-radius:14px;display:block}.slip.none{font-size:12px;color:#af8193}.statusBox{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:14px}.statusBox select{height:40px;border:1px solid #efc8d7;border-radius:11px;padding:0 10px;background:#fff;color:#71465a;font:inherit}.empty{text-align:center;padding:48px 10px;color:#aa7c8e}.pill{display:inline-block;padding:5px 9px;border-radius:999px;background:#fff0f6;border:1px solid #f2c6d7;font-size:11px;font-weight:800}.danger{background:#fff;color:#a65367;border:1px solid #efc8d7}.messenger{display:inline-flex;align-items:center;text-decoration:none;background:#e889ad;color:#fff;padding:10px 12px;border-radius:11px;font-weight:800;font-size:12px}.footer{margin-top:20px;text-align:center;color:#b38a99;font-size:11px}@media(max-width:620px){.rows{grid-template-columns:1fr}.price{font-size:18px}}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#fff6fa;color:#6f4658}.wrap{max-width:920px;margin:auto;padding:24px 16px 60px}.head{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}.title{font-weight:900;font-size:25px;color:#8f4f68}.sub{color:#a16b80;font-size:13px;margin-top:4px}.notice{margin:16px 0;padding:13px 14px;border:1px solid #f1c7d8;border-radius:14px;background:#fff0f6;font-size:12px;line-height:1.6}.actions{display:flex;gap:8px;flex-wrap:wrap}.btn{border:0;border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer}.btn.primary{background:#e889ad;color:#fff}.btn.soft{background:#fff0f6;color:#92566e;border:1px solid #efc8d7}.grid{display:grid;gap:14px}.orderTools{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:16px 0 12px;padding:12px;background:#fff;border:1px solid #f2ccdc;border-radius:14px}.orderTools label{font-size:12px;font-weight:800;color:#8f5d71}.orderTools input{border:1px solid #efc8d7;border-radius:10px;padding:9px 10px;color:#71465a;font:inherit;background:#fff}.orderCount{font-size:12px;font-weight:800;color:#92566e}.card{background:#fff;border:1px solid #f2ccdc;border-radius:18px;padding:16px;box-shadow:0 8px 24px rgba(190,105,145,.08)}.cardTop{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.oid{font-weight:900;color:#8f4f68}.time{font-size:11px;color:#af8193;margin-top:2px}.price{font-weight:900;font-size:20px;color:#d96f9a}.rows{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;margin-top:12px}.row{font-size:12px;line-height:1.5}.row b{display:block;color:#8f5d71;font-size:11px}.slip{margin-top:12px}.slip img{max-width:280px;width:100%;border:1px solid #f2ccdc;border-radius:14px;display:block}.slip.none{font-size:12px;color:#af8193}.statusBox{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:14px}.statusBox select{height:40px;border:1px solid #efc8d7;border-radius:11px;padding:0 10px;background:#fff;color:#71465a;font:inherit}.empty{text-align:center;padding:48px 10px;color:#aa7c8e}.pill{display:inline-block;padding:5px 9px;border-radius:999px;background:#fff0f6;border:1px solid #f2c6d7;font-size:11px;font-weight:800}.danger{background:#fff;color:#a65367;border:1px solid #efc8d7}.messenger{display:inline-flex;align-items:center;text-decoration:none;background:#e889ad;color:#fff;padding:10px 12px;border-radius:11px;font-weight:800;font-size:12px}.footer{margin-top:20px;text-align:center;color:#b38a99;font-size:11px}@media(max-width:620px){.rows{grid-template-columns:1fr}.price{font-size:18px}}
 </style>
 
 <style>
@@ -21,6 +21,7 @@
  <div class="actions"><button class="btn primary" id="login">เข้าสู่ระบบร้าน</button><button class="btn soft" id="logout" style="display:none">ออกจากระบบ</button><button class="btn soft" id="reload">รีเฟรช</button><button class="btn soft" id="notifyToggle">🔔 เปิดแจ้งเตือน</button><button class="btn danger" id="clearAll">ล้างออเดอร์</button></div>
  </div>
  <div class="notice">หลังบ้านนี้รองรับ <b>Firebase ออนไลน์</b> แล้ว หากยังไม่ได้ใส่ค่า Firebase จะกลับไปใช้โหมดในเบราว์เซอร์นี้อัตโนมัติ เพื่อความปลอดภัย โหมดออนไลน์ต้องเข้าสู่ระบบด้วยบัญชีร้านก่อนดู UID และรายละเอียดออเดอร์ • รูปสลิปให้ลูกค้าส่งใน Messenger</div>
+ <div class="orderTools"><label for="orderDateFilter">เลือกวันที่ดูออเดอร์</label><input type="date" id="orderDateFilter"><button class="btn soft" id="clearOrderDate" type="button">แสดงทุกวัน</button><span class="orderCount" id="orderCount">กำลังโหลดออเดอร์...</span></div>
  <div id="orders" class="grid"></div>
  
 <section class="productAdmin" id="productAdmin">
@@ -47,6 +48,7 @@ const $=s=>document.querySelector(s);
 
 let online=false, db=null, auth=null, unsubscribe=null, statusUnsubscribe=null;
 let initialOrdersLoaded=false;
+let allOrders=[];
 const seenOrderIds=new Set();
 const publicOrderStatusCache=new Map();
 let notificationsEnabled=localStorage.getItem('ymk_admin_notify')==='1';
@@ -151,7 +153,43 @@ async function enableNotifications(){
   }
 }
 
+function orderDateValue(o){
+  const value=o?.createdAt;
+  if(value?.toDate) return value.toDate();
+  if(value instanceof Date) return value;
+  if(typeof value==='number'){const d=new Date(value);return Number.isNaN(d.getTime())?null:d;}
+  if(typeof value==='string'){const d=new Date(value);return Number.isNaN(d.getTime())?null:d;}
+  return null;
+}
+
+function orderDateKey(o){
+  const d=orderDateValue(o);
+  if(!d) return '';
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,'0');
+  const day=String(d.getDate()).padStart(2,'0');
+  return y+'-'+m+'-'+day;
+}
+
+function getFilteredOrders(){
+  const selected=$('#orderDateFilter')?.value||'';
+  return selected ? allOrders.filter(o=>orderDateKey(o)===selected) : allOrders;
+}
+
+function updateOrderCount(arr){
+  const label=$('#orderCount');
+  if(!label) return;
+  const selected=$('#orderDateFilter')?.value||'';
+  if(!selected){
+    label.textContent='ทั้งหมด '+arr.length.toLocaleString('th-TH')+' รายการ';
+    return;
+  }
+  const [y,m,d]=selected.split('-');
+  label.textContent='วันที่ '+d+'/'+m+'/'+y+' มี '+arr.length.toLocaleString('th-TH')+' รายการ';
+}
+
 function render(arr){
+  updateOrderCount(arr);
   const root=$('#orders');
   if(!arr.length){
     root.innerHTML='<div class="empty">ยังไม่มีออเดอร์ ♡</div>';
@@ -260,19 +298,23 @@ function startOnline(){
 
   // Orders feed supplies order details only. Do not mirror stale order fields
   // back into order_status: the latter is the public tracking source of truth.
+  // โหลดเอกสาร orders ทั้งหมดโดยไม่จำกัดจำนวน และไม่ใช้ orderBy
+  // เพื่อไม่ให้เอกสารที่ไม่มี createdAt ถูกตัดออกจากผลลัพธ์
   unsubscribe=db.collection('orders')
-    .orderBy('createdAt','desc')
-    .limit(100)
     .onSnapshot(snap=>{
       const arr=snap.docs.map(d=>{
         const o=d.data();
-        const dt=o.createdAt?.toDate?.();
-        return {...o,id:o.id||d.id,createdAtText:dt?dt.toLocaleString('th-TH'):''};
+        const dt=orderDateValue(o);
+        return {...o,id:o.id||d.id,createdAtText:dt?dt.toLocaleString('th-TH'):'ไม่ระบุวันที่'};
+      }).sort((a,b)=>{
+        const da=orderDateValue(a), db=orderDateValue(b);
+        if(!da && !db) return String(b.id).localeCompare(String(a.id));
+        if(!da) return 1;
+        if(!db) return -1;
+        return db.getTime()-da.getTime();
       });
-      render(arr);
-      // Publish the minimal tracking fields from the private order feed
-      // into the public order_status document consumed by the storefront.
-      arr.forEach(o=>{syncPublicStatus(o);});
+      allOrders=arr;
+      render(getFilteredOrders());
       arr.forEach(o=>{const s=publicOrderStatusCache.get(o.id);if(s)applyPublicOrderStatus(o.id,s);});
       if(!initialOrdersLoaded){
         snap.docs.forEach(d=>seenOrderIds.add(d.id));
@@ -282,7 +324,10 @@ function startOnline(){
       snap.docChanges().forEach(change=>{
         if(change.type!=='added' || seenOrderIds.has(change.doc.id)) return;
         seenOrderIds.add(change.doc.id);
-        notifyNewOrder({...change.doc.data(),id:change.doc.id});
+        const newOrder={...change.doc.data(),id:change.doc.id};
+        // Sync only newly created orders; never bulk-write historical orders.
+        syncPublicStatus(newOrder);
+        notifyNewOrder(newOrder);
       });
     },err=>{
       $('#orders').innerHTML='<div class="empty">โหลดออเดอร์ออนไลน์ไม่ได้: '+esc(err.message)+'</div>';
@@ -327,6 +372,12 @@ async function removeOrder(id){
     alert('ลบออเดอร์ไม่สำเร็จ: '+e.message);
   }
 }
+
+$('#orderDateFilter').addEventListener('change',()=>render(getFilteredOrders()));
+$('#clearOrderDate').addEventListener('click',()=>{
+  $('#orderDateFilter').value='';
+  render(getFilteredOrders());
+});
 
 $('#reload').addEventListener('click',()=>online?startOnline():location.reload());
 
